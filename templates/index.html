@@ -505,7 +505,14 @@ function apiGet(path, params) {
 function esc(s) {
   const d = document.createElement('div');
   d.textContent = String(s ?? '');
-  return d.innerHTML;
+  // textContent/innerHTML escapes <, >, & for us, but NOT quote characters —
+  // those only matter when the result is later embedded inside an HTML
+  // attribute (e.g. data-join="${esc(JSON.stringify(...))}"). JSON strings
+  // are full of double quotes, so without this, a quote inside any field
+  // (game name, username, etc.) terminates the attribute early and corrupts
+  // everything after it — which silently breaks JSON.parse on click with no
+  // visible error, looking exactly like "the button does nothing."
+  return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function fmtSeconds(s) {
