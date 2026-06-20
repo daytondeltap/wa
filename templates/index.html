@@ -597,10 +597,24 @@ function confirmJoin() {
   _joinState = null;
 
   if (url.startsWith('roblox://')) {
-    // Protocol links fail silently if Roblox isn't installed or the OS/
-    // browser blocks the handler — there's no error event for this, so we
-    // open the game page automatically if the page is still visible after
-    // a short delay (meaning the handoff to the Roblox app never happened).
+    // IMPORTANT: do not use an <a> click or window.open() to trigger a
+    // custom-protocol handoff. Several Chromium-based browsers open a
+    // transient, content-less browsing context for the protocol request,
+    // hand off to the OS, then garbage-collect that context — and in some
+    // browser/OS combinations the "tab to close" gets resolved incorrectly,
+    // closing THIS dashboard tab instead. An invisible same-page iframe
+    // triggers the OS protocol handler without creating any new browsing
+    // context at all, so there's nothing for the browser to clean up.
+    const frame = document.createElement('iframe');
+    frame.style.display = 'none';
+    frame.src = url;
+    document.body.appendChild(frame);
+    setTimeout(() => frame.remove(), 1500);
+
+    // Protocol handoffs fail silently if Roblox isn't installed — there's
+    // no error event for this, so fall back to the game page if the tab is
+    // still visible (i.e. focus never left for the native app) after a
+    // short delay.
     const fallbackUrl = `https://www.roblox.com/games/${placeId}`;
     const fallbackTimer = setTimeout(() => {
       if (document.visibilityState === 'visible') {
@@ -613,8 +627,6 @@ function confirmJoin() {
         document.removeEventListener('visibilitychange', onHide);
       }
     });
-    const a = document.createElement('a'); a.href = url; a.style.display = 'none';
-    document.body.appendChild(a); a.click(); setTimeout(() => document.body.removeChild(a), 1000);
   } else {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
