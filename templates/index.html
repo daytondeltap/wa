@@ -474,6 +474,7 @@
 const KEY_ID       = '{{ key_id }}';           // account identifier from Flask session (display only)
 const TIER         = '{{ tier }}';             // DEV / PK_ / UPK_ / BK_
 const ALLOWED_TABS = {{ allowed_tabs|safe }};  // e.g. ['monitor','leaderboard',...]
+const CAN_JOIN     = {{ can_join|safe }};      // Deluxe (PK_) + DEV only — click-to-join perk
 
 async function api(path, opts) {
   const res = await fetch(path, Object.assign({
@@ -587,10 +588,29 @@ function confirmJoin() {
   if (!url) { alert('No place or game ID available.'); return; }
   document.getElementById('join-overlay').style.display = 'none';
   _joinState = null;
+
   if (url.startsWith('roblox://')) {
+    // Protocol links fail silently if Roblox isn't installed or the OS/
+    // browser blocks the handler — there's no error event for this, so we
+    // open the game page automatically if the page is still visible after
+    // a short delay (meaning the handoff to the Roblox app never happened).
+    const fallbackUrl = `https://www.roblox.com/games/${placeId}`;
+    const fallbackTimer = setTimeout(() => {
+      if (document.visibilityState === 'visible') {
+        window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+      }
+    }, 1500);
+    document.addEventListener('visibilitychange', function onHide() {
+      if (document.visibilityState === 'hidden') {
+        clearTimeout(fallbackTimer);
+        document.removeEventListener('visibilitychange', onHide);
+      }
+    });
     const a = document.createElement('a'); a.href = url; a.style.display = 'none';
     document.body.appendChild(a); a.click(); setTimeout(() => document.body.removeChild(a), 1000);
-  } else { window.open(url, '_blank', 'noopener,noreferrer'); }
+  } else {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
 }
 
 document.addEventListener('keydown', e => {
@@ -671,16 +691,21 @@ async function refreshPresence() {
       const stLabel = inGame ? 'IN GAME' : isInvisible ? 'INVISIBLE' : 'OFFLINE';
       const ts      = ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : '';
       const loc     = open?.location_name || null;
-      const joinData = inGame
+      // Join data only exists in `open` at all if the server decided this
+      // tier is entitled to it (Deluxe/PK_ + DEV) — see /api/monitor/presence.
+      // CAN_JOIN double-checks client-side so the affordance never renders
+      // even if open.place_id happens to be present for some other reason.
+      const joinable = inGame && CAN_JOIN && (open.place_id || open.game_id);
+      const joinData = joinable
         ? `data-join="${esc(JSON.stringify({ userId:id, username, gameName:loc||'', placeId:open.place_id||null, gameId:open.game_id||'' }))}"`
         : '';
-      const clickAttr = inGame ? `${joinData} onclick="handleCardClick(this)"` : '';
+      const clickAttr = joinable ? `${joinData} onclick="handleCardClick(this)"` : '';
       return `
         <div class="presence-card ${cls}" ${clickAttr}>
           <div class="card-head">${avatarImg(id,'avatar-md')}<div class="card-username">${esc(username)}</div></div>
           <span class="card-status ${stCls}">${stLabel}</span>
           ${loc ? `<div class="card-game">🎮 ${esc(loc)}</div>` : ''}
-          ${inGame
+          ${joinable
             ? `<div class="card-time" style="color:var(--accent2)">🔗 Click to join</div>`
             : `<div class="card-time">${ts}</div>`}
         </div>`;

@@ -109,6 +109,14 @@ def allowed_tabs() -> list:
     return TIER_TABS.get(current_tier(), [])
 
 
+# Click-to-join (deep-linking into a tracked user's live Roblox server) is a
+# Deluxe (PK_) + DEV perk, not available to UPK_/BK_. This is checked here
+# rather than only hidden in the UI, since the join-relevant fields
+# (place_id / game_id) must never reach a browser that isn't entitled to them.
+def can_join() -> bool:
+    return current_tier() in ("PK_", "DEV")
+
+
 # Note: earlier versions of this app shipped a Supabase anon/JWT token to the
 # browser so client-side JS could query Supabase directly, scoped by RLS
 # policies keyed on a custom `key_id` JWT claim. That JWT was never actually
@@ -339,9 +347,10 @@ def api_top_games():
 @app.route("/api/account")
 def api_account():
     return jsonify({
-        "key_id": current_key_id(),
-        "tier":   current_tier(),
-        "tabs":   allowed_tabs(),
+        "key_id":   current_key_id(),
+        "tier":     current_tier(),
+        "tabs":     allowed_tabs(),
+        "can_join": can_join(),
     })
 
 
@@ -442,6 +451,15 @@ def api_monitor_presence():
                       .eq("key_id", kid).is_("end_time", "null")
                       .in_("user_id", ids).execute())
         open_map = {r["user_id"]: r for r in (open_res.data or [])}
+
+        # Join data (place_id/game_id) is a Deluxe (PK_)/DEV perk. Strip it
+        # for other tiers server-side so it never reaches their browser —
+        # hiding the button client-side alone wouldn't stop someone reading
+        # it straight out of the API response.
+        if not can_join():
+            for r in open_map.values():
+                r.pop("place_id", None)
+                r.pop("game_id", None)
 
         ev_res = (sb().table("events")
                     .select("user_id, event_type, new_status, timestamp")
@@ -954,10 +972,10 @@ def index():
         key_id=current_key_id(),
         tier=current_tier(),
         allowed_tabs=jsonlib.dumps(allowed_tabs()),
+        can_join=jsonlib.dumps(can_join()),
     )
 
 
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
-
