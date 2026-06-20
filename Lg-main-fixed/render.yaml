@@ -1,0 +1,40 @@
+services:
+  # ── Flask dashboard (Web Service) ───────────────────────────────────────────
+  - type: web
+    name: rbx-web
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60
+    envVars:
+      - key: SUPABASE_URL
+        sync: false          # set manually in Render dashboard
+      - key: SUPABASE_SERVICE_KEY
+        sync: false          # service_role key — server only, never sent to the browser
+      - key: OPENAI_API_KEY
+        sync: false          # optional — only needed for the AI Insights tab
+      - key: DEV_KEYS
+        sync: false          # comma-separated developer keys; each is its own account
+      - key: FLASK_SECRET_KEY
+        sync: false          # REQUIRED — random 32+ char string, same value the worker
+                              # doesn't need but must be set here so sessions survive
+                              # restarts and stay valid across all gunicorn workers.
+                              # Generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
+
+  # ── Roblox presence poller (Background Worker) ──────────────────────────────
+  # A single worker process polls Roblox presence for every tracked user
+  # across every account (key_id) in one pass — no per-account worker needed.
+  - type: worker
+    name: rbx-detect
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python Detect.py
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: ROBLOX_COOKIE
+        sync: false          # .ROBLOSECURITY value — required for accurate presence
+                              # on any account that isn't fully public
+      - key: POLL_INTERVAL
+        sync: false          # optional, seconds between polls (default 10)

@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox Presence Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:       #0a0a0f;
+    --surface:  #111118;
+    --border:   #1e1e2e;
+    --accent:   #ff3c5f;
+    --accent2:  #00e5ff;
+    --green:    #39ff14;
+    --muted:    #555570;
+    --text:     #e8e8f0;
+    --subtext:  #8888aa;
+    --font-ui:  'Syne', sans-serif;
+    --font-mono:'Space Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-ui); min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.07) 2px, rgba(0,0,0,.07) 4px);
+  }
+
+  /* header */
+  header { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 2rem; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 1.1rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  .logo span { color: var(--accent); }
+  .tier-badge { font-family: var(--font-mono); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; padding: .25rem .55rem; border-radius: 3px; border: 1px solid var(--border); color: var(--subtext); white-space: nowrap; }
+  .tier-badge.tb-dev { color:#ff4d6d; border-color:#ff4d6d; box-shadow:0 0 8px rgba(255,77,109,.35); }
+  .tier-badge.tb-pk  { color:#ffd166; border-color:#ffd166; }
+  .tier-badge.tb-upk { color:#7ee787; border-color:#7ee787; }
+  .tier-badge.tb-bk  { color:#79c0ff; border-color:#79c0ff; }
+  .header-right { display: flex; align-items: center; gap: 1.5rem; }
+  #live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  .last-update { font-family: var(--font-mono); font-size: .7rem; color: var(--muted); }
+  .btn-logout { font-family: var(--font-mono); font-size: .65rem; letter-spacing: .06em; text-transform: uppercase; background: transparent; color: var(--subtext); border: 1px solid var(--border); border-radius: 4px; padding: .3rem .7rem; cursor: pointer; transition: border-color .2s, color .2s; }
+  .btn-logout:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* filter bar */
+  .filter-bar { display: flex; align-items: center; gap: 1rem; padding: .8rem 2rem; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .filter-bar label { font-size: .75rem; color: var(--subtext); text-transform: uppercase; letter-spacing: .1em; }
+  select, .btn { font-family: var(--font-mono); font-size: .75rem; background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: .35rem .8rem; border-radius: 4px; cursor: pointer; outline: none; transition: border-color .2s; }
+  select:hover, .btn:hover { border-color: var(--accent2); }
+  .btn-accent { border-color: var(--accent); color: var(--accent); }
+  .btn-accent:hover { background: var(--accent); color: #fff; }
+
+  /* layout */
+  .main { padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+  .sec-title { font-size: .65rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--subtext); margin-bottom: .8rem; display: flex; align-items: center; gap: .6rem; }
+  .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* cards */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+  .presence-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; position: relative; overflow: hidden; transition: border-color .2s, transform .15s; }
+  .presence-card:hover { transform: translateY(-2px); border-color: var(--accent2); }
+  .presence-card.ingame   { border-left: 3px solid var(--accent); cursor: pointer; }
+  .presence-card.offline  { border-left: 3px solid var(--muted); }
+  .presence-card.invisible { border: 1px solid var(--accent2); box-shadow: 0 0 0 1px var(--accent2); }
+  .card-head { display: flex; align-items: center; gap: .65rem; margin-bottom: .5rem; }
+  .card-username { font-weight: 800; font-size: .95rem; }
+  .card-status { font-family: var(--font-mono); font-size: .65rem; padding: .15rem .5rem; border-radius: 3px; display: inline-block; margin-bottom: .5rem; }
+  .status-ingame   { background: rgba(255,60,95,.15);  color: var(--accent); }
+  .status-offline  { background: rgba(85,85,112,.1);   color: var(--muted); }
+  .status-invisible { background: rgba(0,229,255,.12); color: var(--accent2); }
+  .card-game { font-size: .78rem; color: var(--subtext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-time { font-family: var(--font-mono); font-size: .65rem; color: var(--muted); margin-top: .4rem; }
+
+  /* charts */
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 900px) { .chart-row { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.4rem; }
+  .panel canvas { max-height: 220px; }
+
+  /* tables */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th { font-family: var(--font-mono); font-size: .6rem; letter-spacing: .15em; text-transform: uppercase; color: var(--subtext); padding: .5rem .8rem; text-align: left; }
+  td { padding: .45rem .8rem; color: var(--text); border-bottom: 1px solid rgba(30,30,46,.6); }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  .tag { font-family: var(--font-mono); font-size: .6rem; padding: .1rem .4rem; border-radius: 3px; display: inline-block; }
+  .tag-entered  { background: rgba(57,255,20,.12);  color: var(--green); }
+  .tag-left     { background: rgba(85,85,112,.15);  color: var(--muted); }
+  .tag-switched { background: rgba(0,229,255,.1);   color: var(--accent2); }
+  .tag-started  { background: rgba(255,60,95,.12);  color: var(--accent); }
+
+  /* user totals */
+  .user-totals { display: flex; flex-wrap: wrap; gap: .8rem; }
+  .user-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: .8rem 1.2rem; min-width: 160px; flex: 1; }
+  .tile-head { display: flex; align-items: center; gap: .55rem; margin-bottom: .4rem; }
+  .tile-name { font-weight: 800; font-size: .85rem; }
+  .tile-stat { font-family: var(--font-mono); font-size: .7rem; color: var(--subtext); margin-top: .2rem; }
+  .tile-stat span { color: var(--accent2); }
+
+  /* tabs */
+  .tab-row { display: flex; gap: .5rem; margin-bottom: 1rem; }
+  .tab { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; padding: .3rem .8rem; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; background: transparent; color: var(--subtext); transition: .15s; }
+  .tab.active, .tab:hover { border-color: var(--accent); color: var(--accent); }
+  .empty { color: var(--muted); font-family: var(--font-mono); font-size: .75rem; padding: 1.5rem 0; text-align: center; }
+
+  /* page nav */
+  .page-nav { display: flex; padding: 0 2rem; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .page-nav-btn { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; padding: .7rem 1.2rem; border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--subtext); cursor: pointer; transition: color .15s, border-color .15s; outline: none; margin-bottom: -1px; }
+  .page-nav-btn:hover { color: var(--text); }
+  .page-nav-btn.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* leaderboard */
+  .lb-wrap { padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+  .lb-table { width: 100%; border-collapse: collapse; }
+  .lb-table thead tr { border-bottom: 1px solid var(--border); }
+  .lb-table th { font-family: var(--font-mono); font-size: .6rem; letter-spacing: .15em; text-transform: uppercase; color: var(--subtext); padding: .6rem 1rem; text-align: left; }
+  .lb-table td { padding: .7rem 1rem; border-bottom: 1px solid rgba(30,30,46,.6); vertical-align: middle; }
+  .lb-table tr:hover td { background: rgba(255,255,255,.02); }
+  .lb-rank { font-family: var(--font-mono); font-size: .75rem; color: var(--muted); width: 2.5rem; }
+  .lb-rank-1 { color: #ffd700; text-shadow: 0 0 8px #ffd70066; }
+  .lb-rank-2 { color: #c0c0c0; }
+  .lb-rank-3 { color: #cd7f32; }
+  .lb-username { font-weight: 800; font-size: .9rem; }
+  .lb-userid { font-family: var(--font-mono); font-size: .62rem; color: var(--muted); margin-top: .15rem; }
+  .lb-user-cell { display: flex; align-items: center; gap: .75rem; }
+  .lb-bar-cell { width: 200px; }
+  .lb-bar-track { background: rgba(255,255,255,.05); border-radius: 2px; height: 6px; overflow: hidden; }
+  .lb-bar-fill  { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .6s ease; }
+  .lb-time { font-family: var(--font-mono); font-size: .75rem; color: var(--accent2); white-space: nowrap; }
+  .lb-sessions { font-family: var(--font-mono); font-size: .72rem; color: var(--subtext); }
+  .games-chart-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.4rem 1.6rem; }
+  .games-chart-panel canvas { max-height: 320px; }
+
+  /* insights */
+  .insights-wrap { padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; max-width: 880px; }
+  .insight-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.4rem 1.6rem; }
+  .insight-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .9rem; }
+  .insight-card-head .sec-title { margin-bottom: 0; flex: 1; }
+  .insight-refresh-btn { font-family: var(--font-mono); font-size: .65rem; background: transparent; border: 1px solid var(--border); color: var(--subtext); padding: .3rem .7rem; border-radius: 4px; cursor: pointer; margin-left: .8rem; transition: border-color .15s, color .15s; }
+  .insight-refresh-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .insight-body { font-size: .85rem; line-height: 1.65; color: var(--text); white-space: pre-wrap; }
+  .insight-body.muted { color: var(--muted); font-family: var(--font-mono); font-size: .75rem; }
+  .ai-spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--accent2); border-radius: 50%; animation: spin .7s linear infinite; margin-right: .5rem; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ask-form { display: flex; gap: .6rem; }
+  .ask-input { flex: 1; font-family: var(--font-ui); font-size: .85rem; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: .65rem .9rem; outline: none; transition: border-color .15s; }
+  .ask-input:focus { border-color: var(--accent2); }
+  .ask-input::placeholder { color: var(--muted); }
+  .ask-submit { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: .65rem 1.3rem; border-radius: 6px; cursor: pointer; transition: background .15s, color .15s; white-space: nowrap; }
+  .ask-submit:hover:not(:disabled) { background: var(--accent); color: #fff; }
+  .ask-submit:disabled { opacity: .4; cursor: not-allowed; }
+  .ask-history { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.2rem; }
+  .ask-qa { border-top: 1px solid var(--border); padding-top: 1rem; }
+  .ask-q { font-weight: 800; font-size: .82rem; color: var(--accent2); margin-bottom: .5rem; }
+  .ask-q::before { content: '› '; }
+  .ask-a { font-size: .83rem; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
+  .ask-a.error { color: var(--accent); font-family: var(--font-mono); font-size: .75rem; }
+
+  /* add user */
+  .adduser-wrap { padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; max-width: 880px; }
+  .adduser-form { display: flex; gap: .8rem; flex-wrap: wrap; align-items: flex-end; }
+  .adduser-field { display: flex; flex-direction: column; gap: .35rem; flex: 1; min-width: 180px; }
+  .adduser-field label { font-family: var(--font-mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--subtext); }
+  .adduser-msg { margin-top: .9rem; font-family: var(--font-mono); font-size: .75rem; min-height: 1.2em; }
+  .adduser-msg.ok    { color: var(--green); }
+  .adduser-msg.error { color: var(--accent); }
+  .adduser-hint { margin-top: .8rem; font-size: .7rem; color: var(--muted); line-height: 1.5; }
+  .tracked-list { display: flex; flex-direction: column; gap: .5rem; }
+  .tracked-row { display: flex; align-items: center; justify-content: space-between; padding: .6rem .9rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; }
+  .tracked-name { font-weight: 800; font-size: .85rem; }
+  .tracked-id { font-family: var(--font-mono); font-size: .65rem; color: var(--muted); margin-top: .15rem; }
+  .tracked-left { display: flex; align-items: center; gap: .75rem; }
+  .tracked-remove { font-family: var(--font-mono); font-size: .65rem; background: transparent; border: 1px solid var(--border); color: var(--subtext); padding: .3rem .6rem; border-radius: 4px; cursor: pointer; transition: border-color .15s, color .15s; }
+  .tracked-remove:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* join modal */
+  .join-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); animation: fadeIn .15s ease; }
+  @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+  .join-modal { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: 10px; padding: 2rem 2.4rem; min-width: 320px; max-width: 400px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .join-modal-avatar { margin: 0 auto .9rem; display: block; width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--accent); }
+  .join-modal-name { font-weight: 800; font-size: 1.1rem; margin-bottom: .25rem; }
+  .join-modal-game { font-size: .8rem; color: var(--subtext); margin-bottom: 1.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .join-modal-q { font-size: .82rem; color: var(--muted); margin-bottom: 1.2rem; font-family: var(--font-mono); }
+  .join-modal-btns { display: flex; gap: .75rem; justify-content: center; }
+  .join-yes { flex: 1; padding: .65rem 1.2rem; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-family: var(--font-mono); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: opacity .15s; }
+  .join-yes:hover { opacity: .85; }
+  .join-no  { flex: 1; padding: .65rem 1.2rem; background: transparent; color: var(--subtext); border: 1px solid var(--border); border-radius: 6px; font-family: var(--font-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: border-color .15s, color .15s; }
+  .join-no:hover { border-color: var(--muted); color: var(--text); }
+  .join-hint { font-family: var(--font-mono); font-size: .58rem; color: var(--muted); margin-top: .4rem; }
+
+  /* avatars */
+  .avatar { border-radius: 50%; object-fit: cover; background: var(--bg); border: 1px solid var(--border); flex-shrink: 0; display: block; }
+  .avatar-sm { width: 32px; height: 32px; }
+  .avatar-md { width: 44px; height: 44px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <div class="logo">RBX<span>/</span>MONITOR</div>
+    <span id="tier-badge" class="tier-badge"></span>
+  </div>
+  <div class="header-right">
+    <div id="live-dot"></div>
+    <span class="last-update" id="last-update">--:--:--</span>
+    <form method="POST" action="/logout" style="margin:0;">
+      <button type="submit" class="btn-logout">🔒 Logout</button>
+    </form>
+  </div>
+</header>
+<script>
+(function(){
+  var t = '{{ tier }}';
+  var map = {
+    'DEV':  {label:'DEV',       cls:'tb-dev'},
+    'PK_':  {label:'DELUXE',    cls:'tb-pk'},
+    'UPK_': {label:'UPGRADED',  cls:'tb-upk'},
+    'BK_':  {label:'BASIC',     cls:'tb-bk'}
+  };
+  var info = map[t];
+  var el = document.getElementById('tier-badge');
+  if (info && el) { el.textContent = info.label; el.classList.add(info.cls); }
+})();
+</script>
+
+<nav class="page-nav">
+  <button class="page-nav-btn active" data-tab="monitor"     onclick="switchPage('monitor',this)">Monitor</button>
+  <button class="page-nav-btn"        data-tab="leaderboard" onclick="switchPage('leaderboard',this)">Leaderboard</button>
+  <button class="page-nav-btn"        data-tab="insights"    onclick="switchPage('insights',this)">AI Insights</button>
+  <button class="page-nav-btn"        data-tab="history"     onclick="switchPage('history',this)">History</button>
+  <button class="page-nav-btn"        data-tab="adduser"     onclick="switchPage('adduser',this)">User Adding</button>
+  <button class="page-nav-btn"        data-tab="keys"        onclick="switchPage('keys',this)">Key Generator</button>
+</nav>
+
+<!-- ══ MONITOR ══ -->
+<div class="page active" id="page-monitor">
+  <div class="filter-bar">
+    <label>User</label>
+    <select id="user-filter"><option value="">All Users</option></select>
+    <label>Period</label>
+    <select id="days-filter">
+      <option value="">All time</option>
+      <option value="7">7 days</option>
+      <option value="30" selected>30 days</option>
+      <option value="90">90 days</option>
+    </select>
+    <button class="btn btn-accent" onclick="manualRefresh()">↺ Refresh</button>
+  </div>
+  <div class="main">
+    <section>
+      <div class="sec-title">Live Presence</div>
+      <div class="card-grid" id="presence-grid"><div class="empty">Loading…</div></div>
+    </section>
+    <section>
+      <div class="sec-title">All-Time Totals</div>
+      <div class="user-totals" id="user-totals"><div class="empty">Loading…</div></div>
+    </section>
+    <div class="chart-row">
+      <div class="panel"><div class="sec-title">Daily Playtime</div><canvas id="daily-chart"></canvas></div>
+      <div class="panel"><div class="sec-title">Activity by Hour (UTC)</div><canvas id="hourly-chart"></canvas></div>
+    </div>
+    <section class="panel">
+      <div class="sec-title">Top Games</div>
+      <div class="table-wrap">
+        <table id="games-table">
+          <thead><tr><th>Game</th><th>Sessions</th><th>Total Time</th><th>Avg Session</th><th>Longest</th></tr></thead>
+          <tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="tab-row">
+        <button class="tab active" onclick="showTab('sessions',event)">Recent Sessions</button>
+        <button class="tab" onclick="showTab('events',event)">Event Log</button>
+      </div>
+      <div id="tab-sessions">
+        <div class="table-wrap">
+          <table id="sessions-table">
+            <thead><tr><th>User</th><th>Game</th><th>Start</th><th>End</th><th>Duration</th></tr></thead>
+            <tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="tab-events" style="display:none">
+        <div class="table-wrap">
+          <table id="events-table">
+            <thead><tr><th>Time</th><th>User</th><th>Event</th><th>From</th><th>To</th></tr></thead>
+            <tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ══ LEADERBOARD (server-side Flask) ══ -->
+<div class="page" id="page-leaderboard">
+  <div class="lb-wrap">
+    <section>
+      <div class="sec-title">Gametime Leaderboard</div>
+      <div class="table-wrap">
+        <table class="lb-table" id="lb-table">
+          <thead><tr><th>#</th><th>Player</th><th class="lb-bar-cell">Playtime</th><th>Total Time</th><th>Sessions</th></tr></thead>
+          <tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="games-chart-panel">
+      <div class="sec-title">Most Played Games — All Users</div>
+      <canvas id="lb-games-chart"></canvas>
+    </section>
+  </div>
+</div>
+
+<!-- ══ AI INSIGHTS (client → Flask → OpenAI) ══ -->
+<div class="page" id="page-insights">
+  <div class="insights-wrap">
+    <section class="insight-card">
+      <div class="insight-card-head">
+        <div class="sec-title">Auto-Generated Insights</div>
+        <button class="insight-refresh-btn" onclick="refreshInsights()">↺ Regenerate</button>
+      </div>
+      <div class="insight-body muted" id="insight-body">Loading…</div>
+    </section>
+    <section class="insight-card">
+      <div class="sec-title">Ask About Your Data</div>
+      <form class="ask-form" id="ask-form" onsubmit="return submitAsk(event)">
+        <input class="ask-input" id="ask-input" type="text" placeholder="e.g. Which user plays the most on weekends?" maxlength="500" autocomplete="off">
+        <button class="ask-submit" id="ask-submit" type="submit">Ask</button>
+      </form>
+      <div class="ask-history" id="ask-history"></div>
+    </section>
+  </div>
+</div>
+
+<!-- ══ HISTORY (Flask-backed, scoped per account) ══ -->
+<div class="page" id="page-history">
+  <div class="insights-wrap">
+    <div class="filter-bar" style="border-radius:6px;border:1px solid var(--border);margin-bottom:1rem">
+      <label>User</label>
+      <select id="hist-user-filter"><option value="">All Users</option></select>
+      <label>Period</label>
+      <select id="hist-days-filter">
+        <option value="" selected>All time</option>
+        <option value="7">7 days</option>
+        <option value="30">30 days</option>
+        <option value="90">90 days</option>
+      </select>
+      <button class="btn btn-accent" onclick="refreshHistory()">↺ Refresh</button>
+      <span id="hist-summary" style="margin-left:auto;color:var(--subtext);font-family:var(--font-mono);font-size:.7rem"></span>
+    </div>
+    <section class="insight-card">
+      <div class="sec-title">Game History</div>
+      <div style="color:var(--subtext);font-size:.75rem;margin-bottom:.6rem">Click any game row to expand individual sessions.</div>
+      <div class="table-wrap">
+        <table id="hist-table" style="width:100%;border-collapse:collapse;font-size:.78rem">
+          <thead><tr>
+            <th style="text-align:left;padding:.5rem">Game</th>
+            <th style="text-align:left;padding:.5rem">Players</th>
+            <th style="text-align:left;padding:.5rem">Sessions</th>
+            <th style="text-align:left;padding:.5rem">Total Time</th>
+            <th style="text-align:left;padding:.5rem">Avg</th>
+            <th style="text-align:left;padding:.5rem">Longest</th>
+            <th style="text-align:left;padding:.5rem">First Played</th>
+            <th style="text-align:left;padding:.5rem">Last Played</th>
+          </tr></thead>
+          <tbody><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ══ USER ADDING (Flask-backed, scoped per account) ══ -->
+<div class="page" id="page-adduser">
+  <div class="adduser-wrap">
+    <section class="insight-card">
+      <div class="sec-title">Track a New User</div>
+      <form class="adduser-form" id="adduser-form" onsubmit="return submitAddUser(event)">
+        <div class="adduser-field">
+          <label for="adduser-id">Roblox User ID</label>
+          <input class="ask-input" id="adduser-id" type="number" min="1" inputmode="numeric" placeholder="e.g. 1876419070" required>
+        </div>
+        <div class="adduser-field">
+          <label for="adduser-name">Display Name</label>
+          <input class="ask-input" id="adduser-name" type="text" maxlength="50" placeholder="e.g. daytondeltap" required>
+        </div>
+        <button class="ask-submit" id="adduser-submit" type="submit">+ Add User</button>
+      </form>
+      <div class="adduser-msg" id="adduser-msg"></div>
+      <div class="adduser-hint">Saved on the server for your account only. Detect.py picks up new/removed users within one poll cycle (~10s).</div>
+    </section>
+    <section class="insight-card">
+      <div class="sec-title">Currently Tracked</div>
+      <div class="tracked-list" id="tracked-list">Loading…</div>
+    </section>
+  </div>
+</div>
+
+
+<!-- ══ KEY GENERATOR (DEV only) ══ -->
+<div class="page" id="page-keys">
+  <div class="insights-wrap">
+    <section class="insight-card">
+      <div class="sec-title">Generate New Access Key</div>
+      <div style="color:var(--subtext);font-size:.75rem;margin-bottom:.8rem">
+        Pick a key class — each generated key is an isolated account with its own dataset.
+        The raw key is shown <strong>once</strong> on creation; copy it immediately.
+      </div>
+      <form class="adduser-form" id="keygen-form" onsubmit="return generateKey(event)" style="align-items:flex-end">
+        <div class="adduser-field">
+          <label for="keygen-tier">Key Weight</label>
+          <select class="ask-input" id="keygen-tier" required>
+            <option value="PK_">PK_ — Full access (Monitor, Leaderboard, AI, History, User Adding)</option>
+            <option value="UPK_">UPK_ — Leaderboard + User Adding</option>
+            <option value="BK_">BK_ — Monitor + User Adding</option>
+          </select>
+        </div>
+        <div class="adduser-field">
+          <label for="keygen-label">Label (optional)</label>
+          <input class="ask-input" id="keygen-label" type="text" maxlength="60" placeholder="e.g. client-acme">
+        </div>
+        <button class="ask-submit" id="keygen-submit" type="submit">+ Generate Key</button>
+      </form>
+      <div id="keygen-result" style="margin-top:1rem"></div>
+    </section>
+    <section class="insight-card">
+      <div class="sec-title">All Generated Keys</div>
+      <div class="table-wrap">
+        <table id="keys-table" style="width:100%;border-collapse:collapse;font-size:.78rem">
+          <thead><tr>
+            <th style="text-align:left;padding:.5rem">Tier</th>
+            <th style="text-align:left;padding:.5rem">Label</th>
+            <th style="text-align:left;padding:.5rem">Key ID</th>
+            <th style="text-align:left;padding:.5rem">Status</th>
+            <th style="text-align:left;padding:.5rem">Created</th>
+            <th style="text-align:left;padding:.5rem">Action</th>
+          </tr></thead>
+          <tbody><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ══ JOIN MODAL ══ -->
+<div id="join-overlay" class="join-overlay" style="display:none" onclick="closeJoinModal(event)">
+  <div class="join-modal" onclick="event.stopPropagation()">
+    <img id="join-avatar" class="join-modal-avatar" src="" alt="">
+    <div class="join-modal-name" id="join-name"></div>
+    <div class="join-modal-game" id="join-game"></div>
+    <div class="join-modal-q">Join their game?</div>
+    <div class="join-modal-btns">
+      <button class="join-yes" onclick="confirmJoin()">✓ YES</button>
+      <button class="join-no"  onclick="closeJoinModal()">✕ NO</button>
+    </div>
+    <div class="join-hint" id="join-hint"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// API HELPER — every read/write goes through Flask, never Supabase directly.
+// The server scopes each query to the logged-in account via the session
+// cookie (current_key_id()), so accounts can never see each other's data
+// regardless of how this page is opened.
+// ══════════════════════════════════════════════════════════════════════════════
+const KEY_ID       = '{{ key_id }}';           // account identifier from Flask session (display only)
+const TIER         = '{{ tier }}';             // DEV / PK_ / UPK_ / BK_
+const ALLOWED_TABS = {{ allowed_tabs|safe }};  // e.g. ['monitor','leaderboard',...]
+
+async function api(path, opts) {
+  const res = await fetch(path, Object.assign({
+    headers: { 'Content-Type': 'application/json' },
+  }, opts || {}));
+  if (res.status === 401) { window.location.href = '/login'; throw new Error('Not authenticated'); }
+  let data = null;
+  try { data = await res.json(); } catch (_) { /* empty body */ }
+  if (!res.ok) {
+    const err = new Error((data && (data.error || data.detail)) || `Request failed (${res.status})`);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+function apiGet(path, params) {
+  const qs = params ? '?' + new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== '')
+  ).toString() : '';
+  return api(path + qs);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s ?? '');
+  return d.innerHTML;
+}
+
+function fmtSeconds(s) {
+  if (!s) return '0s';
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  if (h) return `${h}h ${m}m`;
+  if (m) return `${m}m ${sec}s`;
+  return `${sec}s`;
+}
+
+function fmtTs(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function fmtHistTs(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleString(undefined, { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function monitorUid()  { return document.getElementById('user-filter').value  || null; }
+function monitorDays() { return document.getElementById('days-filter').value  || null; }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AVATARS (via Flask — Roblox CDN has no CORS headers)
+// ══════════════════════════════════════════════════════════════════════════════
+const avatarCache = {};
+const AVATAR_FALLBACK = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+  '<rect width="100" height="100" fill="#1e1e2e"/>' +
+  '<circle cx="50" cy="38" r="18" fill="#3a3a52"/>' +
+  '<rect x="18" y="62" width="64" height="36" rx="18" fill="#3a3a52"/></svg>'
+);
+
+async function ensureAvatars(ids) {
+  const need = [...new Set(ids.filter(id => id != null && !(id in avatarCache)))];
+  if (!need.length) return;
+  try {
+    const r = await fetch('/api/avatars?user_ids=' + need.join(','));
+    if (r.status === 401) { window.location.href = '/login'; return; }
+    const map = await r.json();
+    need.forEach(id => { avatarCache[id] = map[id] || ''; });
+  } catch { need.forEach(id => { avatarCache[id] = ''; }); }
+}
+
+function avatarImg(id, cls = 'avatar-sm') {
+  const src = avatarCache[id] || AVATAR_FALLBACK;
+  return `<img class="avatar ${cls}" src="${src}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${AVATAR_FALLBACK}'">`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// JOIN MODAL
+// ══════════════════════════════════════════════════════════════════════════════
+let _joinState = null;
+
+function handleCardClick(el) {
+  const d = JSON.parse(el.getAttribute('data-join'));
+  _joinState = { placeId: d.placeId, gameId: d.gameId };
+  document.getElementById('join-name').textContent  = d.username;
+  document.getElementById('join-game').textContent  = d.gameName || 'Unknown Game';
+  document.getElementById('join-hint').textContent  = d.gameId
+    ? 'Opens Roblox and joins the same server'
+    : 'Opens the game page — click Play in Roblox to join';
+  document.getElementById('join-avatar').src = avatarCache[d.userId] || AVATAR_FALLBACK;
+  document.getElementById('join-overlay').style.display = 'flex';
+}
+
+function closeJoinModal(evt) {
+  if (evt && evt.target !== document.getElementById('join-overlay')) return;
+  document.getElementById('join-overlay').style.display = 'none';
+  _joinState = null;
+}
+
+function confirmJoin() {
+  if (!_joinState) return;
+  const { placeId, gameId } = _joinState;
+  let url = gameId
+    ? `roblox://experiences/start?placeId=${placeId}&gameInstanceId=${gameId}`
+    : placeId ? `https://www.roblox.com/games/${placeId}` : null;
+  if (!url) { alert('No place or game ID available.'); return; }
+  document.getElementById('join-overlay').style.display = 'none';
+  _joinState = null;
+  if (url.startsWith('roblox://')) {
+    const a = document.createElement('a'); a.href = url; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); setTimeout(() => document.body.removeChild(a), 1000);
+  } else { window.open(url, '_blank', 'noopener,noreferrer'); }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeJoinModal({ target: document.getElementById('join-overlay') });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════════════════════
+function showTab(name, evt) {
+  document.getElementById('tab-sessions').style.display = name === 'sessions' ? '' : 'none';
+  document.getElementById('tab-events').style.display   = name === 'events'   ? '' : 'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (evt) evt.target.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════════════════════════════════════════
+let dailyChart, hourlyChart;
+const chartOpts = {
+  responsive: true, maintainAspectRatio: true,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { ticks: { color:'#555570', font:{ family:'Space Mono', size:9 } }, grid:{ color:'#1e1e2e' } },
+    y: { ticks: { color:'#555570', font:{ family:'Space Mono', size:9 },
+          callback: v => v >= 3600 ? (v/3600).toFixed(1)+'h' : (v/60).toFixed(0)+'m' },
+         grid: { color:'#1e1e2e' } }
+  }
+};
+
+function mkChart(id, type, labels, data, color) {
+  const ctx = document.getElementById(id).getContext('2d');
+  return new Chart(ctx, {
+    type,
+    data: { labels, datasets: [{ data, backgroundColor: color+'33', borderColor: color, borderWidth:1.5, pointRadius:2, fill: type==='line', tension:.3 }] },
+    options: chartOpts
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MONITOR — all via Flask /api/monitor/* (server scopes to current account)
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function loadMonitorUserFilter() {
+  const data = await api('/api/tracked_users').catch(() => []);
+  const sel = document.getElementById('user-filter');
+  const cur = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  (data || []).forEach(u => sel.add(new Option(`${u.name} (${u.id})`, u.id)));
+  if (cur) sel.value = cur;
+}
+
+// Live presence: open sessions + latest event per user
+async function refreshPresence() {
+  try {
+    const uid = monitorUid();
+    const { users: tracked, open_sessions: openMap, latest_events: latestEvent } =
+      await api('/api/monitor/presence' + (uid ? `?user_id=${encodeURIComponent(uid)}` : ''));
+
+    if (!tracked || !tracked.length) {
+      document.getElementById('presence-grid').innerHTML = '<div class="empty">No users tracked yet.</div>';
+      return;
+    }
+    const trackedMap = Object.fromEntries(tracked.map(u => [u.id, u.name]));
+    const ids = tracked.map(u => u.id);
+
+    await ensureAvatars(ids);
+
+    const cards = ids.map(id => {
+      const username = trackedMap[id];
+      const open = openMap[id];
+      const ev   = latestEvent[id] || {};
+      const inGame = !!open;
+      const isInvisible = !inGame && (ev.new_status === 'INVISIBLE');
+      const cls     = inGame ? 'ingame' : isInvisible ? 'invisible' : 'offline';
+      const stCls   = inGame ? 'status-ingame' : isInvisible ? 'status-invisible' : 'status-offline';
+      const stLabel = inGame ? 'IN GAME' : isInvisible ? 'INVISIBLE' : 'OFFLINE';
+      const ts      = ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : '';
+      const loc     = open?.location_name || null;
+      const joinData = inGame
+        ? `data-join="${esc(JSON.stringify({ userId:id, username, gameName:loc||'', placeId:open.place_id||null, gameId:open.game_id||'' }))}"`
+        : '';
+      const clickAttr = inGame ? `${joinData} onclick="handleCardClick(this)"` : '';
+      return `
+        <div class="presence-card ${cls}" ${clickAttr}>
+          <div class="card-head">${avatarImg(id,'avatar-md')}<div class="card-username">${esc(username)}</div></div>
+          <span class="card-status ${stCls}">${stLabel}</span>
+          ${loc ? `<div class="card-game">🎮 ${esc(loc)}</div>` : ''}
+          ${inGame
+            ? `<div class="card-time" style="color:var(--accent2)">🔗 Click to join</div>`
+            : `<div class="card-time">${ts}</div>`}
+        </div>`;
+    });
+    document.getElementById('presence-grid').innerHTML = cards.join('');
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+  } catch(e) { console.error('Presence error:', e); }
+}
+
+// Recent events (Event Log tab)
+async function refreshEvents() {
+  try {
+    const uid = monitorUid();
+    const rows = await apiGet('/api/monitor/events', { user_id: uid });
+    const tbody = document.querySelector('#events-table tbody');
+    if (!rows?.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No events yet.</td></tr>'; return; }
+    const tagCls = { ENTERED_GAME:'tag-entered', LEFT_GAME:'tag-left', SWITCHED_GAME:'tag-switched', SCRIPT_STARTED:'tag-started' };
+    tbody.innerHTML = rows.map(e => `
+      <tr>
+        <td style="font-family:var(--font-mono);font-size:.65rem;white-space:nowrap">${fmtTs(e.timestamp)}</td>
+        <td>${esc(e.username)}</td>
+        <td><span class="tag ${tagCls[e.event_type]||''}">${e.event_type}</span></td>
+        <td style="color:var(--subtext)">${esc(e.old_location||e.old_status||'—')}</td>
+        <td>${esc(e.new_location||e.new_status||'—')}</td>
+      </tr>`).join('');
+  } catch(e) { console.error('Events error:', e); }
+}
+
+// All-time user totals
+async function refreshTotals() {
+  try {
+    const uid = monitorUid();
+    const sorted = await apiGet('/api/monitor/totals', { user_id: uid });
+    await ensureAvatars(sorted.map(u => u.user_id));
+    const el = document.getElementById('user-totals');
+    if (!sorted.length) { el.innerHTML = '<div class="empty">No session data yet.</div>'; return; }
+    el.innerHTML = sorted.map(u => `
+      <div class="user-tile">
+        <div class="tile-head">${avatarImg(u.user_id,'avatar-sm')}<div class="tile-name">${esc(u.username)}</div></div>
+        <div class="tile-stat">Sessions <span>${u.sessions}</span></div>
+        <div class="tile-stat">Total <span>${fmtSeconds(u.total_seconds)}</span></div>
+      </div>`).join('');
+  } catch(e) { console.error('Totals error:', e); }
+}
+
+// Top games
+async function refreshTopGames() {
+  try {
+    const uid = monitorUid(); const days = monitorDays();
+    const rows = await apiGet('/api/monitor/top_games', { user_id: uid, days });
+    const tbody = document.querySelector('#games-table tbody');
+    if (!rows?.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No completed sessions yet.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(g => `
+      <tr>
+        <td>${esc(g.location_name)}</td><td>${g.sessions}</td>
+        <td>${fmtSeconds(g.total_seconds)}</td>
+        <td>${fmtSeconds(g.avg_seconds)}</td>
+        <td>${fmtSeconds(g.max_seconds)}</td>
+      </tr>`).join('');
+  } catch(e) { console.error('Top games error:', e); }
+}
+
+// Recent sessions
+async function refreshSessions() {
+  try {
+    const uid = monitorUid(); const days = monitorDays();
+    const rows = await apiGet('/api/monitor/sessions', { user_id: uid, days });
+    const tbody = document.querySelector('#sessions-table tbody');
+    if (!rows?.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No sessions yet.</td></tr>'; return; }
+    tbody.innerHTML = rows.map(s => `
+      <tr>
+        <td>${esc(s.username)}</td>
+        <td>${esc(s.location_name||'—')}</td>
+        <td style="font-family:var(--font-mono);font-size:.65rem">${fmtTs(s.start_time)}</td>
+        <td style="font-family:var(--font-mono);font-size:.65rem">${s.end_time ? fmtTs(s.end_time) : '<span style="color:var(--green)">active</span>'}</td>
+        <td style="font-family:var(--font-mono)">${fmtSeconds(s.duration_seconds)||'—'}</td>
+      </tr>`).join('');
+  } catch(e) { console.error('Sessions error:', e); }
+}
+
+// Daily + hourly charts (one call covers both)
+async function refreshCharts() {
+  try {
+    const uid = monitorUid(); const days = monitorDays() || 30;
+    const { daily, hourly } = await apiGet('/api/monitor/charts', { user_id: uid, days });
+
+    if (dailyChart) dailyChart.destroy();
+    dailyChart = mkChart('daily-chart', 'line',
+      daily.map(d => d.day.slice(5)), daily.map(d => d.total_seconds), '#00e5ff');
+
+    if (hourlyChart) hourlyChart.destroy();
+    hourlyChart = mkChart('hourly-chart', 'bar',
+      hourly.map(h => String(h.hour).padStart(2,'0')+':00'),
+      hourly.map(h => h.total_seconds), '#ff3c5f');
+  } catch(e) { console.error('Charts error:', e); }
+}
+
+async function refresh() {
+  await loadMonitorUserFilter();
+  await Promise.all([
+    refreshPresence(),
+    refreshTotals(),
+    refreshTopGames(),
+    refreshSessions(),
+    refreshEvents(),
+    refreshCharts(),
+  ]);
+}
+
+let _refreshCooldown = false;
+async function manualRefresh() {
+  if (_refreshCooldown) return;
+  _refreshCooldown = true;
+  const btn = document.querySelector('.btn-accent');
+  if (btn) { btn.disabled = true; btn.textContent = '↺ Refreshing…'; }
+  try { await fetch('/api/poll', { method: 'POST' }); } catch(_) {}
+  await new Promise(r => setTimeout(r, 1200));
+  await refresh();
+  if (btn) { btn.disabled = false; btn.textContent = '↺ Refresh'; }
+  setTimeout(() => { _refreshCooldown = false; }, 2000);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LEADERBOARD — server-side Flask (uses service role key)
+// ══════════════════════════════════════════════════════════════════════════════
+let lbGamesChart;
+
+async function refreshLeaderboard() {
+  try {
+    const [lbRes, gamesRes] = await Promise.all([
+      api('/api/leaderboard'),
+      api('/api/top_games'),  // Flask route — already aggregated & scoped to this account
+    ]);
+
+    await ensureAvatars((lbRes||[]).map(u => u.user_id));
+
+    // Leaderboard table
+    const tbody = document.querySelector('#lb-table tbody');
+    if (!lbRes?.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No session data yet.</td></tr>'; }
+    else {
+      const max = lbRes[0].total_seconds || 1;
+      const medals = ['lb-rank-1','lb-rank-2','lb-rank-3'];
+      tbody.innerHTML = lbRes.map((u,i) => `
+        <tr>
+          <td class="lb-rank ${medals[i]||'lb-rank'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</td>
+          <td><div class="lb-user-cell">${avatarImg(u.user_id,'avatar-sm')}<div><div class="lb-username">${esc(u.username)}</div><div class="lb-userid">ID: ${u.user_id}</div></div></div></td>
+          <td class="lb-bar-cell"><div class="lb-bar-track"><div class="lb-bar-fill" style="width:${((u.total_seconds||0)/max*100).toFixed(1)}%"></div></div></td>
+          <td class="lb-time">${fmtSeconds(u.total_seconds)}</td>
+          <td class="lb-sessions">${u.sessions} sessions</td>
+        </tr>`).join('');
+    }
+
+    // Top games chart — reuse the Flask-aggregated rows from /api/top_games
+    const topGames = (gamesRes || [])
+      .map(g => [g.location_name, g.total_seconds || 0])
+      .sort((a,b) => b[1]-a[1])
+      .slice(0,12);
+    const labels = topGames.map(([n]) => n.length > 22 ? n.slice(0,20)+'…' : n);
+    const values = topGames.map(([,v]) => v);
+    const colors = topGames.map((_,i) => {
+      const t = i / Math.max(topGames.length-1,1);
+      return `rgb(${Math.round(t*255)},${Math.round(229-t*169)},${Math.round(255-t*160)})`;
+    });
+    if (lbGamesChart) lbGamesChart.destroy();
+    const ctx = document.getElementById('lb-games-chart').getContext('2d');
+    lbGamesChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ data:values, backgroundColor:colors.map(c=>c.replace('rgb','rgba').replace(')',',0.25)')), borderColor:colors, borderWidth:1.5, borderRadius:3 }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:true,
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{label: ctx=>' '+fmtSeconds(ctx.raw)}} },
+        scales:{
+          x:{ ticks:{color:'#555570',font:{family:'Space Mono',size:9},callback:v=>v>=3600?(v/3600).toFixed(1)+'h':(v/60).toFixed(0)+'m'},grid:{color:'#1e1e2e'}},
+          y:{ ticks:{color:'#e8e8f0',font:{family:'Syne',size:11}},grid:{color:'transparent'}}
+        }
+      }
+    });
+  } catch(e) { console.error('Leaderboard error:', e); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AI INSIGHTS — client → Flask → OpenAI (data aggregated server-side)
+// ══════════════════════════════════════════════════════════════════════════════
+let insightsLoadedOnce = false;
+
+async function refreshInsights() {
+  const body = document.getElementById('insight-body');
+  body.classList.add('muted');
+  body.innerHTML = '<span class="ai-spinner"></span>Analyzing session data…';
+  insightsLoadedOnce = true;
+  try {
+    const r = await fetch('/api/ai_insights?days=30');
+    if (r.status === 401) { window.location.href = '/login'; return; }
+    const data = await r.json();
+    if (data.error) { body.classList.add('muted'); body.textContent = data.error; }
+    else { body.classList.remove('muted'); body.textContent = data.insight; }
+  } catch(e) { body.classList.add('muted'); body.textContent = 'Could not reach server for insights.'; }
+}
+
+async function submitAsk(evt) {
+  evt.preventDefault();
+  const input = document.getElementById('ask-input');
+  const btn   = document.getElementById('ask-submit');
+  const q     = input.value.trim();
+  if (!q) return false;
+  const history = document.getElementById('ask-history');
+  const id  = 'qa-' + Date.now();
+  const blk = document.createElement('div');
+  blk.className = 'ask-qa'; blk.id = id;
+  blk.innerHTML = `<div class="ask-q">${esc(q)}</div><div class="ask-a"><span class="ai-spinner"></span>Thinking…</div>`;
+  history.prepend(blk);
+  input.value = ''; input.disabled = true; btn.disabled = true;
+  try {
+    const r = await fetch('/api/ai_ask', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:q,days:30}) });
+    const data = await r.json();
+    const ans = document.querySelector(`#${id} .ask-a`);
+    if (data.error) { ans.classList.add('error'); ans.textContent = data.error; }
+    else ans.textContent = data.answer;
+  } catch(e) {
+    const ans = document.querySelector(`#${id} .ask-a`);
+    ans.classList.add('error'); ans.textContent = 'Request failed — check server.';
+  } finally { input.disabled = false; btn.disabled = false; input.focus(); }
+  return false;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// HISTORY — via Flask /api/history/* (server scopes to current account)
+// ══════════════════════════════════════════════════════════════════════════════
+let _histLoaded = {};
+let _histGames  = [];  // cached last response so toggleHistRow can look up by index
+
+async function loadHistUsers() {
+  const data = await api('/api/tracked_users').catch(() => []);
+  const sel = document.getElementById('hist-user-filter');
+  const cur = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  (data||[]).forEach(u => sel.add(new Option(`${u.name} (${u.id})`, u.id)));
+  if (cur) sel.value = cur;
+}
+
+async function refreshHistory() {
+  await loadHistUsers();
+  const tbody  = document.querySelector('#hist-table tbody');
+  const uid    = document.getElementById('hist-user-filter').value || null;
+  const daysVal= document.getElementById('hist-days-filter').value || null;
+  tbody.innerHTML = '<tr><td colspan="8" class="empty">Loading…</td></tr>';
+  _histLoaded = {};
+  try {
+    const sorted = await apiGet('/api/history/games', { user_id: uid, days: daysVal });
+    _histGames = sorted;
+    if (!sorted?.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">No sessions in this window.</td></tr>';
+      document.getElementById('hist-summary').textContent = '';
+      return;
+    }
+    document.getElementById('hist-summary').textContent =
+      `${sorted.length} games · ${sorted.reduce((a,g)=>a+g.sessions,0)} sessions · ${fmtSeconds(sorted.reduce((a,g)=>a+g.total_seconds,0))} total`;
+    tbody.innerHTML = sorted.map((g,i) => {
+      const players = g.players || [];
+      const chips = players.slice(0,4).map(p=>`<span style="display:inline-block;padding:1px 6px;margin:1px 2px;background:#1e1e2e;border-radius:8px;font-size:.65rem">${esc(p.username)} · ${fmtSeconds(p.total_seconds)}</span>`).join('')
+        + (players.length>4?`<span style="color:var(--subtext);font-size:.65rem"> +${players.length-4}</span>`:'');
+      return `
+        <tr class="hist-row" style="cursor:pointer;border-top:1px solid var(--border)" onclick="toggleHistRow(${i},${uid||'null'},${daysVal||'null'})">
+          <td style="padding:.5rem"><span id="hist-caret-${i}" style="display:inline-block;width:.8rem;color:var(--accent2)">▸</span> ${esc(g.location_name)}</td>
+          <td style="padding:.5rem">${g.unique_players} <div>${chips}</div></td>
+          <td style="padding:.5rem">${g.sessions}</td>
+          <td style="padding:.5rem;color:var(--accent2);font-family:var(--font-mono)">${fmtSeconds(g.total_seconds)}</td>
+          <td style="padding:.5rem;font-family:var(--font-mono)">${fmtSeconds(g.avg_seconds)}</td>
+          <td style="padding:.5rem;font-family:var(--font-mono)">${fmtSeconds(g.max_seconds)}</td>
+          <td style="padding:.5rem;font-family:var(--font-mono);font-size:.65rem;color:var(--subtext)">${fmtHistTs(g.first_played)}</td>
+          <td style="padding:.5rem;font-family:var(--font-mono);font-size:.65rem;color:var(--subtext)">${fmtHistTs(g.last_played)}</td>
+        </tr>
+        <tr id="hist-detail-${i}" style="display:none">
+          <td colspan="8" style="padding:0 .5rem 1rem 2rem;background:rgba(0,0,0,.2)">
+            <div id="hist-detail-body-${i}" style="padding:.6rem 0;color:var(--subtext)">Loading sessions…</div>
+          </td>
+        </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Could not load history.</td></tr>';
+    console.error('History error:', e);
+  }
+}
+
+async function toggleHistRow(idx, uid, daysVal) {
+  const row   = document.getElementById('hist-detail-'+idx);
+  const caret = document.getElementById('hist-caret-'+idx);
+  if (row.style.display !== 'none') { row.style.display='none'; caret.textContent='▸'; return; }
+  row.style.display=''; caret.textContent='▾';
+  if (_histLoaded[idx]) return;
+  const body = document.getElementById('hist-detail-body-'+idx);
+  const gameName = (_histGames[idx] || {}).location_name;
+  try {
+    const sessions = await apiGet('/api/history/sessions', { game: gameName, user_id: uid, days: daysVal });
+    if (!sessions?.length) { body.innerHTML = '<div class="empty">No sessions in this window.</div>'; }
+    else {
+      body.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.72rem">
+        <thead><tr style="color:var(--subtext)">
+          <th style="text-align:left;padding:.3rem .5rem">User</th>
+          <th style="text-align:left;padding:.3rem .5rem">Start</th>
+          <th style="text-align:left;padding:.3rem .5rem">End</th>
+          <th style="text-align:left;padding:.3rem .5rem">Duration</th>
+        </tr></thead>
+        <tbody>${sessions.map(s=>`
+          <tr style="border-top:1px solid var(--border)">
+            <td style="padding:.3rem .5rem;color:var(--text)">${esc(s.username)}</td>
+            <td style="padding:.3rem .5rem;font-family:var(--font-mono)">${fmtHistTs(s.start_time)}</td>
+            <td style="padding:.3rem .5rem;font-family:var(--font-mono)">${s.end_time?fmtHistTs(s.end_time):'<span style="color:var(--green)">active</span>'}</td>
+            <td style="padding:.3rem .5rem;font-family:var(--font-mono);color:var(--accent2)">${fmtSeconds(s.duration_seconds)||'—'}</td>
+          </tr>`).join('')}</tbody></table>`;
+    }
+    _histLoaded[idx] = true;
+  } catch(e) { body.innerHTML = '<div class="empty">Could not load sessions.</div>'; console.error(e); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// USER ADDING — via Flask /api/tracked_users (server scopes to current account)
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function loadTrackedUsers() {
+  const list = document.getElementById('tracked-list');
+  list.innerHTML = 'Loading…';
+  let data;
+  try { data = await api('/api/tracked_users'); }
+  catch (e) { list.innerHTML = '<div class="empty">Could not load tracked users.</div>'; return; }
+  if (!data?.length) { list.innerHTML = '<div class="empty">No users configured yet.</div>'; return; }
+  await ensureAvatars(data.map(u => u.id));
+  list.innerHTML = data.map(u => `
+    <div class="tracked-row">
+      <div class="tracked-left">${avatarImg(u.id,'avatar-sm')}<div><div class="tracked-name">${esc(u.name)}</div><div class="tracked-id">ID: ${u.id}</div></div></div>
+      <button class="tracked-remove" onclick="removeTrackedUser(${u.id})">Remove</button>
+    </div>`).join('');
+}
+
+async function submitAddUser(evt) {
+  evt.preventDefault();
+  const idInput  = document.getElementById('adduser-id');
+  const nameInpt = document.getElementById('adduser-name');
+  const msg      = document.getElementById('adduser-msg');
+  const btn      = document.getElementById('adduser-submit');
+  const rawId = idInput.value.trim(), name = nameInpt.value.trim();
+  msg.className = 'adduser-msg'; msg.textContent = '';
+  if (!rawId || !name) { msg.classList.add('error'); msg.textContent = 'Both fields are required.'; return false; }
+  if (name.length > 50) { msg.classList.add('error'); msg.textContent = 'Username too long (max 50).'; return false; }
+  const userId = parseInt(rawId, 10);
+  if (!userId || userId <= 0) { msg.classList.add('error'); msg.textContent = 'User ID must be a positive number.'; return false; }
+  btn.disabled = true;
+  try {
+    await api('/api/tracked_users', { method: 'POST', body: JSON.stringify({ id: userId, name }) });
+    msg.classList.add('ok'); msg.textContent = `Added ${name} (${userId}).`;
+    idInput.value=''; nameInpt.value=''; loadTrackedUsers();
+  } catch(e) {
+    msg.classList.add('error'); msg.textContent = e.message || 'Could not add user.';
+  } finally { btn.disabled = false; }
+  return false;
+}
+
+async function removeTrackedUser(id) {
+  if (!confirm('Stop tracking this user?')) return;
+  try {
+    await api(`/api/tracked_users/${id}`, { method: 'DELETE' });
+    loadTrackedUsers();
+  } catch(e) { alert(e.message || 'Could not remove user.'); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PAGE SWITCHING
+// ══════════════════════════════════════════════════════════════════════════════
+function switchPage(name, btn) {
+  if (!ALLOWED_TABS.includes(name)) return;   // hard-block forbidden tabs
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else {
+    const tabBtn = document.querySelector(`.page-nav-btn[data-tab="${name}"]`);
+    if (tabBtn) tabBtn.classList.add('active');
+  }
+  if (name === 'leaderboard') refreshLeaderboard();
+  if (name === 'insights' && !insightsLoadedOnce) refreshInsights();
+  if (name === 'history')  refreshHistory();
+  if (name === 'adduser')  loadTrackedUsers();
+  if (name === 'keys')     refreshKeys();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// KEY GENERATOR (DEV only — UI hidden otherwise, but Flask also enforces 403)
+// ══════════════════════════════════════════════════════════════════════════════
+function tierBadge(tier) {
+  const colors = { 'PK_': 'var(--accent2)', 'UPK_': 'var(--green)', 'BK_': 'var(--accent)' };
+  const c = colors[tier] || 'var(--subtext)';
+  return `<span style="font-family:var(--font-mono);font-size:.7rem;padding:.15rem .45rem;border:1px solid ${c};color:${c};border-radius:3px">${tier}</span>`;
+}
+
+async function refreshKeys() {
+  const tbody = document.querySelector('#keys-table tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty">Loading…</td></tr>';
+  let rows;
+  try {
+    rows = await api('/api/keys');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">Error: ${esc(e.message)}</td></tr>`;
+    return;
+  }
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">No keys generated yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const status = r.active
+      ? '<span style="color:var(--green)">ACTIVE</span>'
+      : '<span style="color:var(--muted)">REVOKED</span>';
+    const action = r.active
+      ? `<button class="btn" onclick="revokeKey('${r.key_id}')" style="font-size:.7rem;color:var(--accent);border-color:var(--accent)">Revoke</button>`
+      : `<button class="btn" onclick="reactivateKey('${r.key_id}')" style="font-size:.7rem;color:var(--green);border-color:var(--green)">Reactivate</button>`;
+    const created = r.created_at ? new Date(r.created_at).toLocaleString() : '—';
+    return `<tr>
+      <td style="padding:.5rem">${tierBadge(r.tier)}</td>
+      <td style="padding:.5rem">${r.key_label || '<span class="empty">—</span>'}</td>
+      <td style="padding:.5rem;font-family:var(--font-mono);font-size:.7rem;color:var(--subtext)">${r.key_id}</td>
+      <td style="padding:.5rem">${status}</td>
+      <td style="padding:.5rem;color:var(--subtext);font-size:.7rem">${created}</td>
+      <td style="padding:.5rem">${action}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function generateKey(e) {
+  e.preventDefault();
+  const tier  = document.getElementById('keygen-tier').value;
+  const label = document.getElementById('keygen-label').value.trim();
+  const result = document.getElementById('keygen-result');
+  result.innerHTML = '<div class="muted">Generating…</div>';
+  try {
+    const data = await api('/api/keys/generate', {
+      method: 'POST',
+      body:   JSON.stringify({ tier, label }),
+    });
+    result.innerHTML = `
+      <div style="border:1px solid var(--green);border-radius:6px;padding:1rem;background:rgba(57,255,20,.05)">
+        <div style="color:var(--green);font-weight:700;margin-bottom:.5rem">✓ Key created. Copy it now — it will not be shown again.</div>
+        <div style="font-family:var(--font-mono);font-size:.85rem;background:var(--bg);padding:.6rem;border-radius:4px;word-break:break-all;user-select:all">${esc(data.raw_key)}</div>
+        <div style="margin-top:.5rem;color:var(--subtext);font-size:.7rem">Tier: ${esc(data.tier)} &nbsp;·&nbsp; key_id: ${esc(data.key_id)}</div>
+      </div>`;
+    document.getElementById('keygen-form').reset();
+    refreshKeys();
+  } catch (err) {
+    result.innerHTML = `<div style="color:var(--accent)">Error: ${esc(err.message)}</div>`;
+  }
+  return false;
+}
+
+async function revokeKey(keyId) {
+  if (!confirm('Revoke this key? Data is preserved; the holder simply loses access.')) return;
+  try { await api(`/api/keys/${keyId}/revoke`, { method: 'POST' }); refreshKeys(); }
+  catch (e) { alert(e.message || 'Revoke failed'); }
+}
+
+async function reactivateKey(keyId) {
+  try { await api(`/api/keys/${keyId}/reactivate`, { method: 'POST' }); refreshKeys(); }
+  catch (e) { alert(e.message || 'Reactivate failed'); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════════
+function applyTierPermissions() {
+  // Hide nav buttons for tabs this tier can't access
+  document.querySelectorAll('.page-nav-btn[data-tab]').forEach(btn => {
+    if (!ALLOWED_TABS.includes(btn.dataset.tab)) btn.style.display = 'none';
+  });
+  // If default 'monitor' isn't allowed, switch to the first permitted tab
+  if (!ALLOWED_TABS.includes('monitor') && ALLOWED_TABS.length) {
+    switchPage(ALLOWED_TABS[0], null);
+  }
+}
+
+(async () => {
+  applyTierPermissions();
+  // Only initialize monitor-dependent refreshes if monitor is permitted
+  if (ALLOWED_TABS.includes('monitor')) {
+    await refresh();
+    setInterval(refreshPresence, 5000);   // live presence + event log every 5s
+    setInterval(refresh,         30000);  // charts + tables every 30s
+    document.getElementById('user-filter').addEventListener('change', refresh);
+    document.getElementById('days-filter').addEventListener('change', refresh);
+  }
+})();
+</script>
+</body>
+</html>
