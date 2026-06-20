@@ -64,12 +64,16 @@
   .presence-card.ingame   { border-left: 3px solid var(--accent); cursor: pointer; }
   .presence-card.offline  { border-left: 3px solid var(--muted); }
   .presence-card.invisible { border: 1px solid var(--accent2); box-shadow: 0 0 0 1px var(--accent2); }
+  .presence-card.website  { border-left: 3px solid var(--green); }
+  .presence-card.studio   { border-left: 3px solid #ffb000; }
   .card-head { display: flex; align-items: center; gap: .65rem; margin-bottom: .5rem; }
   .card-username { font-weight: 800; font-size: .95rem; }
   .card-status { font-family: var(--font-mono); font-size: .65rem; padding: .15rem .5rem; border-radius: 3px; display: inline-block; margin-bottom: .5rem; }
   .status-ingame   { background: rgba(255,60,95,.15);  color: var(--accent); }
   .status-offline  { background: rgba(85,85,112,.1);   color: var(--muted); }
   .status-invisible { background: rgba(0,229,255,.12); color: var(--accent2); }
+  .status-website  { background: rgba(57,255,20,.12);  color: var(--green); }
+  .status-studio   { background: rgba(255,176,0,.14);  color: #ffb000; }
   .card-game { font-size: .78rem; color: var(--subtext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .card-time { font-family: var(--font-mono); font-size: .65rem; color: var(--muted); margin-top: .4rem; }
 
@@ -704,10 +708,19 @@ async function refreshPresence() {
       const open = openMap[id];
       const ev   = latestEvent[id] || {};
       const inGame = !!open;
-      const isInvisible = !inGame && (ev.new_status === 'INVISIBLE');
-      const cls     = inGame ? 'ingame' : isInvisible ? 'invisible' : 'offline';
-      const stCls   = inGame ? 'status-ingame' : isInvisible ? 'status-invisible' : 'status-offline';
-      const stLabel = inGame ? 'IN GAME' : isInvisible ? 'INVISIBLE' : 'OFFLINE';
+      // When not in-game, the last STATUS_CHANGED event (written by
+      // Detect.py) tells us whether the user is actually offline, browsing
+      // the Roblox website, in Roblox Studio, or in invisible mode — instead
+      // of lumping all of those together as plain OFFLINE.
+      const NON_GAME_STATUS = {
+        INVISIBLE: { cls: 'invisible', stCls: 'status-invisible', label: 'INVISIBLE' },
+        WEBSITE:   { cls: 'website',   stCls: 'status-website',   label: 'ON WEBSITE' },
+        IN_STUDIO: { cls: 'studio',    stCls: 'status-studio',    label: 'IN STUDIO' },
+      };
+      const nonGame = !inGame ? NON_GAME_STATUS[ev.new_status] : null;
+      const cls     = inGame ? 'ingame' : nonGame ? nonGame.cls : 'offline';
+      const stCls   = inGame ? 'status-ingame' : nonGame ? nonGame.stCls : 'status-offline';
+      const stLabel = inGame ? 'IN GAME' : nonGame ? nonGame.label : 'OFFLINE';
       const ts      = ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : '';
       const loc     = open?.location_name || null;
       // Join data only exists in `open` at all if the server decided this
