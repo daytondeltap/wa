@@ -1,54 +1,78 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark">
-<title>LG Monitor</title>
+<title>Roblox Presence Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#070709;--panel:#0f1014;--panel2:#14151b;--line:#242630;--text:#eeeef2;--muted:#858896;--cyan:#57d6ff;--red:#ff526b;--green:#6ee7a8;--amber:#ffc76b}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
-button,input,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}
-.auth{min-height:100vh;display:grid;place-items:center;padding:24px}.auth-card{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px}
-.brand{font-size:20px;font-weight:800;letter-spacing:.16em}.brand b{color:var(--cyan)}.muted{color:var(--muted)}.tiny{font-size:12px}.error{color:#ff8b9b;min-height:20px;margin-top:10px}
-.field{display:grid;gap:7px;margin-top:18px}.field label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
-input,select{width:100%;background:#090a0d;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px 12px;outline:none}input:focus,select:focus{border-color:var(--cyan)}
-.btn{border:1px solid var(--line);background:#111319;color:var(--text);padding:9px 12px;border-radius:9px}.btn:hover{border-color:#3b3f4d}.btn.primary{border-color:#257b98;color:#a9edff}.btn.danger{border-color:#6e2b38;color:#ff9bad}.btn.small{padding:6px 9px;font-size:12px}.wide{width:100%;margin-top:16px}
-.shell{min-height:100vh}.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:14px 22px;background:rgba(10,10,13,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.top .brand{font-size:15px}.spacer{flex:1}.badge{border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--muted);font-size:11px}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
-.nav{display:flex;gap:4px;overflow:auto;padding:0 22px;border-bottom:1px solid var(--line);background:#0b0c10}.nav button{white-space:nowrap;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);padding:12px 11px}.nav button.active{color:var(--text);border-color:var(--cyan)}
-.main{padding:22px;max-width:1500px;margin:auto}.page{display:none}.page.active{display:block}.toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:16px}.toolbar .field{margin:0;min-width:170px}
-.title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:18px 0 10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px}.card{padding:14px}.card.live{border-left:3px solid var(--red)}.card.web{border-left:3px solid var(--green)}.card.studio{border-left:3px solid var(--amber)}.card.invis{border-left:3px solid var(--cyan)}.card .name{font-weight:750;font-size:15px}.status{display:inline-flex;margin-top:8px;padding:3px 7px;border-radius:6px;background:#171922;color:var(--muted);font-size:11px}.status.live{color:#ff8ba0;background:#2a1117}.game{margin-top:8px;color:#c9cad1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.join{margin-top:8px;color:var(--cyan);font-size:12px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.kpi{padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px}.kpi strong{display:block;font-size:20px;margin-top:4px}
-.panel{padding:14px;overflow:hidden}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #1c1e26}th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}td{font-size:13px}.tag{font-size:10px;border:1px solid var(--line);border-radius:5px;padding:2px 5px}.empty{color:var(--muted);padding:24px;text-align:center}.stack{display:grid;gap:10px}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row .grow{flex:1}.raw-key{word-break:break-all;background:#090a0d;border:1px dashed #39404e;border-radius:8px;padding:10px;color:#bcefff}
-.toast{position:fixed;right:18px;bottom:18px;z-index:50;background:#151821;border:1px solid #363a47;border-radius:10px;padding:11px 14px;max-width:360px;box-shadow:0 12px 40px #0008}
-@media(max-width:700px){.top,.nav,.main{padding-left:12px;padding-right:12px}.last{display:none}.main{padding-top:14px}}
+:root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--accent:#ff3c5f;--accent2:#00e5ff;--green:#39ff14;--amber:#ffb000;--muted:#555570;--text:#e8e8f0;--subtext:#8888aa;--font-ui:'Syne',sans-serif;--font-mono:'Space Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px)}
+button,input,select{font:inherit}.hidden{display:none!important}.muted{color:var(--muted)}.tiny{font-family:var(--font-mono);font-size:.65rem}.spacer{flex:1}.error{font-family:var(--font-mono);font-size:.7rem;color:var(--accent);min-height:1rem}
+
+/* original login */
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2.4rem 2.2rem;width:100%;max-width:360px;position:relative}
+.login-card::before{content:'';position:absolute;top:-1px;left:-1px;right:-1px;height:3px;border-radius:10px 10px 0 0;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.logo{font-size:1.1rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.logo span{color:var(--accent)}
+.auth .logo{text-align:center;margin-bottom:.35rem}.login-sub{text-align:center;font-family:var(--font-mono);font-size:.7rem;color:var(--subtext);letter-spacing:.05em;margin-bottom:1.8rem}
+.auth form{display:flex;flex-direction:column;gap:1rem}.auth label,.field label{font-size:.65rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--subtext)}
+.auth input{font-family:var(--font-mono);font-size:.85rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:.7rem .8rem;outline:none;letter-spacing:.04em;transition:border-color .2s,box-shadow .2s;width:100%}
+.auth input:focus{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2)}
+.btn-login{font-family:var(--font-mono);font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:.65rem;cursor:pointer;transition:background .2s,color .2s;margin-top:.4rem}.btn-login:hover{background:var(--accent);color:#fff}
+.login-footer{margin-top:1.6rem;text-align:center;font-family:var(--font-mono);font-size:.62rem;color:var(--muted);letter-spacing:.05em}
+
+/* original dashboard shell */
+.shell{min-height:100vh}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.2rem 2rem;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
+.top-left,.top-right{display:flex;align-items:center;gap:1rem}.top-right{margin-left:auto}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.badge{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.25rem .55rem;border-radius:3px;border:1px solid var(--border);color:var(--subtext);white-space:nowrap}
+.last{font-family:var(--font-mono);font-size:.7rem;color:var(--muted)}
+.btn{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.04em;background:transparent;color:var(--subtext);border:1px solid var(--border);border-radius:4px;padding:.35rem .8rem;cursor:pointer;outline:none;transition:border-color .2s,color .2s,background .2s}.btn:hover{border-color:var(--accent2);color:var(--accent2)}.btn.primary{border-color:var(--accent);color:var(--accent)}.btn.primary:hover{background:var(--accent);color:#fff}.btn.danger{border-color:rgba(255,60,95,.5);color:var(--accent)}.btn.danger:hover{background:var(--accent);color:#fff}.btn.small{font-size:.62rem;padding:.3rem .65rem}
+.nav{display:flex;padding:0 2rem;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto}.nav button{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 1.2rem;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--subtext);cursor:pointer;transition:color .15s,border-color .15s;outline:none;margin-bottom:-1px;white-space:nowrap}.nav button:hover{color:var(--text)}.nav button.active{color:var(--accent2);border-bottom-color:var(--accent2)}
+.main{padding:1.5rem 2rem;display:flex;flex-direction:column;gap:1.5rem;max-width:none;margin:0}.page{display:none}.page.active{display:block}
+.toolbar{display:flex;align-items:end;gap:1rem;padding:.8rem 0;flex-wrap:wrap}.toolbar .field{margin:0}.field{display:flex;flex-direction:column;gap:.35rem}.field input,.field select,select{font-family:var(--font-mono);font-size:.75rem;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:.35rem .8rem;border-radius:4px;outline:none;transition:border-color .2s}.field input{padding:.6rem .75rem}.field input:focus,.field select:focus,select:focus{border-color:var(--accent2)}
+.title{font-size:.65rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--subtext);margin:1.1rem 0 .8rem;display:flex;align-items:center;gap:.6rem}.title::after{content:'';flex:1;height:1px;background:var(--border)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}.card,.panel,.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px}.card{padding:1rem 1.2rem;position:relative;overflow:hidden;transition:border-color .2s,transform .15s}.card:hover{transform:translateY(-2px);border-color:var(--accent2)}.card.live{border-left:3px solid var(--accent);cursor:pointer}.card.web{border-left:3px solid var(--green)}.card.studio{border-left:3px solid var(--amber)}.card.invis{border:1px solid var(--accent2);box-shadow:0 0 0 1px var(--accent2)}.card .name{font-weight:800;font-size:.95rem}.status{font-family:var(--font-mono);font-size:.65rem;padding:.15rem .5rem;border-radius:3px;display:inline-block;margin-top:.5rem;background:rgba(85,85,112,.1);color:var(--muted)}.status.live{background:rgba(255,60,95,.15);color:var(--accent)}.game{font-size:.78rem;color:var(--subtext);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.5rem}.join{font-family:var(--font-mono);font-size:.65rem;color:var(--accent2);margin-top:.4rem}
+.kpis{display:flex;flex-wrap:wrap;gap:.8rem}.kpi{padding:.8rem 1.2rem;min-width:160px;flex:1}.kpi strong{display:block;font-family:var(--font-mono);font-size:1rem;color:var(--accent2);margin-top:.35rem}.kpi .muted{color:var(--subtext)}
+.panel{padding:1.2rem 1.4rem;overflow:hidden}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.78rem;min-width:680px}thead tr{border-bottom:1px solid var(--border)}th{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--subtext);padding:.5rem .8rem;text-align:left}td{padding:.45rem .8rem;color:var(--text);border-bottom:1px solid rgba(30,30,46,.6)}tr:hover td{background:rgba(255,255,255,.02)}.tag{font-family:var(--font-mono);font-size:.6rem;padding:.1rem .4rem;border-radius:3px;background:rgba(0,229,255,.1);color:var(--accent2)}.empty{color:var(--muted);font-family:var(--font-mono);font-size:.75rem;padding:1.5rem 0;text-align:center}
+.row{display:flex;gap:.8rem;align-items:flex-end;flex-wrap:wrap}.row .grow{flex:1;min-width:180px}.raw-key{word-break:break-all;background:var(--bg);border:1px dashed var(--accent2);border-radius:4px;padding:.7rem;margin-top:.45rem;color:var(--accent2);font-family:var(--font-mono);font-size:.72rem}
+.toast{position:fixed;right:1.2rem;bottom:1.2rem;z-index:500;background:var(--surface);border:1px solid var(--accent2);border-radius:4px;padding:.7rem 1rem;max-width:360px;font-family:var(--font-mono);font-size:.7rem;color:var(--text);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+@media(max-width:700px){.top{padding:1rem}.top-left{gap:.6rem}.top-right{gap:.5rem}.last{display:none}.nav{padding:0 1rem}.main{padding:1rem}.logo{font-size:.92rem}.badge{display:none}.panel{padding:.85rem}.auth{padding:1rem}}
 </style>
 </head>
 <body>
 <section id="auth" class="auth">
-  <div class="auth-card">
-    <div class="brand">LG<b>/</b>MONITOR</div>
-    <p class="muted">Static GitHub Pages client. Your access key is kept only in this browser tab.</p>
+  <div class="login-card">
+    <div class="logo">RBX<span>/</span>MONITOR</div>
+    <div class="login-sub">RESTRICTED ACCESS — KEY REQUIRED</div>
     <form id="login-form">
-      <div class="field"><label>Access key</label><input id="login-key" type="password" autocomplete="off" required placeholder="DEV / PK_ / UPK_ / BK_ key"></div>
-      <button class="btn primary wide" type="submit">Connect</button>
+      <label for="login-key">Access Key</label>
+      <input id="login-key" type="password" placeholder="••••••••••••••••••••" autocomplete="off" autofocus required>
+      <button class="btn-login" type="submit">Enter</button>
       <div id="login-error" class="error"></div>
     </form>
+    <div class="login-footer">Authorized personnel only</div>
   </div>
 </section>
 
 <div id="shell" class="shell hidden">
   <header class="top">
-    <div class="brand">LG<b>/</b>MONITOR</div>
-    <span class="dot" id="live-dot"></span>
-    <span class="badge" id="tier-badge">—</span>
-    <span class="muted tiny last" id="last-update">not updated</span>
-    <span class="spacer"></span>
-    <button class="btn small" id="refresh-btn">Refresh</button>
-    <button class="btn small" id="logout-btn">Log out</button>
+    <div class="top-left">
+      <div class="logo">RBX<span>/</span>MONITOR</div>
+      <span class="dot" id="live-dot"></span>
+      <span class="badge" id="tier-badge">—</span>
+    </div>
+    <div class="top-right">
+      <span class="last" id="last-update">not updated</span>
+      <button class="btn small" id="refresh-btn">Refresh</button>
+      <button class="btn small" id="logout-btn">Log out</button>
+    </div>
   </header>
   <nav class="nav" id="nav"></nav>
   <main class="main">
@@ -80,8 +104,8 @@ input,select{width:100%;background:#090a0d;color:var(--text);border:1px solid va
       <div class="panel" style="max-width:720px">
         <div class="title" style="margin-top:0">Track a player</div>
         <form id="add-form" class="row">
-          <div class="field grow" style="margin:0"><label>Roblox user ID</label><input id="add-id" inputmode="numeric" required placeholder="1876419070"></div>
-          <div class="field grow" style="margin:0"><label>Display label</label><input id="add-name" maxlength="50" required placeholder="daytondeltap"></div>
+          <div class="field grow"><label>Roblox user ID</label><input id="add-id" inputmode="numeric" required placeholder="1876419070"></div>
+          <div class="field grow"><label>Display label</label><input id="add-name" maxlength="50" required placeholder="daytondeltap"></div>
           <button class="btn primary" type="submit">Add</button>
         </form>
         <div id="add-msg" class="tiny muted" style="margin-top:9px">The poller picks up changes within one 10-second cycle.</div>
@@ -93,8 +117,8 @@ input,select{width:100%;background:#090a0d;color:var(--text);border:1px solid va
       <div class="panel">
         <div class="title" style="margin-top:0">Generate access key</div>
         <form id="key-form" class="row">
-          <div class="field" style="margin:0;min-width:210px"><label>Tier</label><select id="key-tier"><option value="PK_">PK_ — Full</option><option value="UPK_">UPK_ — Leaderboard</option><option value="BK_">BK_ — Monitor</option></select></div>
-          <div class="field grow" style="margin:0"><label>Label</label><input id="key-label" maxlength="60" placeholder="optional"></div>
+          <div class="field" style="min-width:210px"><label>Tier</label><select id="key-tier"><option value="PK_">PK_ — Full</option><option value="UPK_">UPK_ — Leaderboard</option><option value="BK_">BK_ — Monitor</option></select></div>
+          <div class="field grow"><label>Label</label><input id="key-label" maxlength="60" placeholder="optional"></div>
           <button class="btn primary" type="submit">Generate</button>
         </form>
         <div id="key-result" class="hidden" style="margin-top:12px"></div>
