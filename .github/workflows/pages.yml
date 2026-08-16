@@ -28,17 +28,21 @@ jobs:
         uses: actions/checkout@v6
       - name: Configure Pages
         uses: actions/configure-pages@v6
-      - name: Enable LG Exchange module
+      - name: Enable LG modules
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('site/index.html')
           s = p.read_text(encoding='utf-8')
-          tag = '<script src="exchange.js"></script>'
-          if tag not in s:
-              s = s.replace('</body>', tag + '\n</body>')
-              p.write_text(s, encoding='utf-8')
+          tags = [
+              '<script src="exchange.js"></script>',
+              '<script src="cards.js"></script>',
+          ]
+          for tag in tags:
+              if tag not in s:
+                  s = s.replace('</body>', tag + '\n</body>')
+          p.write_text(s, encoding='utf-8')
           PY
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
