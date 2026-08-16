@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>LG Monitor</title>
+<style>
+:root{--bg:#070709;--panel:#0f1014;--panel2:#14151b;--line:#242630;--text:#eeeef2;--muted:#858896;--cyan:#57d6ff;--red:#ff526b;--green:#6ee7a8;--amber:#ffc76b}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+.auth{min-height:100vh;display:grid;place-items:center;padding:24px}.auth-card{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px}
+.brand{font-size:20px;font-weight:800;letter-spacing:.16em}.brand b{color:var(--cyan)}.muted{color:var(--muted)}.tiny{font-size:12px}.error{color:#ff8b9b;min-height:20px;margin-top:10px}
+.field{display:grid;gap:7px;margin-top:18px}.field label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+input,select{width:100%;background:#090a0d;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px 12px;outline:none}input:focus,select:focus{border-color:var(--cyan)}
+.btn{border:1px solid var(--line);background:#111319;color:var(--text);padding:9px 12px;border-radius:9px}.btn:hover{border-color:#3b3f4d}.btn.primary{border-color:#257b98;color:#a9edff}.btn.danger{border-color:#6e2b38;color:#ff9bad}.btn.small{padding:6px 9px;font-size:12px}.wide{width:100%;margin-top:16px}
+.shell{min-height:100vh}.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:14px 22px;background:rgba(10,10,13,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top .brand{font-size:15px}.spacer{flex:1}.badge{border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--muted);font-size:11px}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+.nav{display:flex;gap:4px;overflow:auto;padding:0 22px;border-bottom:1px solid var(--line);background:#0b0c10}.nav button{white-space:nowrap;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);padding:12px 11px}.nav button.active{color:var(--text);border-color:var(--cyan)}
+.main{padding:22px;max-width:1500px;margin:auto}.page{display:none}.page.active{display:block}.toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:16px}.toolbar .field{margin:0;min-width:170px}
+.title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:18px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px}.card{padding:14px}.card.live{border-left:3px solid var(--red)}.card.web{border-left:3px solid var(--green)}.card.studio{border-left:3px solid var(--amber)}.card.invis{border-left:3px solid var(--cyan)}.card .name{font-weight:750;font-size:15px}.status{display:inline-flex;margin-top:8px;padding:3px 7px;border-radius:6px;background:#171922;color:var(--muted);font-size:11px}.status.live{color:#ff8ba0;background:#2a1117}.game{margin-top:8px;color:#c9cad1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.join{margin-top:8px;color:var(--cyan);font-size:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.kpi{padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px}.kpi strong{display:block;font-size:20px;margin-top:4px}
+.panel{padding:14px;overflow:hidden}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #1c1e26}th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}td{font-size:13px}.tag{font-size:10px;border:1px solid var(--line);border-radius:5px;padding:2px 5px}.empty{color:var(--muted);padding:24px;text-align:center}.stack{display:grid;gap:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row .grow{flex:1}.raw-key{word-break:break-all;background:#090a0d;border:1px dashed #39404e;border-radius:8px;padding:10px;color:#bcefff}
+.toast{position:fixed;right:18px;bottom:18px;z-index:50;background:#151821;border:1px solid #363a47;border-radius:10px;padding:11px 14px;max-width:360px;box-shadow:0 12px 40px #0008}
+@media(max-width:700px){.top,.nav,.main{padding-left:12px;padding-right:12px}.last{display:none}.main{padding-top:14px}}
+</style>
+</head>
+<body>
+<section id="auth" class="auth">
+  <div class="auth-card">
+    <div class="brand">LG<b>/</b>MONITOR</div>
+    <p class="muted">Static GitHub Pages client. Your access key is kept only in this browser tab.</p>
+    <form id="login-form">
+      <div class="field"><label>Access key</label><input id="login-key" type="password" autocomplete="off" required placeholder="DEV / PK_ / UPK_ / BK_ key"></div>
+      <button class="btn primary wide" type="submit">Connect</button>
+      <div id="login-error" class="error"></div>
+    </form>
+  </div>
+</section>
+
+<div id="shell" class="shell hidden">
+  <header class="top">
+    <div class="brand">LG<b>/</b>MONITOR</div>
+    <span class="dot" id="live-dot"></span>
+    <span class="badge" id="tier-badge">—</span>
+    <span class="muted tiny last" id="last-update">not updated</span>
+    <span class="spacer"></span>
+    <button class="btn small" id="refresh-btn">Refresh</button>
+    <button class="btn small" id="logout-btn">Log out</button>
+  </header>
+  <nav class="nav" id="nav"></nav>
+  <main class="main">
+    <section id="page-monitor" class="page">
+      <div class="toolbar">
+        <div class="field"><label>Player</label><select id="monitor-user"><option value="">All players</option></select></div>
+        <div class="field"><label>Window</label><select id="monitor-days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="">All time</option></select></div>
+      </div>
+      <div class="title">Live presence</div><div id="presence" class="grid"></div>
+      <div class="title">Totals</div><div id="totals" class="kpis"></div>
+      <div class="title">Recent events</div><div class="panel table-wrap"><table><thead><tr><th>Time</th><th>Player</th><th>Event</th><th>From</th><th>To</th></tr></thead><tbody id="events"></tbody></table></div>
+      <div class="title">Recent sessions</div><div class="panel table-wrap"><table><thead><tr><th>Player</th><th>Game</th><th>Started</th><th>Ended</th><th>Duration</th></tr></thead><tbody id="sessions"></tbody></table></div>
+    </section>
+
+    <section id="page-leaderboard" class="page">
+      <div class="title">Leaderboard</div>
+      <div class="panel table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Sessions</th><th>Total</th><th>Average</th><th>Longest</th><th>Last seen</th></tr></thead><tbody id="leaderboard"></tbody></table></div>
+    </section>
+
+    <section id="page-history" class="page">
+      <div class="toolbar">
+        <div class="field"><label>Window</label><select id="history-days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="">All time</option></select></div>
+      </div>
+      <div class="title">Game history</div>
+      <div class="panel table-wrap"><table><thead><tr><th>Game</th><th>Sessions</th><th>Players</th><th>Total</th><th>Average</th><th>Last played</th></tr></thead><tbody id="history"></tbody></table></div>
+    </section>
+
+    <section id="page-adduser" class="page">
+      <div class="panel" style="max-width:720px">
+        <div class="title" style="margin-top:0">Track a player</div>
+        <form id="add-form" class="row">
+          <div class="field grow" style="margin:0"><label>Roblox user ID</label><input id="add-id" inputmode="numeric" required placeholder="1876419070"></div>
+          <div class="field grow" style="margin:0"><label>Display label</label><input id="add-name" maxlength="50" required placeholder="daytondeltap"></div>
+          <button class="btn primary" type="submit">Add</button>
+        </form>
+        <div id="add-msg" class="tiny muted" style="margin-top:9px">The poller picks up changes within one 10-second cycle.</div>
+      </div>
+      <div class="title">Tracked players</div><div class="panel table-wrap"><table><thead><tr><th>User ID</th><th>Name</th><th>Added</th><th></th></tr></thead><tbody id="tracked"></tbody></table></div>
+    </section>
+
+    <section id="page-keys" class="page">
+      <div class="panel">
+        <div class="title" style="margin-top:0">Generate access key</div>
+        <form id="key-form" class="row">
+          <div class="field" style="margin:0;min-width:210px"><label>Tier</label><select id="key-tier"><option value="PK_">PK_ — Full</option><option value="UPK_">UPK_ — Leaderboard</option><option value="BK_">BK_ — Monitor</option></select></div>
+          <div class="field grow" style="margin:0"><label>Label</label><input id="key-label" maxlength="60" placeholder="optional"></div>
+          <button class="btn primary" type="submit">Generate</button>
+        </form>
+        <div id="key-result" class="hidden" style="margin-top:12px"></div>
+      </div>
+      <div class="title">Generated keys</div><div class="panel table-wrap"><table><thead><tr><th>Tier</th><th>Label</th><th>Key ID</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="keys"></tbody></table></div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script>
+const API='https://jwjxhxvahgrpkvaoyrzw.supabase.co/functions/v1/lg-api';
+const authEl=document.getElementById('auth'), shell=document.getElementById('shell');
+let SITE_KEY=sessionStorage.getItem('lg_site_key')||'', account=null, activeTab='', refreshTimer=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtTime=s=>s?new Date(s).toLocaleString():'—';
+function fmtSeconds(v){v=Number(v||0);const h=Math.floor(v/3600),m=Math.floor(v%3600/60),s=v%60;return h?`${h}h ${m}m`:m?`${m}m ${s}s`:`${s}s`}
+function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2600)}
+async function api(path,opts={}){
+  const headers=new Headers(opts.headers||{});headers.set('x-site-key',SITE_KEY);if(opts.body&&!headers.has('content-type'))headers.set('content-type','application/json');
+  const r=await fetch(API+path,{...opts,headers});let j=null;try{j=await r.json()}catch{}
+  if(r.status===401){logout();throw new Error('Access key rejected')}
+  if(!r.ok)throw new Error(j?.error||j?.detail||`Request failed (${r.status})`);
+  return j;
+}
+async function login(key){
+  SITE_KEY=key.trim();if(!SITE_KEY)throw new Error('Enter an access key');
+  account=await api('/auth',{method:'POST'});sessionStorage.setItem('lg_site_key',SITE_KEY);
+  authEl.classList.add('hidden');shell.classList.remove('hidden');$('tier-badge').textContent=account.tier;
+  buildNav();await loadTracked();await refreshCurrent();
+}
+function logout(){sessionStorage.removeItem('lg_site_key');SITE_KEY='';account=null;clearInterval(refreshTimer);shell.classList.add('hidden');authEl.classList.remove('hidden');$('login-key').value=''}
+function buildNav(){
+  const labels={monitor:'Monitor',leaderboard:'Leaderboard',history:'History',adduser:'Players',keys:'Keys'};
+  const order=['monitor','leaderboard','history','adduser','keys'];const allowed=new Set(account.tabs||[]);
+  $('nav').innerHTML='';
+  for(const name of order){if(!allowed.has(name))continue;const b=document.createElement('button');b.textContent=labels[name];b.onclick=()=>showTab(name);$('nav').appendChild(b)}
+  const first=order.find(x=>allowed.has(x));if(first)showTab(first);
+  clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(activeTab==='monitor')refreshMonitor(false)},10000);
+}
+function showTab(name){activeTab=name;document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('active',x.textContent.toLowerCase()===(name==='adduser'?'players':name)));
+  $('page-'+name).classList.add('active');refreshCurrent();
+}
+async function loadTracked(){
+  if(!(account.tabs||[]).some(x=>x==='adduser'||x==='monitor'))return;
+  const rows=await api('/tracked_users');const options=['<option value="">All players</option>',...rows.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.id})</option>`)].join('');
+  $('monitor-user').innerHTML=options;
+  $('tracked').innerHTML=rows.length?rows.map(x=>`<tr><td>${x.id}</td><td>${esc(x.name)}</td><td>${fmtTime(x.added_at)}</td><td><button class="btn danger small" data-remove="${x.id}">Remove</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">No tracked players</td></tr>';
+  document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Stop tracking this player?'))return;await api('/tracked_users/'+b.dataset.remove,{method:'DELETE'});await loadTracked();await refreshMonitor()});
+}
+async function refreshCurrent(){try{
+  if(activeTab==='monitor')await refreshMonitor();
+  if(activeTab==='leaderboard')await refreshLeaderboard();
+  if(activeTab==='history')await refreshHistory();
+  if(activeTab==='adduser')await loadTracked();
+  if(activeTab==='keys')await refreshKeys();
+}catch(e){toast(e.message)}}
+async function refreshMonitor(mark=true){
+  const uid=$('monitor-user').value,days=$('monitor-days').value,qs=uid?'?user_id='+encodeURIComponent(uid):'';
+  const [p,tot,ev,ses]=await Promise.all([
+    api('/monitor/presence'+qs),api('/monitor/totals'+qs),
+    api('/monitor/events'+qs),
+    api('/monitor/sessions?'+new URLSearchParams(Object.fromEntries(Object.entries({user_id:uid,days}).filter(([,v])=>v))))
+  ]);
+  const statusInfo={WEBSITE:['web','ON WEBSITE'],IN_STUDIO:['studio','IN STUDIO'],INVISIBLE:['invis','INVISIBLE']};
+  $('presence').innerHTML=p.users?.length?p.users.map(u=>{const o=p.open_sessions?.[u.id],e=p.latest_events?.[u.id]||{},live=!!o,ni=statusInfo[e.new_status]||['','OFFLINE'],cls=live?'live':ni[0],label=live?'IN GAME':ni[1];
+    const join=live&&account.can_join&&(o.place_id||o.game_id);return `<div class="card ${cls}" ${join?`data-place="${o.place_id||''}" data-game="${esc(o.game_id||'')}"`:''}><div class="name">${esc(u.name)}</div><span class="status ${live?'live':''}">${label}</span>${o?.location_name?`<div class="game">🎮 ${esc(o.location_name)}</div>`:''}${join?'<div class="join">Click to join server</div>':''}</div>`}).join(''):'<div class="empty">No tracked players</div>';
+  document.querySelectorAll('.card[data-place]').forEach(c=>c.onclick=()=>{const place=c.dataset.place,game=c.dataset.game;if(!place)return;location.href=game?`roblox://experiences/start?placeId=${encodeURIComponent(place)}&gameInstanceId=${encodeURIComponent(game)}`:`https://www.roblox.com/games/${place}`});
+  $('totals').innerHTML=tot.length?tot.map(x=>`<div class="kpi"><span class="muted">${esc(x.username)}</span><strong>${fmtSeconds(x.total_seconds)}</strong><span class="tiny muted">${x.sessions} sessions</span></div>`).join(''):'<div class="empty">No completed sessions yet</div>';
+  $('events').innerHTML=ev.length?ev.map(x=>`<tr><td>${fmtTime(x.timestamp)}</td><td>${esc(x.username)}</td><td><span class="tag">${esc(x.event_type)}</span></td><td>${esc(x.old_location||x.old_status||'—')}</td><td>${esc(x.new_location||x.new_status||'—')}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No events yet</td></tr>';
+  $('sessions').innerHTML=ses.length?ses.map(x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.location_name||'—')}</td><td>${fmtTime(x.start_time)}</td><td>${fmtTime(x.end_time)}</td><td>${x.end_time?fmtSeconds(x.duration_seconds):'LIVE'}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No sessions yet</td></tr>';
+  if(mark)$('last-update').textContent='updated '+new Date().toLocaleTimeString();
+}
+async function refreshLeaderboard(){const rows=await api('/leaderboard');$('leaderboard').innerHTML=rows.length?rows.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.username)}</td><td>${x.sessions}</td><td>${fmtSeconds(x.total_seconds)}</td><td>${fmtSeconds(x.avg_seconds)}</td><td>${fmtSeconds(x.longest_seconds)}</td><td>${fmtTime(x.last_seen)}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">No completed sessions yet</td></tr>'}
+async function refreshHistory(){const days=$('history-days').value,qs=days?'?days='+encodeURIComponent(days):'';const rows=await api('/history/games'+qs);$('history').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.location_name)}</td><td>${x.sessions}</td><td>${x.unique_players}</td><td>${fmtSeconds(x.total_seconds)}</td><td>${fmtSeconds(x.avg_seconds)}</td><td>${fmtTime(x.last_played)}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">No history yet</td></tr>'}
+async function refreshKeys(){const rows=await api('/keys');$('keys').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.tier)}</td><td>${esc(x.key_label||'—')}</td><td><code>${x.key_id}</code></td><td>${x.active?'Active':'Revoked'}</td><td>${fmtTime(x.created_at)}</td><td><button class="btn small ${x.active?'danger':''}" data-key="${x.key_id}" data-action="${x.active?'revoke':'reactivate'}">${x.active?'Revoke':'Reactivate'}</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">No generated keys</td></tr>';
+  document.querySelectorAll('[data-key]').forEach(b=>b.onclick=async()=>{await api(`/keys/${b.dataset.key}/${b.dataset.action}`,{method:'POST'});await refreshKeys()});
+}
+$('login-form').onsubmit=async e=>{e.preventDefault();$('login-error').textContent='';try{await login($('login-key').value)}catch(ex){$('login-error').textContent=ex.message;SITE_KEY=''}};
+$('logout-btn').onclick=logout;$('refresh-btn').onclick=refreshCurrent;
+$('monitor-user').onchange=()=>refreshMonitor();$('monitor-days').onchange=()=>refreshMonitor();$('history-days').onchange=refreshHistory;
+$('add-form').onsubmit=async e=>{e.preventDefault();try{await api('/tracked_users',{method:'POST',body:JSON.stringify({id:Number($('add-id').value),name:$('add-name').value.trim()})});$('add-id').value='';$('add-name').value='';await loadTracked();toast('Player added')}catch(ex){toast(ex.message)}};
+$('key-form').onsubmit=async e=>{e.preventDefault();try{const x=await api('/keys/generate',{method:'POST',body:JSON.stringify({tier:$('key-tier').value,label:$('key-label').value.trim()})});$('key-result').classList.remove('hidden');$('key-result').innerHTML=`<div class="tiny muted">Copy this now — it is not stored in plaintext.</div><div class="raw-key">${esc(x.raw_key)}</div>`;await refreshKeys()}catch(ex){toast(ex.message)}};
+if(SITE_KEY)login(SITE_KEY).catch(()=>logout());
+</script>
+</body>
+</html>
