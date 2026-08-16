@@ -3,206 +3,198 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="dark">
 <title>Roblox Presence Monitor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--accent:#ff3c5f;--accent2:#00e5ff;--green:#39ff14;--amber:#ffb000;--muted:#555570;--text:#e8e8f0;--subtext:#8888aa;--font-ui:'Syne',sans-serif;--font-mono:'Space Mono',monospace}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{min-height:100%}
-body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px)}
-button,input,select{font:inherit}.hidden{display:none!important}.muted{color:var(--muted)}.tiny{font-family:var(--font-mono);font-size:.65rem}.spacer{flex:1}.error{font-family:var(--font-mono);font-size:.7rem;color:var(--accent);min-height:1rem}
+  :root {
+    --bg:#0a0a0f; --surface:#111118; --border:#1e1e2e; --accent:#ff3c5f;
+    --accent2:#00e5ff; --green:#39ff14; --muted:#555570; --text:#e8e8f0;
+    --subtext:#8888aa; --font-ui:'Syne',sans-serif; --font-mono:'Space Mono',monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px)}
+  .hidden{display:none!important}
 
-/* original login */
-.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
-.login-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2.4rem 2.2rem;width:100%;max-width:360px;position:relative}
-.login-card::before{content:'';position:absolute;top:-1px;left:-1px;right:-1px;height:3px;border-radius:10px 10px 0 0;background:linear-gradient(90deg,var(--accent),var(--accent2))}
-.logo{font-size:1.1rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.logo span{color:var(--accent)}
-.auth .logo{text-align:center;margin-bottom:.35rem}.login-sub{text-align:center;font-family:var(--font-mono);font-size:.7rem;color:var(--subtext);letter-spacing:.05em;margin-bottom:1.8rem}
-.auth form{display:flex;flex-direction:column;gap:1rem}.auth label,.field label{font-size:.65rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--subtext)}
-.auth input{font-family:var(--font-mono);font-size:.85rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:.7rem .8rem;outline:none;letter-spacing:.04em;transition:border-color .2s,box-shadow .2s;width:100%}
-.auth input:focus{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2)}
-.btn-login{font-family:var(--font-mono);font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:.65rem;cursor:pointer;transition:background .2s,color .2s;margin-top:.4rem}.btn-login:hover{background:var(--accent);color:#fff}
-.login-footer{margin-top:1.6rem;text-align:center;font-family:var(--font-mono);font-size:.62rem;color:var(--muted);letter-spacing:.05em}
+  /* exact original login style */
+  .auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2.4rem 2.2rem;width:100%;max-width:360px;position:relative}
+  .login-card::before{content:'';position:absolute;top:-1px;left:-1px;right:-1px;height:3px;border-radius:10px 10px 0 0;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .logo{font-size:1.1rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.logo span{color:var(--accent)}
+  .auth .logo{text-align:center;margin-bottom:.35rem}.login-sub{text-align:center;font-family:var(--font-mono);font-size:.7rem;color:var(--subtext);letter-spacing:.05em;margin-bottom:1.8rem}
+  .auth form{display:flex;flex-direction:column;gap:1rem}.auth label{font-size:.65rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--subtext)}
+  .auth input{font-family:var(--font-mono);font-size:.85rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:.7rem .8rem;outline:none;letter-spacing:.04em;transition:border-color .2s,box-shadow .2s;width:100%}
+  .auth input:focus{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2)}
+  .btn-login{font-family:var(--font-mono);font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:.65rem;cursor:pointer;transition:background .2s,color .2s;margin-top:.4rem}.btn-login:hover{background:var(--accent);color:#fff}
+  .error-msg{font-family:var(--font-mono);font-size:.7rem;color:var(--accent);background:rgba(255,60,95,.1);border:1px solid rgba(255,60,95,.3);border-radius:4px;padding:.55rem .7rem}
+  .login-footer{margin-top:1.6rem;text-align:center;font-family:var(--font-mono);font-size:.62rem;color:var(--muted);letter-spacing:.05em}
 
-/* original dashboard shell */
-.shell{min-height:100vh}
-.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.2rem 2rem;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
-.top-left,.top-right{display:flex;align-items:center;gap:1rem}.top-right{margin-left:auto}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.badge{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.25rem .55rem;border-radius:3px;border:1px solid var(--border);color:var(--subtext);white-space:nowrap}
-.last{font-family:var(--font-mono);font-size:.7rem;color:var(--muted)}
-.btn{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.04em;background:transparent;color:var(--subtext);border:1px solid var(--border);border-radius:4px;padding:.35rem .8rem;cursor:pointer;outline:none;transition:border-color .2s,color .2s,background .2s}.btn:hover{border-color:var(--accent2);color:var(--accent2)}.btn.primary{border-color:var(--accent);color:var(--accent)}.btn.primary:hover{background:var(--accent);color:#fff}.btn.danger{border-color:rgba(255,60,95,.5);color:var(--accent)}.btn.danger:hover{background:var(--accent);color:#fff}.btn.small{font-size:.62rem;padding:.3rem .65rem}
-.nav{display:flex;padding:0 2rem;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto}.nav button{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 1.2rem;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--subtext);cursor:pointer;transition:color .15s,border-color .15s;outline:none;margin-bottom:-1px;white-space:nowrap}.nav button:hover{color:var(--text)}.nav button.active{color:var(--accent2);border-bottom-color:var(--accent2)}
-.main{padding:1.5rem 2rem;display:flex;flex-direction:column;gap:1.5rem;max-width:none;margin:0}.page{display:none}.page.active{display:block}
-.toolbar{display:flex;align-items:end;gap:1rem;padding:.8rem 0;flex-wrap:wrap}.toolbar .field{margin:0}.field{display:flex;flex-direction:column;gap:.35rem}.field input,.field select,select{font-family:var(--font-mono);font-size:.75rem;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:.35rem .8rem;border-radius:4px;outline:none;transition:border-color .2s}.field input{padding:.6rem .75rem}.field input:focus,.field select:focus,select:focus{border-color:var(--accent2)}
-.title{font-size:.65rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--subtext);margin:1.1rem 0 .8rem;display:flex;align-items:center;gap:.6rem}.title::after{content:'';flex:1;height:1px;background:var(--border)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}.card,.panel,.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px}.card{padding:1rem 1.2rem;position:relative;overflow:hidden;transition:border-color .2s,transform .15s}.card:hover{transform:translateY(-2px);border-color:var(--accent2)}.card.live{border-left:3px solid var(--accent);cursor:pointer}.card.web{border-left:3px solid var(--green)}.card.studio{border-left:3px solid var(--amber)}.card.invis{border:1px solid var(--accent2);box-shadow:0 0 0 1px var(--accent2)}.card .name{font-weight:800;font-size:.95rem}.status{font-family:var(--font-mono);font-size:.65rem;padding:.15rem .5rem;border-radius:3px;display:inline-block;margin-top:.5rem;background:rgba(85,85,112,.1);color:var(--muted)}.status.live{background:rgba(255,60,95,.15);color:var(--accent)}.game{font-size:.78rem;color:var(--subtext);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.5rem}.join{font-family:var(--font-mono);font-size:.65rem;color:var(--accent2);margin-top:.4rem}
-.kpis{display:flex;flex-wrap:wrap;gap:.8rem}.kpi{padding:.8rem 1.2rem;min-width:160px;flex:1}.kpi strong{display:block;font-family:var(--font-mono);font-size:1rem;color:var(--accent2);margin-top:.35rem}.kpi .muted{color:var(--subtext)}
-.panel{padding:1.2rem 1.4rem;overflow:hidden}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.78rem;min-width:680px}thead tr{border-bottom:1px solid var(--border)}th{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--subtext);padding:.5rem .8rem;text-align:left}td{padding:.45rem .8rem;color:var(--text);border-bottom:1px solid rgba(30,30,46,.6)}tr:hover td{background:rgba(255,255,255,.02)}.tag{font-family:var(--font-mono);font-size:.6rem;padding:.1rem .4rem;border-radius:3px;background:rgba(0,229,255,.1);color:var(--accent2)}.empty{color:var(--muted);font-family:var(--font-mono);font-size:.75rem;padding:1.5rem 0;text-align:center}
-.row{display:flex;gap:.8rem;align-items:flex-end;flex-wrap:wrap}.row .grow{flex:1;min-width:180px}.raw-key{word-break:break-all;background:var(--bg);border:1px dashed var(--accent2);border-radius:4px;padding:.7rem;margin-top:.45rem;color:var(--accent2);font-family:var(--font-mono);font-size:.72rem}
-.toast{position:fixed;right:1.2rem;bottom:1.2rem;z-index:500;background:var(--surface);border:1px solid var(--accent2);border-radius:4px;padding:.7rem 1rem;max-width:360px;font-family:var(--font-mono);font-size:.7rem;color:var(--text);box-shadow:0 10px 30px rgba(0,0,0,.4)}
-@media(max-width:700px){.top{padding:1rem}.top-left{gap:.6rem}.top-right{gap:.5rem}.last{display:none}.nav{padding:0 1rem}.main{padding:1rem}.logo{font-size:.92rem}.badge{display:none}.panel{padding:.85rem}.auth{padding:1rem}}
+  /* original header */
+  header{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2rem;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
+  .tier-badge{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.25rem .55rem;border-radius:3px;border:1px solid var(--border);color:var(--subtext);white-space:nowrap}
+  .tier-badge.tb-dev{color:#ff4d6d;border-color:#ff4d6d;box-shadow:0 0 8px rgba(255,77,109,.35)}.tier-badge.tb-pk{color:#ffd166;border-color:#ffd166}.tier-badge.tb-upk{color:#7ee787;border-color:#7ee787}.tier-badge.tb-bk{color:#79c0ff;border-color:#79c0ff}
+  .header-right{display:flex;align-items:center;gap:1.5rem}#live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .last-update{font-family:var(--font-mono);font-size:.7rem;color:var(--muted)}
+  .btn-logout{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;background:transparent;color:var(--subtext);border:1px solid var(--border);border-radius:4px;padding:.3rem .7rem;cursor:pointer;transition:border-color .2s,color .2s}.btn-logout:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* original nav/filter/layout */
+  .page-nav{display:flex;padding:0 2rem;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto}.page-nav-btn{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:.7rem 1.2rem;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--subtext);cursor:pointer;transition:color .15s,border-color .15s;outline:none;margin-bottom:-1px;white-space:nowrap}.page-nav-btn:hover{color:var(--text)}.page-nav-btn.active{color:var(--accent2);border-bottom-color:var(--accent2)}
+  .filter-bar{display:flex;align-items:center;gap:1rem;padding:.8rem 2rem;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}.filter-bar label{font-size:.75rem;color:var(--subtext);text-transform:uppercase;letter-spacing:.1em}
+  select,.btn{font-family:var(--font-mono);font-size:.75rem;background:var(--bg);color:var(--text);border:1px solid var(--border);padding:.35rem .8rem;border-radius:4px;cursor:pointer;outline:none;transition:border-color .2s}select:hover,.btn:hover{border-color:var(--accent2)}.btn-accent{border-color:var(--accent);color:var(--accent)}.btn-accent:hover{background:var(--accent);color:#fff}
+  .page{display:none}.page.active{display:block}.main{padding:1.5rem 2rem;display:flex;flex-direction:column;gap:1.5rem}.sec-title{font-size:.65rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--subtext);margin-bottom:.8rem;display:flex;align-items:center;gap:.6rem}.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  /* original cards */
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}.presence-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;position:relative;overflow:hidden;transition:border-color .2s,transform .15s}.presence-card:hover{transform:translateY(-2px);border-color:var(--accent2)}.presence-card.ingame{border-left:3px solid var(--accent);cursor:pointer}.presence-card.offline{border-left:3px solid var(--muted)}.presence-card.invisible{border:1px solid var(--accent2);box-shadow:0 0 0 1px var(--accent2)}.presence-card.website{border-left:3px solid var(--green)}.presence-card.studio{border-left:3px solid #ffb000}
+  .card-head{display:flex;align-items:center;gap:.65rem;margin-bottom:.5rem}.card-username{font-weight:800;font-size:.95rem}.card-status{font-family:var(--font-mono);font-size:.65rem;padding:.15rem .5rem;border-radius:3px;display:inline-block;margin-bottom:.5rem}.status-ingame{background:rgba(255,60,95,.15);color:var(--accent)}.status-offline{background:rgba(85,85,112,.1);color:var(--muted)}.status-invisible{background:rgba(0,229,255,.12);color:var(--accent2)}.status-website{background:rgba(57,255,20,.12);color:var(--green)}.status-studio{background:rgba(255,176,0,.14);color:#ffb000}.card-game{font-size:.78rem;color:var(--subtext);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-time{font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-top:.4rem}
+  .avatar{border-radius:50%;object-fit:cover;background:var(--bg);border:1px solid var(--border);flex-shrink:0;display:block}.avatar-sm{width:32px;height:32px}.avatar-md{width:44px;height:44px}
+
+  /* original charts/tables/totals */
+  .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}@media(max-width:900px){.chart-row{grid-template-columns:1fr}}.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.4rem}.panel canvas{max-height:220px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:.78rem}thead tr{border-bottom:1px solid var(--border)}th{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--subtext);padding:.5rem .8rem;text-align:left}td{padding:.45rem .8rem;color:var(--text);border-bottom:1px solid rgba(30,30,46,.6)}tr:hover td{background:rgba(255,255,255,.02)}.tag{font-family:var(--font-mono);font-size:.6rem;padding:.1rem .4rem;border-radius:3px;display:inline-block}.tag-entered{background:rgba(57,255,20,.12);color:var(--green)}.tag-left{background:rgba(85,85,112,.15);color:var(--muted)}.tag-switched{background:rgba(0,229,255,.1);color:var(--accent2)}.tag-started{background:rgba(255,60,95,.12);color:var(--accent)}
+  .user-totals{display:flex;flex-wrap:wrap;gap:.8rem}.user-tile{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.8rem 1.2rem;min-width:160px;flex:1}.tile-head{display:flex;align-items:center;gap:.55rem;margin-bottom:.4rem}.tile-name{font-weight:800;font-size:.85rem}.tile-stat{font-family:var(--font-mono);font-size:.7rem;color:var(--subtext);margin-top:.2rem}.tile-stat span{color:var(--accent2)}.tab-row{display:flex;gap:.5rem;margin-bottom:1rem}.tab{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .8rem;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:transparent;color:var(--subtext);transition:.15s}.tab.active,.tab:hover{border-color:var(--accent);color:var(--accent)}.empty{color:var(--muted);font-family:var(--font-mono);font-size:.75rem;padding:1.5rem 0;text-align:center}
+
+  /* original leaderboard */
+  .lb-wrap{padding:1.5rem 2rem;display:flex;flex-direction:column;gap:1.5rem}.lb-table{width:100%;border-collapse:collapse}.lb-table th{padding:.6rem 1rem}.lb-table td{padding:.7rem 1rem;vertical-align:middle}.lb-rank{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);width:2.5rem}.lb-rank-1{color:#ffd700;text-shadow:0 0 8px #ffd70066}.lb-rank-2{color:#c0c0c0}.lb-rank-3{color:#cd7f32}.lb-username{font-weight:800;font-size:.9rem}.lb-userid{font-family:var(--font-mono);font-size:.62rem;color:var(--muted);margin-top:.15rem}.lb-user-cell{display:flex;align-items:center;gap:.75rem}.lb-title{font-family:var(--font-mono);font-size:.62rem;margin-top:.18rem;color:var(--accent)}.lb-bar-cell{width:200px}.lb-bar-track{background:rgba(255,255,255,.05);border-radius:2px;height:6px;overflow:hidden}.lb-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .6s ease}.lb-time{font-family:var(--font-mono);font-size:.75rem;color:var(--accent2);white-space:nowrap}.lb-sessions{font-family:var(--font-mono);font-size:.72rem;color:var(--subtext)}
+
+  /* original history/add user/key panels */
+  .insights-wrap,.adduser-wrap{padding:1.5rem 2rem;display:flex;flex-direction:column;gap:1.5rem;max-width:1100px}.insight-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.4rem 1.6rem}.ask-input{font-family:var(--font-mono);font-size:.78rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:.65rem .75rem;outline:none}.ask-input:focus{border-color:var(--accent2)}.ask-submit{font-family:var(--font-mono);font-size:.72rem;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:.6rem .9rem;cursor:pointer}.ask-submit:hover{background:var(--accent);color:#fff}.adduser-form{display:flex;align-items:flex-end;gap:.8rem;flex-wrap:wrap}.adduser-field{display:flex;flex-direction:column;gap:.35rem;flex:1;min-width:200px}.adduser-field label{font-size:.65rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--subtext)}.adduser-msg{font-family:var(--font-mono);font-size:.7rem;margin-top:.7rem;color:var(--accent2)}.adduser-hint{font-family:var(--font-mono);font-size:.62rem;color:var(--muted);margin-top:.7rem}.tracked-list{display:flex;flex-direction:column;gap:.55rem}.tracked-row{display:flex;align-items:center;gap:.8rem;padding:.65rem .75rem;border:1px solid var(--border);border-radius:6px}.tracked-row .grow{flex:1}.tracked-id{font-family:var(--font-mono);font-size:.65rem;color:var(--muted)}.danger{border-color:rgba(255,60,95,.5);color:var(--accent)}.key-output{font-family:var(--font-mono);font-size:.72rem;word-break:break-all;background:var(--bg);border:1px dashed var(--accent2);padding:.75rem;border-radius:4px;color:var(--accent2);margin-top:.5rem}
+
+  /* original join modal */
+  .join-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:1rem}.join-modal{width:min(360px,100%);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;text-align:center}.join-modal-avatar{width:76px;height:76px;border-radius:50%;border:1px solid var(--border);object-fit:cover}.join-modal-name{font-weight:800;margin-top:.7rem}.join-modal-game{font-size:.75rem;color:var(--subtext);margin-top:.25rem}.join-modal-q{font-family:var(--font-mono);font-size:.72rem;margin:1rem 0}.join-modal-btns{display:flex;gap:.7rem;justify-content:center}.join-yes,.join-no{font-family:var(--font-mono);font-size:.7rem;padding:.55rem .9rem;border-radius:4px;cursor:pointer;background:transparent}.join-yes{color:var(--green);border:1px solid var(--green)}.join-no{color:var(--accent);border:1px solid var(--accent)}.join-hint{font-family:var(--font-mono);font-size:.6rem;color:var(--muted);margin-top:.7rem}
+  .toast{position:fixed;right:1rem;bottom:1rem;z-index:1200;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.7rem .9rem;font-family:var(--font-mono);font-size:.7rem;color:var(--text)}
+  @media(max-width:700px){header,.filter-bar,.page-nav,.main,.lb-wrap,.insights-wrap,.adduser-wrap{padding-left:1rem;padding-right:1rem}.header-right{gap:.7rem}.last-update{display:none}.lb-bar-cell{width:120px}}
 </style>
 </head>
 <body>
+
 <section id="auth" class="auth">
   <div class="login-card">
     <div class="logo">RBX<span>/</span>MONITOR</div>
     <div class="login-sub">RESTRICTED ACCESS — KEY REQUIRED</div>
     <form id="login-form">
       <label for="login-key">Access Key</label>
-      <input id="login-key" type="password" placeholder="••••••••••••••••••••" autocomplete="off" autofocus required>
-      <button class="btn-login" type="submit">Enter</button>
-      <div id="login-error" class="error"></div>
+      <input type="password" id="login-key" placeholder="••••••••••••••••••••" autocomplete="off" autofocus required>
+      <div id="login-error" class="error-msg hidden"></div>
+      <button type="submit" class="btn-login">Enter</button>
     </form>
     <div class="login-footer">Authorized personnel only</div>
   </div>
 </section>
 
-<div id="shell" class="shell hidden">
-  <header class="top">
-    <div class="top-left">
-      <div class="logo">RBX<span>/</span>MONITOR</div>
-      <span class="dot" id="live-dot"></span>
-      <span class="badge" id="tier-badge">—</span>
-    </div>
-    <div class="top-right">
-      <span class="last" id="last-update">not updated</span>
-      <button class="btn small" id="refresh-btn">Refresh</button>
-      <button class="btn small" id="logout-btn">Log out</button>
-    </div>
-  </header>
-  <nav class="nav" id="nav"></nav>
-  <main class="main">
-    <section id="page-monitor" class="page">
-      <div class="toolbar">
-        <div class="field"><label>Player</label><select id="monitor-user"><option value="">All players</option></select></div>
-        <div class="field"><label>Window</label><select id="monitor-days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="">All time</option></select></div>
-      </div>
-      <div class="title">Live presence</div><div id="presence" class="grid"></div>
-      <div class="title">Totals</div><div id="totals" class="kpis"></div>
-      <div class="title">Recent events</div><div class="panel table-wrap"><table><thead><tr><th>Time</th><th>Player</th><th>Event</th><th>From</th><th>To</th></tr></thead><tbody id="events"></tbody></table></div>
-      <div class="title">Recent sessions</div><div class="panel table-wrap"><table><thead><tr><th>Player</th><th>Game</th><th>Started</th><th>Ended</th><th>Duration</th></tr></thead><tbody id="sessions"></tbody></table></div>
-    </section>
+<div id="app" class="hidden">
+<header>
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <div class="logo">RBX<span>/</span>MONITOR</div>
+    <span id="tier-badge" class="tier-badge"></span>
+  </div>
+  <div class="header-right">
+    <div id="live-dot"></div>
+    <span class="last-update" id="last-update">--:--:--</span>
+    <button type="button" id="logout-btn" class="btn-logout">🔒 Logout</button>
+  </div>
+</header>
 
-    <section id="page-leaderboard" class="page">
-      <div class="title">Leaderboard</div>
-      <div class="panel table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Sessions</th><th>Total</th><th>Average</th><th>Longest</th><th>Last seen</th></tr></thead><tbody id="leaderboard"></tbody></table></div>
-    </section>
+<nav class="page-nav" id="page-nav"></nav>
 
-    <section id="page-history" class="page">
-      <div class="toolbar">
-        <div class="field"><label>Window</label><select id="history-days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option><option value="">All time</option></select></div>
-      </div>
-      <div class="title">Game history</div>
-      <div class="panel table-wrap"><table><thead><tr><th>Game</th><th>Sessions</th><th>Players</th><th>Total</th><th>Average</th><th>Last played</th></tr></thead><tbody id="history"></tbody></table></div>
+<div class="page active" id="page-monitor">
+  <div class="filter-bar">
+    <label>User</label><select id="user-filter"><option value="">All Users</option></select>
+    <label>Period</label><select id="days-filter"><option value="">All time</option><option value="7">7 days</option><option value="30" selected>30 days</option><option value="60">60 days</option></select>
+    <button class="btn btn-accent" id="manual-refresh">↺ Refresh</button>
+  </div>
+  <div class="main">
+    <section><div class="sec-title">Live Presence</div><div class="card-grid" id="presence-grid"><div class="empty">Loading…</div></div></section>
+    <section><div class="sec-title">All-Time Totals</div><div class="user-totals" id="user-totals"><div class="empty">Loading…</div></div></section>
+    <div class="chart-row"><div class="panel"><div class="sec-title">Daily Playtime</div><canvas id="daily-chart"></canvas></div><div class="panel"><div class="sec-title">Activity by Hour (UTC)</div><canvas id="hourly-chart"></canvas></div></div>
+    <section class="panel"><div class="sec-title">Top Games</div><div class="table-wrap"><table id="games-table"><thead><tr><th>Game</th><th>Sessions</th><th>Total Time</th><th>Avg Session</th><th>Longest</th></tr></thead><tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></section>
+    <section class="panel">
+      <div class="tab-row"><button class="tab active" data-inner-tab="sessions">Recent Sessions</button><button class="tab" data-inner-tab="events">Event Log</button></div>
+      <div id="tab-sessions"><div class="table-wrap"><table id="sessions-table"><thead><tr><th>User</th><th>Game</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div>
+      <div id="tab-events" style="display:none"><div class="table-wrap"><table id="events-table"><thead><tr><th>Time</th><th>User</th><th>Event</th><th>From</th><th>To</th></tr></thead><tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div>
     </section>
-
-    <section id="page-adduser" class="page">
-      <div class="panel" style="max-width:720px">
-        <div class="title" style="margin-top:0">Track a player</div>
-        <form id="add-form" class="row">
-          <div class="field grow"><label>Roblox user ID</label><input id="add-id" inputmode="numeric" required placeholder="1876419070"></div>
-          <div class="field grow"><label>Display label</label><input id="add-name" maxlength="50" required placeholder="daytondeltap"></div>
-          <button class="btn primary" type="submit">Add</button>
-        </form>
-        <div id="add-msg" class="tiny muted" style="margin-top:9px">The poller picks up changes within one 10-second cycle.</div>
-      </div>
-      <div class="title">Tracked players</div><div class="panel table-wrap"><table><thead><tr><th>User ID</th><th>Name</th><th>Added</th><th></th></tr></thead><tbody id="tracked"></tbody></table></div>
-    </section>
-
-    <section id="page-keys" class="page">
-      <div class="panel">
-        <div class="title" style="margin-top:0">Generate access key</div>
-        <form id="key-form" class="row">
-          <div class="field" style="min-width:210px"><label>Tier</label><select id="key-tier"><option value="PK_">PK_ — Full</option><option value="UPK_">UPK_ — Leaderboard</option><option value="BK_">BK_ — Monitor</option></select></div>
-          <div class="field grow"><label>Label</label><input id="key-label" maxlength="60" placeholder="optional"></div>
-          <button class="btn primary" type="submit">Generate</button>
-        </form>
-        <div id="key-result" class="hidden" style="margin-top:12px"></div>
-      </div>
-      <div class="title">Generated keys</div><div class="panel table-wrap"><table><thead><tr><th>Tier</th><th>Label</th><th>Key ID</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="keys"></tbody></table></div>
-    </section>
-  </main>
+  </div>
 </div>
 
+<div class="page" id="page-leaderboard">
+  <div class="lb-wrap"><section><div class="sec-title">Gametime Leaderboard</div><div class="table-wrap"><table class="lb-table" id="lb-table"><thead><tr><th>#</th><th>Player</th><th class="lb-bar-cell">Playtime</th><th>Total Time</th><th>Sessions</th></tr></thead><tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></section></div>
+</div>
+
+<div class="page" id="page-history">
+  <div class="insights-wrap">
+    <div class="filter-bar" style="border-radius:6px;border:1px solid var(--border);margin-bottom:1rem;padding:.8rem 1rem">
+      <label>User</label><select id="hist-user-filter"><option value="">All Users</option></select>
+      <label>Period</label><select id="hist-days-filter"><option value="" selected>All retained data</option><option value="7">7 days</option><option value="30">30 days</option><option value="60">60 days</option></select>
+      <button class="btn btn-accent" id="history-refresh">↺ Refresh</button><span id="hist-summary" style="margin-left:auto;color:var(--subtext);font-family:var(--font-mono);font-size:.7rem"></span>
+    </div>
+    <section class="insight-card"><div class="sec-title">Game History</div><div style="color:var(--subtext);font-size:.75rem;margin-bottom:.6rem">Click any game row to expand individual sessions. History is server-side and only shows players on this key's tracking list.</div><div class="table-wrap"><table id="hist-table"><thead><tr><th>Game</th><th>Players</th><th>Sessions</th><th>Total Time</th><th>Avg</th><th>Longest</th><th>First Played</th><th>Last Played</th></tr></thead><tbody><tr><td colspan="8" class="empty">Loading…</td></tr></tbody></table></div></section>
+  </div>
+</div>
+
+<div class="page" id="page-adduser">
+  <div class="adduser-wrap">
+    <section class="insight-card"><div class="sec-title">Track a New User</div><form class="adduser-form" id="adduser-form"><div class="adduser-field"><label for="adduser-id">Roblox User ID</label><input class="ask-input" id="adduser-id" type="number" min="1" inputmode="numeric" placeholder="e.g. 1876419070" required></div><div class="adduser-field"><label for="adduser-name">Display Name</label><input class="ask-input" id="adduser-name" type="text" maxlength="50" placeholder="e.g. daytondeltap" required></div><button class="ask-submit" id="adduser-submit" type="submit">+ Add User</button></form><div class="adduser-msg" id="adduser-msg"></div><div class="adduser-hint">Saved server-side for this account. The backend picks up new/removed users within one poll cycle (~10s).</div></section>
+    <section class="insight-card"><div class="sec-title">Currently Tracked</div><div class="tracked-list" id="tracked-list">Loading…</div></section>
+  </div>
+</div>
+
+<div class="page" id="page-keys">
+  <div class="insights-wrap">
+    <section class="insight-card"><div class="sec-title">Generate New Access Key</div><form class="adduser-form" id="keygen-form"><div class="adduser-field"><label for="keygen-tier">Key Weight</label><select class="ask-input" id="keygen-tier" required><option value="PK_">PK_ — Full access</option><option value="UPK_">UPK_ — Leaderboard + User Adding</option><option value="BK_">BK_ — Monitor + User Adding</option></select></div><div class="adduser-field"><label for="keygen-label">Label (optional)</label><input class="ask-input" id="keygen-label" maxlength="60" placeholder="e.g. client-acme"></div><button class="ask-submit" type="submit">+ Generate Key</button></form><div id="keygen-result"></div></section>
+    <section class="insight-card"><div class="sec-title">All Generated Keys</div><div class="table-wrap"><table id="keys-table"><thead><tr><th>Tier</th><th>Label</th><th>Key ID</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table></div></section>
+  </div>
+</div>
+</div>
+
+<div id="join-overlay" class="join-overlay hidden">
+  <div class="join-modal"><img id="join-avatar" class="join-modal-avatar" src="" alt=""><div class="join-modal-name" id="join-name"></div><div class="join-modal-game" id="join-game"></div><div class="join-modal-q">Join their game?</div><div class="join-modal-btns"><button class="join-yes" id="join-yes">✓ YES</button><button class="join-no" id="join-no">✕ NO</button></div><div class="join-hint">Roblox may ask permission to open the app.</div></div>
+</div>
 <div id="toast" class="toast hidden"></div>
+
 <script>
 const API='https://jwjxhxvahgrpkvaoyrzw.supabase.co/functions/v1/lg-api';
-const authEl=document.getElementById('auth'), shell=document.getElementById('shell');
-let SITE_KEY=sessionStorage.getItem('lg_site_key')||'', account=null, activeTab='', refreshTimer=null;
+let SITE_KEY=sessionStorage.getItem('lg_site_key')||'', account=null, activePage='monitor', refreshTimer=null;
+let dailyChart=null,hourlyChart=null,joinTarget=null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmtTime=s=>s?new Date(s).toLocaleString():'—';
-function fmtSeconds(v){v=Number(v||0);const h=Math.floor(v/3600),m=Math.floor(v%3600/60),s=v%60;return h?`${h}h ${m}m`:m?`${m}m ${s}s`:`${s}s`}
-function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2600)}
-async function api(path,opts={}){
-  const headers=new Headers(opts.headers||{});headers.set('x-site-key',SITE_KEY);if(opts.body&&!headers.has('content-type'))headers.set('content-type','application/json');
-  const r=await fetch(API+path,{...opts,headers});let j=null;try{j=await r.json()}catch{}
-  if(r.status===401){logout();throw new Error('Access key rejected')}
-  if(!r.ok)throw new Error(j?.error||j?.detail||`Request failed (${r.status})`);
-  return j;
-}
-async function login(key){
-  SITE_KEY=key.trim();if(!SITE_KEY)throw new Error('Enter an access key');
-  account=await api('/auth',{method:'POST'});sessionStorage.setItem('lg_site_key',SITE_KEY);
-  authEl.classList.add('hidden');shell.classList.remove('hidden');$('tier-badge').textContent=account.tier;
-  buildNav();await loadTracked();await refreshCurrent();
-}
-function logout(){sessionStorage.removeItem('lg_site_key');SITE_KEY='';account=null;clearInterval(refreshTimer);shell.classList.add('hidden');authEl.classList.remove('hidden');$('login-key').value=''}
-function buildNav(){
-  const labels={monitor:'Monitor',leaderboard:'Leaderboard',history:'History',adduser:'Players',keys:'Keys'};
-  const order=['monitor','leaderboard','history','adduser','keys'];const allowed=new Set(account.tabs||[]);
-  $('nav').innerHTML='';
-  for(const name of order){if(!allowed.has(name))continue;const b=document.createElement('button');b.textContent=labels[name];b.onclick=()=>showTab(name);$('nav').appendChild(b)}
-  const first=order.find(x=>allowed.has(x));if(first)showTab(first);
-  clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(activeTab==='monitor')refreshMonitor(false)},10000);
-}
-function showTab(name){activeTab=name;document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('active',x.textContent.toLowerCase()===(name==='adduser'?'players':name)));
-  $('page-'+name).classList.add('active');refreshCurrent();
-}
-async function loadTracked(){
-  if(!(account.tabs||[]).some(x=>x==='adduser'||x==='monitor'))return;
-  const rows=await api('/tracked_users');const options=['<option value="">All players</option>',...rows.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.id})</option>`)].join('');
-  $('monitor-user').innerHTML=options;
-  $('tracked').innerHTML=rows.length?rows.map(x=>`<tr><td>${x.id}</td><td>${esc(x.name)}</td><td>${fmtTime(x.added_at)}</td><td><button class="btn danger small" data-remove="${x.id}">Remove</button></td></tr>`).join(''):'<tr><td colspan="4" class="empty">No tracked players</td></tr>';
-  document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Stop tracking this player?'))return;await api('/tracked_users/'+b.dataset.remove,{method:'DELETE'});await loadTracked();await refreshMonitor()});
-}
-async function refreshCurrent(){try{
-  if(activeTab==='monitor')await refreshMonitor();
-  if(activeTab==='leaderboard')await refreshLeaderboard();
-  if(activeTab==='history')await refreshHistory();
-  if(activeTab==='adduser')await loadTracked();
-  if(activeTab==='keys')await refreshKeys();
-}catch(e){toast(e.message)}}
-async function refreshMonitor(mark=true){
-  const uid=$('monitor-user').value,days=$('monitor-days').value,qs=uid?'?user_id='+encodeURIComponent(uid):'';
-  const [p,tot,ev,ses]=await Promise.all([
-    api('/monitor/presence'+qs),api('/monitor/totals'+qs),
-    api('/monitor/events'+qs),
-    api('/monitor/sessions?'+new URLSearchParams(Object.fromEntries(Object.entries({user_id:uid,days}).filter(([,v])=>v))))
-  ]);
-  const statusInfo={WEBSITE:['web','ON WEBSITE'],IN_STUDIO:['studio','IN STUDIO'],INVISIBLE:['invis','INVISIBLE']};
-  $('presence').innerHTML=p.users?.length?p.users.map(u=>{const o=p.open_sessions?.[u.id],e=p.latest_events?.[u.id]||{},live=!!o,ni=statusInfo[e.new_status]||['','OFFLINE'],cls=live?'live':ni[0],label=live?'IN GAME':ni[1];
-    const join=live&&account.can_join&&(o.place_id||o.game_id);return `<div class="card ${cls}" ${join?`data-place="${o.place_id||''}" data-game="${esc(o.game_id||'')}"`:''}><div class="name">${esc(u.name)}</div><span class="status ${live?'live':''}">${label}</span>${o?.location_name?`<div class="game">🎮 ${esc(o.location_name)}</div>`:''}${join?'<div class="join">Click to join server</div>':''}</div>`}).join(''):'<div class="empty">No tracked players</div>';
-  document.querySelectorAll('.card[data-place]').forEach(c=>c.onclick=()=>{const place=c.dataset.place,game=c.dataset.game;if(!place)return;location.href=game?`roblox://experiences/start?placeId=${encodeURIComponent(place)}&gameInstanceId=${encodeURIComponent(game)}`:`https://www.roblox.com/games/${place}`});
-  $('totals').innerHTML=tot.length?tot.map(x=>`<div class="kpi"><span class="muted">${esc(x.username)}</span><strong>${fmtSeconds(x.total_seconds)}</strong><span class="tiny muted">${x.sessions} sessions</span></div>`).join(''):'<div class="empty">No completed sessions yet</div>';
-  $('events').innerHTML=ev.length?ev.map(x=>`<tr><td>${fmtTime(x.timestamp)}</td><td>${esc(x.username)}</td><td><span class="tag">${esc(x.event_type)}</span></td><td>${esc(x.old_location||x.old_status||'—')}</td><td>${esc(x.new_location||x.new_status||'—')}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No events yet</td></tr>';
-  $('sessions').innerHTML=ses.length?ses.map(x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.location_name||'—')}</td><td>${fmtTime(x.start_time)}</td><td>${fmtTime(x.end_time)}</td><td>${x.end_time?fmtSeconds(x.duration_seconds):'LIVE'}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No sessions yet</td></tr>';
-  if(mark)$('last-update').textContent='updated '+new Date().toLocaleTimeString();
-}
-async function refreshLeaderboard(){const rows=await api('/leaderboard');$('leaderboard').innerHTML=rows.length?rows.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.username)}</td><td>${x.sessions}</td><td>${fmtSeconds(x.total_seconds)}</td><td>${fmtSeconds(x.avg_seconds)}</td><td>${fmtSeconds(x.longest_seconds)}</td><td>${fmtTime(x.last_seen)}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">No completed sessions yet</td></tr>'}
-async function refreshHistory(){const days=$('history-days').value,qs=days?'?days='+encodeURIComponent(days):'';const rows=await api('/history/games'+qs);$('history').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.location_name)}</td><td>${x.sessions}</td><td>${x.unique_players}</td><td>${fmtSeconds(x.total_seconds)}</td><td>${fmtSeconds(x.avg_seconds)}</td><td>${fmtTime(x.last_played)}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">No history yet</td></tr>'}
-async function refreshKeys(){const rows=await api('/keys');$('keys').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.tier)}</td><td>${esc(x.key_label||'—')}</td><td><code>${x.key_id}</code></td><td>${x.active?'Active':'Revoked'}</td><td>${fmtTime(x.created_at)}</td><td><button class="btn small ${x.active?'danger':''}" data-key="${x.key_id}" data-action="${x.active?'revoke':'reactivate'}">${x.active?'Revoke':'Reactivate'}</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">No generated keys</td></tr>';
-  document.querySelectorAll('[data-key]').forEach(b=>b.onclick=async()=>{await api(`/keys/${b.dataset.key}/${b.dataset.action}`,{method:'POST'});await refreshKeys()});
-}
-$('login-form').onsubmit=async e=>{e.preventDefault();$('login-error').textContent='';try{await login($('login-key').value)}catch(ex){$('login-error').textContent=ex.message;SITE_KEY=''}};
-$('logout-btn').onclick=logout;$('refresh-btn').onclick=refreshCurrent;
-$('monitor-user').onchange=()=>refreshMonitor();$('monitor-days').onchange=()=>refreshMonitor();$('history-days').onchange=refreshHistory;
-$('add-form').onsubmit=async e=>{e.preventDefault();try{await api('/tracked_users',{method:'POST',body:JSON.stringify({id:Number($('add-id').value),name:$('add-name').value.trim()})});$('add-id').value='';$('add-name').value='';await loadTracked();toast('Player added')}catch(ex){toast(ex.message)}};
-$('key-form').onsubmit=async e=>{e.preventDefault();try{const x=await api('/keys/generate',{method:'POST',body:JSON.stringify({tier:$('key-tier').value,label:$('key-label').value.trim()})});$('key-result').classList.remove('hidden');$('key-result').innerHTML=`<div class="tiny muted">Copy this now — it is not stored in plaintext.</div><div class="raw-key">${esc(x.raw_key)}</div>`;await refreshKeys()}catch(ex){toast(ex.message)}};
+function fmtSeconds(s){s=Number(s||0);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;if(h)return `${h}h ${m}m`;if(m)return `${m}m ${sec}s`;return `${sec}s`}
+function fmtTs(ts){if(!ts)return '—';return new Date(ts).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+function fmtHistTs(ts){if(!ts)return '—';return new Date(ts).toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2600)}
+async function api(path,opts={}){const headers=new Headers(opts.headers||{});headers.set('x-site-key',SITE_KEY);if(opts.body&&!headers.has('content-type'))headers.set('content-type','application/json');const r=await fetch(API+path,{...opts,headers});let j=null;try{j=await r.json()}catch{}if(r.status===401){logout();throw new Error('Access key rejected')}if(!r.ok)throw new Error(j?.error||j?.detail||`Request failed (${r.status})`);return j}
+function apiGet(path,params={}){const q=new URLSearchParams(Object.entries(params).filter(([,v])=>v!==null&&v!==undefined&&v!==''));return api(path+(q.toString()?`?${q}`:''))}
+
+async function login(key){SITE_KEY=key.trim();if(!SITE_KEY)throw new Error('Enter an access key');account=await api('/auth',{method:'POST'});sessionStorage.setItem('lg_site_key',SITE_KEY);$('auth').classList.add('hidden');$('app').classList.remove('hidden');applyTier();buildNav();await refreshTracked();await switchPage((account.tabs||[])[0]||'monitor');clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(activePage==='monitor')refreshMonitor(false)},10000)}
+function logout(){clearInterval(refreshTimer);sessionStorage.removeItem('lg_site_key');SITE_KEY='';account=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden');$('login-key').value=''}
+function applyTier(){const map={DEV:['DEV','tb-dev'],'PK_':['DELUXE','tb-pk'],'UPK_':['UPGRADED','tb-upk'],'BK_':['BASIC','tb-bk']};const [label,cls]=map[account.tier]||[account.tier,''];$('tier-badge').textContent=label;$('tier-badge').className='tier-badge '+cls}
+function buildNav(){const labels={monitor:'Monitor',leaderboard:'Leaderboard',history:'History',adduser:'User Adding',keys:'Key Generator'};$('page-nav').innerHTML='';for(const tab of account.tabs||[]){if(!labels[tab])continue;const b=document.createElement('button');b.className='page-nav-btn';b.dataset.tab=tab;b.textContent=labels[tab];b.onclick=()=>switchPage(tab,b);$('page-nav').appendChild(b)}}
+async function switchPage(name,btn){activePage=name;document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));const page=$('page-'+name);if(page)page.classList.add('active');document.querySelectorAll('.page-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));if(btn)btn.classList.add('active');if(name==='monitor')await refreshMonitor();if(name==='leaderboard')await refreshLeaderboard();if(name==='history')await refreshHistory();if(name==='adduser')await refreshTracked();if(name==='keys')await refreshKeys()}
+
+async function refreshTracked(){if(!account||!(account.tabs||[]).some(x=>['monitor','history','adduser'].includes(x)))return;const rows=await api('/tracked_users');const options=['<option value="">All Users</option>',...rows.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.id})</option>`)].join('');if($('user-filter'))$('user-filter').innerHTML=options;if($('hist-user-filter'))$('hist-user-filter').innerHTML=options;if($('tracked-list')){$('tracked-list').innerHTML=rows.length?rows.map(x=>`<div class="tracked-row"><div class="grow"><div>${esc(x.name)}</div><div class="tracked-id">${x.id}</div></div><button class="btn danger" data-remove="${x.id}">Remove</button></div>`).join(''):'<div class="empty">No tracked users</div>';document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Stop tracking this player?'))return;await api('/tracked_users/'+b.dataset.remove,{method:'DELETE'});await refreshTracked();toast('Player removed')})}}
+
+async function refreshMonitor(mark=true){try{const uid=$('user-filter').value||'',days=$('days-filter').value||'';const [presence,totals,charts,games,sessions,events]=await Promise.all([apiGet('/monitor/presence',{user_id:uid}),apiGet('/monitor/totals',{user_id:uid}),apiGet('/monitor/charts',{user_id:uid,days:days||30}),apiGet('/monitor/top_games',{user_id:uid,days}),apiGet('/monitor/sessions',{user_id:uid,days}),apiGet('/monitor/events',{user_id:uid})]);renderPresence(presence);renderTotals(totals,presence.avatars||{});renderCharts(charts);renderGames(games);renderSessions(sessions);renderEvents(events);if(mark)$('last-update').textContent=new Date().toLocaleTimeString()}catch(e){toast(e.message)}}
+function renderPresence(data){const users=data.users||[],states=data.states||{},avatars=data.avatars||{};if(!users.length){$('presence-grid').innerHTML='<div class="empty">No tracked users</div>';return}const label={0:['offline','OFFLINE','status-offline'],1:['website','ON WEBSITE','status-website'],2:['ingame','IN GAME','status-ingame'],3:['studio','IN STUDIO','status-studio'],4:['invisible','INVISIBLE','status-invisible']};$('presence-grid').innerHTML=users.map(u=>{const s=states[String(u.id)]||{presence_type:0},info=label[Number(s.presence_type)]||label[0],img=avatars[String(u.id)]||'';const join=Number(s.presence_type)===2&&account.can_join&&s.place_id;return `<div class="presence-card ${info[0]}" ${join?`data-join='${esc(JSON.stringify({id:u.id,name:u.name,game:s.last_location||'',place:s.place_id,instance:s.game_id||'',avatar:img}))}'`:''}><div class="card-head">${img?`<img class="avatar avatar-md" src="${esc(img)}" alt="${esc(u.name)}">`:'<div class="avatar avatar-md"></div>'}<div><div class="card-username">${esc(u.name)}</div><div class="tracked-id">${u.id}</div></div></div><span class="card-status ${info[2]}">${info[1]}</span>${s.last_location?`<div class="card-game">🎮 ${esc(s.last_location)}</div>`:''}<div class="card-time">${s.updated_at?'Updated '+fmtTs(s.updated_at):'Waiting for first poll'}</div></div>`}).join('');document.querySelectorAll('[data-join]').forEach(c=>c.onclick=()=>openJoin(JSON.parse(c.dataset.join)))}
+function renderTotals(rows,avatars){$('user-totals').innerHTML=rows.length?rows.map(x=>`<div class="user-tile"><div class="tile-head">${avatars[String(x.user_id)]?`<img class="avatar avatar-sm" src="${esc(avatars[String(x.user_id)])}">`:''}<div class="tile-name">${esc(x.username)}</div></div><div class="tile-stat">Total <span>${fmtSeconds(x.total_seconds)}</span></div><div class="tile-stat">Sessions <span>${x.sessions}</span></div></div>`).join(''):'<div class="empty">No completed sessions yet</div>'}
+function renderCharts(data){const d=data.daily||[],h=data.hourly||[];const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8888aa'},grid:{color:'#1e1e2e'}},y:{ticks:{color:'#8888aa',callback:v=>fmtSeconds(v)},grid:{color:'#1e1e2e'}}}};if(dailyChart)dailyChart.destroy();if(hourlyChart)hourlyChart.destroy();dailyChart=new Chart($('daily-chart'),{type:'line',data:{labels:d.map(x=>x.day),datasets:[{data:d.map(x=>x.total_seconds),borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.08)',fill:true,tension:.25,pointRadius:2}]},options:opts});hourlyChart=new Chart($('hourly-chart'),{type:'bar',data:{labels:h.map(x=>String(x.hour).padStart(2,'0')),datasets:[{data:h.map(x=>x.total_seconds),backgroundColor:'rgba(255,60,95,.55)',borderColor:'#ff3c5f',borderWidth:1}]},options:opts})}
+function renderGames(rows){$('games-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.location_name)}</td><td>${x.sessions}</td><td>${fmtSeconds(x.total_seconds)}</td><td>${fmtSeconds(x.avg_seconds)}</td><td>${fmtSeconds(x.max_seconds)}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No game data yet</td></tr>'}
+function renderSessions(rows){$('sessions-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.location_name||'—')}</td><td>${fmtTs(x.start_time)}</td><td>${x.end_time?fmtTs(x.end_time):'LIVE'}</td><td>${x.end_time?fmtSeconds(x.duration_seconds):'LIVE'}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No sessions yet</td></tr>'}
+function renderEvents(rows){const cls=x=>x==='ENTERED_GAME'?'tag-entered':x==='LEFT_GAME'?'tag-left':x==='SWITCHED_GAME'?'tag-switched':'tag-started';$('events-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${fmtTs(x.timestamp)}</td><td>${esc(x.username)}</td><td><span class="tag ${cls(x.event_type)}">${esc(x.event_type)}</span></td><td>${esc(x.old_location||x.old_status||'—')}</td><td>${esc(x.new_location||x.new_status||'—')}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No events yet</td></tr>'}
+
+async function refreshLeaderboard(){try{const rows=await api('/leaderboard');const max=Math.max(1,...rows.map(x=>Number(x.total_seconds||0)));$('lb-table').querySelector('tbody').innerHTML=rows.length?rows.map((x,i)=>`<tr><td class="lb-rank lb-rank-${i+1}">${x.rank}</td><td><div class="lb-user-cell">${x.avatar_url?`<img class="avatar avatar-md" src="${esc(x.avatar_url)}">`:''}<div><div class="lb-username">${esc(x.username)}</div>${x.title?`<div class="lb-title">${esc(x.title)}</div>`:''}<div class="lb-userid">${x.user_id}</div></div></div></td><td class="lb-bar-cell"><div class="lb-bar-track"><div class="lb-bar-fill" style="width:${Math.max(2,Math.round(Number(x.total_seconds||0)/max*100))}%"></div></div></td><td class="lb-time">${fmtSeconds(x.total_seconds)}</td><td class="lb-sessions">${x.sessions}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No players yet</td></tr>'}catch(e){toast(e.message)}}
+
+async function refreshHistory(){try{const uid=$('hist-user-filter').value||'',days=$('hist-days-filter').value||'',rows=await apiGet('/history/games',{user_id:uid,days});$('hist-summary').textContent=`${rows.length} games · server-side · max 2 months retained`;$('hist-table').querySelector('tbody').innerHTML=rows.length?rows.map((x,i)=>`<tr class="hist-game" data-game="${encodeURIComponent(x.location_name)}" data-i="${i}" style="cursor:pointer"><td>${esc(x.location_name)}</td><td>${x.unique_players}</td><td>${x.sessions}</td><td>${fmtSeconds(x.total_seconds)}</td><td>${fmtSeconds(x.avg_seconds)}</td><td>${fmtSeconds(x.max_seconds)}</td><td>${fmtHistTs(x.first_played)}</td><td>${fmtHistTs(x.last_played)}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">No retained history yet</td></tr>';document.querySelectorAll('.hist-game').forEach(r=>r.onclick=()=>toggleHistoryRow(r,uid,days))}catch(e){toast(e.message)}}
+async function toggleHistoryRow(row,uid,days){const next=row.nextElementSibling;if(next&&next.classList.contains('hist-detail')){next.remove();return}const game=decodeURIComponent(row.dataset.game);const rows=await apiGet('/history/sessions',{game,user_id:uid,days});const tr=document.createElement('tr');tr.className='hist-detail';tr.innerHTML=`<td colspan="8"><div style="padding:.55rem 0"><table><thead><tr><th>Player</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody>${rows.length?rows.map(x=>`<tr><td>${esc(x.username)}</td><td>${fmtHistTs(x.start_time)}</td><td>${fmtHistTs(x.end_time)}</td><td>${fmtSeconds(x.duration_seconds)}</td></tr>`).join(''):'<tr><td colspan="4" class="empty">No sessions</td></tr>'}</tbody></table></div></td>`;row.after(tr)}
+
+async function refreshKeys(){if(account.tier!=='DEV')return;try{const rows=await api('/keys');$('keys-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.tier)}</td><td>${esc(x.key_label||'—')}</td><td><code>${esc(x.key_id)}</code></td><td>${x.active?'Active':'Revoked'}</td><td>${fmtHistTs(x.created_at)}</td><td><button class="btn ${x.active?'danger':''}" data-key="${x.key_id}" data-action="${x.active?'revoke':'reactivate'}">${x.active?'Revoke':'Reactivate'}</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">No generated keys</td></tr>';document.querySelectorAll('[data-key]').forEach(b=>b.onclick=async()=>{await api(`/keys/${b.dataset.key}/${b.dataset.action}`,{method:'POST'});await refreshKeys()})}catch(e){toast(e.message)}}
+function openJoin(x){joinTarget=x;$('join-avatar').src=x.avatar||'';$('join-name').textContent=x.name;$('join-game').textContent=x.game||'Roblox game';$('join-overlay').classList.remove('hidden')}
+function closeJoin(){$('join-overlay').classList.add('hidden');joinTarget=null}
+
+$('login-form').onsubmit=async e=>{e.preventDefault();$('login-error').classList.add('hidden');try{await login($('login-key').value)}catch(ex){$('login-error').textContent=ex.message;$('login-error').classList.remove('hidden');SITE_KEY=''}};
+$('logout-btn').onclick=logout;$('manual-refresh').onclick=()=>refreshMonitor();$('user-filter').onchange=()=>refreshMonitor();$('days-filter').onchange=()=>refreshMonitor();$('history-refresh').onclick=refreshHistory;$('hist-user-filter').onchange=refreshHistory;$('hist-days-filter').onchange=refreshHistory;
+document.querySelectorAll('[data-inner-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-inner-tab]').forEach(x=>x.classList.toggle('active',x===b));$('tab-sessions').style.display=b.dataset.innerTab==='sessions'?'':'none';$('tab-events').style.display=b.dataset.innerTab==='events'?'':'none'});
+$('adduser-form').onsubmit=async e=>{e.preventDefault();try{await api('/tracked_users',{method:'POST',body:JSON.stringify({id:Number($('adduser-id').value),name:$('adduser-name').value.trim()})});$('adduser-id').value='';$('adduser-name').value='';$('adduser-msg').textContent='Player added. Tracking begins on the next poll.';await refreshTracked();toast('Player added')}catch(ex){$('adduser-msg').textContent=ex.message}};
+$('keygen-form').onsubmit=async e=>{e.preventDefault();try{const x=await api('/keys/generate',{method:'POST',body:JSON.stringify({tier:$('keygen-tier').value,label:$('keygen-label').value.trim()})});$('keygen-result').innerHTML=`<div class="adduser-hint">Copy this now — plaintext is shown once.</div><div class="key-output">${esc(x.raw_key)}</div>`;await refreshKeys()}catch(ex){toast(ex.message)}};
+$('join-no').onclick=closeJoin;$('join-overlay').onclick=e=>{if(e.target===$('join-overlay'))closeJoin()};$('join-yes').onclick=()=>{if(!joinTarget)return;const p=encodeURIComponent(joinTarget.place),g=encodeURIComponent(joinTarget.instance||'');location.href=joinTarget.instance?`roblox://experiences/start?placeId=${p}&gameInstanceId=${g}`:`https://www.roblox.com/games/${p}`;closeJoin()};
 if(SITE_KEY)login(SITE_KEY).catch(()=>logout());
 </script>
 </body>
