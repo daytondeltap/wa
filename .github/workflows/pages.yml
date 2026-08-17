@@ -26,8 +26,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
       - name: Enable LG modules
         shell: bash
         run: |
@@ -51,5 +49,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-# Retry trigger after a transient GitHub codeload 429.
