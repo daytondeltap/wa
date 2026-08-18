@@ -1,0 +1,10 @@
+LG Roblox profile-code verification
+
+The profile-verify.js module replaces the OAuth-first Cards prompt with a Bloxlink-style profile code flow:
+1. Enter Roblox username.
+2. LG resolves the public Roblox account.
+3. LG creates a 15-minute verification code.
+4. User places the code in the Roblox About description.
+5. LG checks the public Roblox user-details endpoint and, once matched, links the account and issues welcome/self packs.
+
+No Roblox password, Discord connection, verification experience, or Roblox OAuth client setup is required for this primary flow.
