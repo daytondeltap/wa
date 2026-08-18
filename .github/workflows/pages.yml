@@ -39,6 +39,7 @@ jobs:
               '<script src="profile-verify.js"></script>',
               '<script src="profile-verify-bootstrap.js"></script>',
               '<script src="cards-polish.js"></script>',
+              '<script src="dev-cards.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
