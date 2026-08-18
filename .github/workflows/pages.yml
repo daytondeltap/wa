@@ -37,6 +37,7 @@ jobs:
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
               '<script src="profile-verify.js"></script>',
+              '<script src="profile-verify-bootstrap.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
