@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RBX Detect</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="brand-row">
+      <div>
+        <div class="eyebrow">LG / RBX DETECT</div>
+        <h1>Presence alerts</h1>
+      </div>
+      <div class="status-dot" id="top-dot"></div>
+    </section>
+
+    <section id="login-view" class="card hidden">
+      <div class="section-title">Connect access key</div>
+      <p class="muted">Use the same LG key as the website. The key stays in this Chrome profile and is only sent to the LG API.</p>
+      <label class="field-label" for="key-input">LG access key</label>
+      <input id="key-input" class="input" type="password" autocomplete="off" spellcheck="false" placeholder="Enter key">
+      <button id="login-btn" class="btn primary">Connect</button>
+      <div id="login-error" class="error"></div>
+    </section>
+
+    <section id="app-view" class="hidden">
+      <section class="card compact account-row">
+        <div>
+          <div class="section-title">Connected</div>
+          <div class="muted mono" id="tier-text">—</div>
+        </div>
+        <button id="logout-btn" class="btn ghost small">Log out</button>
+      </section>
+
+      <section class="card">
+        <div class="toggle-row">
+          <div>
+            <div class="section-title">Online notifications</div>
+            <div class="muted">07:10–14:40 · Bangkok</div>
+          </div>
+          <label class="switch" aria-label="Toggle notifications">
+            <input id="notify-toggle" type="checkbox">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="window-row">
+          <span id="window-pill" class="pill">CHECKING</span>
+          <span id="last-sync" class="muted mono">Not synced</span>
+        </div>
+        <div id="monitor-warning" class="warning hidden"></div>
+        <div class="button-row">
+          <button id="refresh-btn" class="btn">Refresh</button>
+          <button id="test-btn" class="btn ghost">Test notification</button>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-head">
+          <div class="section-title">Tracked players</div>
+          <div id="online-count" class="mono muted">0 online</div>
+        </div>
+        <div id="players" class="player-list"></div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-head">
+          <div class="section-title">Recent alerts</div>
+          <button id="clear-alerts" class="text-btn">Clear</button>
+        </div>
+        <div id="alerts" class="alert-list"></div>
+      </section>
+    </section>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

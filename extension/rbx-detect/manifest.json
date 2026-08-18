@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "RBX Detect",
+  "version": "1.0.0",
+  "description": "Minimal RBX Detect presence alerts linked to your LG access key.",
+  "permissions": ["storage", "alarms", "notifications"],
+  "host_permissions": ["https://jwjxhxvahgrpkvaoyrzw.supabase.co/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "RBX Detect",
+    "default_popup": "popup.html"
+  }
+}
