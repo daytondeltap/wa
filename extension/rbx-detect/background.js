@@ -6,7 +6,7 @@ const START_MINUTE = 7 * 60 + 10;
 const END_MINUTE = 14 * 60 + 40;
 const ONLINE_TYPES = new Set([1, 2, 3]);
 const LABELS = { 0: 'OFFLINE', 1: 'WEBSITE', 2: 'IN GAME', 3: 'IN STUDIO', 4: 'INVISIBLE' };
-const NOTIFICATION_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAB+UlEQVR4nO3SQQ3AIBDAsAP/nuGNAvZoFSzZOjNnyNi5vwfgdQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCQARQJYJIBFApgkgEUCRCR4A1oBBMP1HZEAAAAASUVORK5CYII=';
+const NOTIFICATION_ICON = 'data:image/png;base64,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';
 
 function storageGet(keys) {
   return chrome.storage.local.get(keys);
@@ -116,7 +116,8 @@ async function pollPresence({ force = false, establishBaseline = false } = {}) {
       const type = Number(state.presence_type ?? 0);
       current[id] = type;
 
-      if (hasBaseline && shouldNotify && !online(previous[id]) && online(type)) {
+      const hadPreviousState = Object.prototype.hasOwnProperty.call(previous, id);
+      if (hasBaseline && hadPreviousState && shouldNotify && !online(previous[id]) && online(type)) {
         await createOnlineNotification(user, state);
       }
     }
@@ -157,10 +158,11 @@ async function validateLogin(siteKey) {
   const key = String(siteKey || '').trim();
   if (!key) throw new Error('Enter an LG access key.');
   const account = await api('/auth', key);
+  const previousSettings = await storageGet(['notificationsEnabled']);
   await chrome.storage.local.set({
     siteKey: key,
     account,
-    notificationsEnabled: true,
+    notificationsEnabled: typeof previousSettings.notificationsEnabled === 'boolean' ? previousSettings.notificationsEnabled : true,
     lastStates: {},
     lastSnapshot: null,
     lastError: null,
