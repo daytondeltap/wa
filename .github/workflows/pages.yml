@@ -41,6 +41,7 @@ jobs:
               '<script src="cards-polish.js"></script>',
               '<script src="dev-cards.js"></script>',
               '<script src="custom-card-tiers.js"></script>',
+              '<script src="mc-detector.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
