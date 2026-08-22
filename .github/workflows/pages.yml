@@ -43,6 +43,7 @@ jobs:
               '<script src="custom-card-tiers.js"></script>',
               '<script src="mc-detector.js"></script>',
               '<script src="mc-detector-session.js"></script>',
+              '<script src="mc-player-lists.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
