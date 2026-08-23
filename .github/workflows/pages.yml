@@ -44,6 +44,7 @@ jobs:
               '<script src="mc-detector.js"></script>',
               '<script src="mc-detector-session.js"></script>',
               '<script src="mc-player-lists.js"></script>',
+              '<script src="mc-aero-final.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
