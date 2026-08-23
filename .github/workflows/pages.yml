@@ -34,6 +34,7 @@ jobs:
           p = Path('site/index.html')
           s = p.read_text(encoding='utf-8')
           tags = [
+              '<script src="login-hardening.js"></script>',
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
               '<script src="profile-verify.js"></script>',
@@ -46,6 +47,7 @@ jobs:
               '<script src="mc-player-lists.js"></script>',
               '<script src="mc-aero-final.js"></script>',
               '<script src="mc-frutiger-aero-overhaul.js"></script>',
+              '<script src="mc-vista-final.js"></script>',
               '<script src="rbx-metro.js"></script>',
           ]
           for tag in tags:
