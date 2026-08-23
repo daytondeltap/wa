@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000">
+  <defs>
+    <linearGradient id="orangeMetal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7eb"/><stop offset=".2" stop-color="#ffbf69"/><stop offset=".46" stop-color="#dd5f11"/><stop offset=".68" stop-color="#fff0d8"/><stop offset="1" stop-color="#ff8a25"/>
+    </linearGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#d6d8dc"/><stop offset=".58" stop-color="#888f98"/><stop offset=".78" stop-color="#f6f7f7"/><stop offset="1" stop-color="#afb4bb"/>
+    </linearGradient>
+    <pattern id="dots" width="19" height="19" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="2.7" fill="#e96f18" opacity=".22"/></pattern>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse"><path d="M38 0H0v38" fill="none" stroke="#9ea3a8" stroke-width="1" opacity=".2"/></pattern>
+    <filter id="rough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".02" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.2"/></filter>
+  </defs>
+  <rect width="1400" height="1000" fill="none"/>
+  <rect x="0" y="438" width="1400" height="562" fill="url(#grid)" opacity=".75"/>
+  <path d="M0 785h123l37-72 53 31 55-109 63 77 77-139 83 95 77-164 96 140 75-79 78 93 69-120 86 143 75-49 60 80 109-59 105 89v258H0z" fill="#dfe2e3" opacity=".64"/>
+  <path d="M0 825h162l43-58 47 20 58-84 62 62 76-103 81 80 87-121 98 107 66-49 76 72 86-82 67 89 102-47 95 84h154v205H0z" fill="#fff" opacity=".94"/>
+
+  <!-- DORFic industrial rings -->
+  <g transform="translate(1065 175)" filter="url(#rough)">
+    <circle r="158" fill="none" stroke="url(#orangeMetal)" stroke-width="28"/>
+    <circle r="110" fill="none" stroke="url(#silver)" stroke-width="16"/>
+    <circle r="68" fill="#fff" stroke="#f27a1a" stroke-width="12"/>
+    <circle r="25" fill="#8d9399"/>
+    <path d="M-198 0h78M120 0h78M0-198v78M0 120v78" stroke="#f27a1a" stroke-width="16" stroke-linecap="square"/>
+  </g>
+
+  <!-- angular industrial arrows -->
+  <g transform="translate(760 325)" fill="none" stroke-linecap="square" stroke-linejoin="miter" filter="url(#rough)">
+    <path d="M0 78h185l48-48h169" stroke="#ee7318" stroke-width="18"/>
+    <path d="M44 126h204l52-51h126" stroke="#a4a9ae" stroke-width="10"/>
+    <path d="M177 3l72 0 0 72" stroke="#fff" stroke-width="12"/>
+    <polygon points="430,30 375,-4 375,64" fill="#ee7318" stroke="none"/>
+  </g>
+
+  <!-- minimalist tech blocks -->
+  <g transform="translate(115 180)" filter="url(#rough)">
+    <rect width="210" height="26" fill="#ef7418"/><rect y="45" width="304" height="26" fill="#c0c4c8"/><rect y="90" width="172" height="26" fill="#ef7418"/>
+    <circle cx="340" cy="58" r="54" fill="none" stroke="url(#silver)" stroke-width="16"/>
+    <circle cx="340" cy="58" r="22" fill="#f07a20"/>
+  </g>
+
+  <!-- white/orange flowing tech arc -->
+  <g fill="none" stroke-linecap="round" filter="url(#rough)">
+    <path d="M125 574c143-173 307-223 481-154 119 47 215 44 326-16" stroke="#fff" stroke-width="15"/>
+    <path d="M146 608c140-135 284-176 432-121 102 38 190 35 290-13" stroke="#f17b21" stroke-width="12"/>
+    <path d="M174 646c113-91 226-119 340-84" stroke="#aeb4b9" stroke-width="8"/>
+  </g>
+
+  <!-- orange halftone field -->
+  <path d="M70 676l405-53 38 254-405 53z" fill="url(#dots)" opacity=".9"/>
+
+  <!-- small technical targets -->
+  <g transform="translate(910 760)" filter="url(#rough)">
+    <circle cx="0" cy="0" r="88" fill="none" stroke="url(#silver)" stroke-width="21"/>
+    <circle cx="0" cy="0" r="48" fill="none" stroke="#f37d20" stroke-width="13"/>
+    <circle cx="154" cy="38" r="58" fill="none" stroke="url(#orangeMetal)" stroke-width="18"/>
+    <circle cx="154" cy="38" r="25" fill="#fff"/>
+    <circle cx="-105" cy="88" r="42" fill="none" stroke="#a8adb2" stroke-width="13"/>
+  </g>
+
+  <!-- technical ticks -->
+  <g stroke="#ed7117" stroke-width="8" opacity=".62"><path d="M1190 486h100"/><path d="M1210 516h64"/><path d="M1170 546h132"/></g>
+</svg>
