@@ -1,0 +1,108 @@
+/* MC Detector — Windows Vista / Frutiger Aero final presentation layer. */
+body.mc-mode{
+  --mcv-blue:#0e7fc7;
+  --mcv-sky:#39bdf1;
+  --mcv-cyan:#74e4f2;
+  --mcv-green:#67c94a;
+  --mcv-lime:#a8e867;
+  --mcv-ink:#173f50;
+  --mcv-muted:#557b88;
+  --mcv-glass:rgba(239,251,255,.73);
+  --mcv-glass-strong:rgba(250,255,255,.88);
+  --mcv-line:rgba(40,130,174,.34);
+  --mcv-shadow:0 18px 44px rgba(4,74,122,.20),0 3px 9px rgba(1,69,106,.12);
+  --bg:#d5f7ff!important;
+  --surface:rgba(248,254,255,.82)!important;
+  --border:rgba(48,134,168,.32)!important;
+  --accent:#168fd1!important;
+  --accent2:#28b9df!important;
+  --green:#5dc64a!important;
+  --text:#153e4c!important;
+  --subtext:#4f7682!important;
+  --muted:#75939a!important;
+  background:
+    linear-gradient(180deg,rgba(3,64,145,.03),rgba(238,255,255,.09) 45%,rgba(228,255,239,.14)),
+    url('mc-vista-city-lossless.webp') center center / cover fixed no-repeat!important;
+  color:var(--mcv-ink)!important;
+}
+body.mc-mode::before{
+  content:''!important;position:fixed!important;inset:0!important;z-index:-5!important;pointer-events:none!important;
+  background:linear-gradient(180deg,rgba(12,103,185,.05),rgba(255,255,255,.03) 40%,rgba(213,255,222,.07))!important;
+  opacity:1!important;
+}
+body.mc-mode #app{background:transparent!important}
+
+/* Vista-style glass title bar. */
+body.mc-mode #app>header{
+  min-height:70px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.80) 0%,rgba(207,243,255,.72) 46%,rgba(113,195,231,.62) 50%,rgba(181,232,247,.70) 100%)!important;
+  border:1px solid rgba(255,255,255,.75)!important;border-left:0!important;border-right:0!important;border-bottom-color:rgba(35,122,164,.42)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.98),inset 0 -1px 0 rgba(255,255,255,.35),0 7px 22px rgba(6,78,125,.18)!important;
+  backdrop-filter:blur(19px) saturate(1.4)!important;
+}
+body.mc-mode #app>header::before{content:'';position:absolute;left:0;right:0;top:0;height:45%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.56),rgba(255,255,255,.08))}
+body.mc-mode #app>header .logo{position:relative;color:#075f91!important;text-shadow:0 1px 0 #fff,0 0 7px rgba(255,255,255,.72)!important;font-family:'Segoe UI',Tahoma,sans-serif!important;font-weight:600!important}
+body.mc-mode #app>header .logo span{color:#4cae43!important}
+body.mc-mode #tier-badge{background:linear-gradient(#fff,#e5f8ff 48%,#bae7f6 52%,#e8faff)!important;border:1px solid #5fa8c7!important;color:#246a84!important;border-radius:13px!important;box-shadow:inset 0 1px 0 #fff,0 1px 4px rgba(23,91,121,.18)!important}
+
+/* Vista Explorer-like glass toolbar. */
+body.mc-mode .mcx-nav{padding:.38rem 1.15rem!important;gap:.32rem!important;background:linear-gradient(180deg,rgba(250,255,255,.85),rgba(207,241,249,.72))!important;border-bottom:1px solid rgba(44,128,164,.30)!important;box-shadow:inset 0 1px 0 #fff,0 4px 12px rgba(7,87,121,.12)!important;backdrop-filter:blur(16px) saturate(1.25)!important}
+body.mc-mode .mcx-nav button{border:1px solid transparent!important;border-radius:5px!important;padding:.58rem 1rem!important;color:#366d84!important;text-shadow:0 1px 0 #fff!important;font-family:'Segoe UI',Tahoma,sans-serif!important;font-weight:600!important;letter-spacing:.02em!important;text-transform:none!important}
+body.mc-mode .mcx-nav button:hover{border-color:#6bb5d3!important;background:linear-gradient(#faffff,#d8f4fd 49%,#b8e6f7 51%,#e7f9ff)!important;box-shadow:inset 0 1px 0 #fff,0 1px 4px rgba(20,105,143,.15)!important;color:#075f90!important}
+body.mc-mode .mcx-nav button.active{color:#075f90!important;border-color:#4b9fc1!important;background:linear-gradient(#fff,#d7f2fc 47%,#a9dcf1 51%,#e1f7ff)!important;box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.45),0 2px 5px rgba(11,93,132,.15)!important}
+
+/* Vista glass windows. */
+body.mc-mode .mcx-stat,body.mc-mode .mcx-panel,body.mc-mode .mcx-card,body.mc-mode .mcpl-server{
+  position:relative!important;overflow:hidden!important;background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(222,247,252,.72))!important;
+  border:1px solid rgba(42,126,164,.37)!important;border-radius:10px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.98),inset 0 0 0 1px rgba(255,255,255,.25),var(--mcv-shadow)!important;backdrop-filter:blur(15px) saturate(1.24)!important;
+}
+body.mc-mode .mcx-stat::before,body.mc-mode .mcx-panel::before,body.mc-mode .mcx-card::before,body.mc-mode .mcpl-server::before{content:'';position:absolute;left:0;right:0;top:0;height:42%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.50),rgba(255,255,255,0))}
+body.mc-mode .mcx-card{border-left:1px solid rgba(42,126,164,.37)!important}
+body.mc-mode .mcx-card.on{border-color:rgba(74,164,76,.55)!important;box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.28),0 15px 36px rgba(35,130,74,.16)!important}
+body.mc-mode .mcx-card.on::after{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(#aef37a,#4fc451,#8ae267);box-shadow:1px 0 3px rgba(45,145,60,.20)}
+body.mc-mode .mcx-card:hover,body.mc-mode .mcpl-server:hover{transform:translateY(-2px)!important;filter:saturate(1.04)}
+
+/* Vista button chrome. */
+body.mc-mode .btn,body.mc-mode .ask-submit,body.mc-mode #mcx-refresh{border:1px solid #5e9db9!important;border-radius:5px!important;background:linear-gradient(180deg,#ffffff 0%,#eefbff 45%,#c1e5f3 49%,#e7f8fd 100%)!important;color:#245d75!important;text-shadow:0 1px 0 #fff!important;box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.38),0 2px 5px rgba(10,83,116,.15)!important;font-family:'Segoe UI',Tahoma,sans-serif!important;font-weight:600!important}
+body.mc-mode .btn:hover,body.mc-mode .ask-submit:hover,body.mc-mode #mcx-refresh:hover{border-color:#2583ae!important;background:linear-gradient(180deg,#fff 0%,#e8fbff 42%,#94daf3 50%,#dbf7ff 100%)!important;box-shadow:inset 0 1px 0 #fff,0 0 7px rgba(46,164,210,.25),0 2px 5px rgba(10,83,116,.15)!important}
+body.mc-mode .btn:active,body.mc-mode .ask-submit:active,body.mc-mode #mcx-refresh:active{background:linear-gradient(180deg,#c6eafa,#e7f9ff)!important;box-shadow:inset 0 2px 5px rgba(31,104,133,.18)!important;transform:translateY(1px)!important}
+body.mc-mode .btn.danger{border-color:#bf7b70!important;background:linear-gradient(#fff,#fff0ed 46%,#f5c9c0 50%,#ffe6e1)!important;color:#8f493c!important}
+
+/* Vista text boxes. */
+body.mc-mode .mcx-in{background:rgba(255,255,255,.93)!important;color:#214f61!important;border:1px solid #7fa8bb!important;border-radius:4px!important;box-shadow:inset 0 1px 3px rgba(27,83,104,.13),0 1px 0 rgba(255,255,255,.85)!important;font-family:'Segoe UI',Tahoma,sans-serif!important}
+body.mc-mode .mcx-in:focus{border-color:#2c96c2!important;box-shadow:0 0 0 2px rgba(70,174,216,.18),inset 0 1px 3px rgba(27,83,104,.10)!important}
+
+/* Status chips. */
+body.mc-mode .mcx-b,body.mc-mode .mcx-chip,body.mc-mode .mcpl-player,body.mc-mode .mcx-watch,body.mc-mode .mcpl-state{border-radius:12px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.90),0 1px 3px rgba(17,83,109,.10)!important}
+body.mc-mode .mcx-b{background:linear-gradient(#fff,#edf7fa)!important;border-color:#9ebcc8!important;color:#627a83!important}
+body.mc-mode .mcx-b.on,body.mc-mode .mcpl-state.full,body.mc-mode .mca-online{background:linear-gradient(#eaffdc,#a9e879 48%,#65c653 52%,#b7ec8a)!important;border-color:#54a447!important;color:#195d22!important}
+body.mc-mode .mca-seen,body.mc-mode .mcpl-state.sample{background:linear-gradient(#fffde6,#f8e890 48%,#ddbd4d 52%,#fff1aa)!important;border-color:#b79c40!important;color:#745f0d!important}
+body.mc-mode .mca-unknown,body.mc-mode .mcpl-state.empty{background:linear-gradient(#f8feff,#d1f1fb 48%,#9bd7e9 52%,#e1f7fc)!important;border-color:#6fb0c7!important;color:#25687d!important}
+
+body.mc-mode .mcx-row{border:1px solid rgba(72,137,159,.25)!important;border-radius:6px!important;background:linear-gradient(90deg,rgba(255,255,255,.78),rgba(224,246,250,.66))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)!important}
+body.mc-mode .mcx-warn{border:1px solid rgba(67,143,173,.34)!important;border-radius:7px!important;background:linear-gradient(180deg,rgba(250,255,255,.88),rgba(215,243,250,.76))!important;color:#326f85!important;box-shadow:inset 0 1px 0 #fff,0 4px 12px rgba(10,89,122,.09)!important}
+body.mc-mode .sec-title{font-family:'Segoe UI',Tahoma,sans-serif!important;color:#146f95!important;text-shadow:0 1px 0 #fff!important;letter-spacing:.04em!important}
+body.mc-mode .mcx-k{color:#557d8b!important}.mc-mode .mcx-v{color:#087cab!important;text-shadow:0 1px 0 #fff!important}.mc-mode .mcx-name{color:#164f63!important}.mc-mode .mcx-sub,.mc-mode .mcx-note,.mc-mode .mcx-meta{color:#587b86!important}.mc-mode .mcx-meta b{color:#234f5f!important}
+
+/* Explorer-style tables. */
+body.mc-mode .mcx-table{border-collapse:separate!important;border-spacing:0!important;background:rgba(255,255,255,.40)!important;border:1px solid rgba(74,139,165,.22)!important}
+body.mc-mode .mcx-table th{background:linear-gradient(#fff,#edf7fa 47%,#d1e9f1 51%,#f4fbfd)!important;color:#4b7180!important;border-right:1px solid rgba(111,154,171,.22)!important;font-family:'Segoe UI',Tahoma,sans-serif!important;text-transform:none!important;letter-spacing:.01em!important;font-weight:600!important}
+body.mc-mode .mcx-table td{background:rgba(255,255,255,.58)!important;color:#315866!important;border-color:rgba(93,150,170,.16)!important}
+body.mc-mode .mcx-table tbody tr:hover td{background:rgba(210,242,252,.75)!important}
+
+/* Vista switch. */
+body.mc-mode .mcx-sw{background:linear-gradient(#d7e7eb,#f9ffff)!important;border:1px solid #7ba6b7!important;box-shadow:inset 0 2px 4px rgba(30,94,117,.14),0 1px 0 #fff!important}
+body.mc-mode .mcx-sw.on{background:linear-gradient(#bdf78d,#58ca52)!important;border-color:#438f3d!important;box-shadow:inset 0 1px 0 #fff,0 0 9px rgba(72,183,66,.28)!important}
+body.mc-mode .mcx-sw::after{background:linear-gradient(#fff,#e5f3f6)!important;border:1px solid rgba(76,119,134,.26)!important;box-shadow:0 2px 5px rgba(27,78,96,.28)!important}
+
+/* Ambient Vista glass orbs. */
+#mcv-decor{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+#mcv-decor i{position:absolute;display:block}
+#mcv-decor .mcv-orb{border-radius:50%;border:1px solid rgba(255,255,255,.78);background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.88),rgba(83,204,239,.15) 42%,rgba(7,124,191,.08) 67%,transparent 72%);box-shadow:inset 0 0 16px rgba(255,255,255,.40),0 4px 18px rgba(10,99,145,.12);animation:mcvFloat 11s ease-in-out infinite}
+#mcv-decor .mcv-orb:nth-child(1){width:78px;height:78px;right:5vw;top:17vh}
+#mcv-decor .mcv-orb:nth-child(2){width:42px;height:42px;left:5vw;bottom:16vh;animation-duration:14s;animation-delay:-4s}
+#mcv-decor .mcv-shine{width:240px;height:80px;right:12vw;top:11vh;opacity:.28;background:linear-gradient(115deg,transparent,rgba(255,255,255,.82),transparent);filter:blur(10px);transform:rotate(-18deg)}
+@keyframes mcvFloat{50%{transform:translate(6px,-13px)}}
+
+@media(max-width:800px){body.mc-mode{background-position:38% center!important;background-attachment:scroll!important}body.mc-mode .mcx-nav{padding-left:.55rem!important;padding-right:.55rem!important}body.mc-mode .mcx-nav button{padding:.52rem .7rem!important}#mcv-decor .mcv-orb:nth-child(1){width:56px;height:56px;right:-12px;top:22vh}}
+@media(prefers-reduced-motion:reduce){#mcv-decor .mcv-orb{animation:none!important}}
