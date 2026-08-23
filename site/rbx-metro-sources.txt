@@ -1,0 +1,4 @@
+Reference summary:
+- Microsoft Metro / Windows Phone: clean, open, typography-led hierarchy; Pivot/Panorama navigation; motion for context.
+- Late-2000s Vectordelia / commonly called Frutiger Metro: cyan, magenta, lime, arrows, circles, dot grids, stripes and fluid vector forms.
+Implementation artwork is original and local to this repository.
