@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 520" fill="none">
+  <defs>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#00e5ff"/><stop offset="1" stop-color="#00a6c8"/></linearGradient>
+    <linearGradient id="pink" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff3c5f"/><stop offset="1" stop-color="#d51d7a"/></linearGradient>
+    <linearGradient id="lime" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#39ff14"/><stop offset="1" stop-color="#1cbd34"/></linearGradient>
+    <pattern id="stripes" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><rect width="5" height="12" fill="#ff3c5f"/></pattern>
+  </defs>
+  <circle cx="574" cy="270" r="128" stroke="url(#cyan)" stroke-width="28" opacity=".34"/>
+  <circle cx="574" cy="270" r="79" stroke="url(#pink)" stroke-width="10" opacity=".5"/>
+  <circle cx="574" cy="270" r="43" fill="url(#stripes)" opacity=".7"/>
+  <path d="M83 402C173 305 236 419 326 316C401 229 427 131 535 98" stroke="url(#lime)" stroke-width="20" stroke-linecap="round" opacity=".5"/>
+  <path d="M71 440C167 345 241 459 345 350C415 276 455 188 571 157" stroke="url(#cyan)" stroke-width="7" stroke-linecap="round" opacity=".55"/>
+  <path d="M92 91h161l-32 31H60z" fill="url(#pink)" opacity=".58"/>
+  <path d="M178 135h133l-27 27H151z" fill="url(#cyan)" opacity=".48"/>
+  <path d="M620 57l78 38-78 38 17-27h-79V84h79z" fill="url(#lime)" opacity=".65"/>
+  <g fill="#00e5ff" opacity=".52">
+    <circle cx="98" cy="238" r="8"/><circle cx="126" cy="238" r="8"/><circle cx="154" cy="238" r="8"/><circle cx="182" cy="238" r="8"/>
+    <circle cx="98" cy="266" r="8"/><circle cx="126" cy="266" r="8"/><circle cx="154" cy="266" r="8"/><circle cx="182" cy="266" r="8"/>
+    <circle cx="98" cy="294" r="8"/><circle cx="126" cy="294" r="8"/><circle cx="154" cy="294" r="8"/><circle cx="182" cy="294" r="8"/>
+  </g>
+  <g opacity=".38">
+    <rect x="302" y="61" width="42" height="42" fill="#00e5ff"/><rect x="349" y="61" width="42" height="42" fill="#ff3c5f"/><rect x="396" y="61" width="42" height="42" fill="#39ff14"/>
+  </g>
+  <path d="M397 432l45-45 45 45-45 45z" fill="#ff3c5f" opacity=".38"/>
+  <path d="M458 442l28-28 28 28-28 28z" fill="#00e5ff" opacity=".45"/>
+</svg>
