@@ -1,0 +1,244 @@
+/* MC Detector — full Frutiger Aero / Vista-era visual overhaul.
+   Presentation only: all detector/watchlist logic remains in mc-detector.js + mc-aero-final.js. */
+
+body.mc-mode{
+  --mca-sky:#21aef3;
+  --mca-cyan:#34d9f6;
+  --mca-aqua:#5de8dd;
+  --mca-green:#55d557;
+  --mca-lime:#9af06c;
+  --mca-deep:#087f82;
+  --mca-ink:#124e55;
+  --mca-muted:#4f8080;
+  --mca-glass:rgba(247,255,255,.77);
+  --mca-glass-strong:rgba(255,255,255,.90);
+  --mca-line:rgba(58,166,176,.34);
+  --mca-shadow:0 18px 44px rgba(0,91,120,.20),0 2px 8px rgba(0,70,92,.10);
+  --mca-inner:inset 0 1px 0 rgba(255,255,255,.98),inset 0 -1px 0 rgba(52,155,162,.10);
+  --bg:#dffbff!important;
+  --surface:rgba(250,255,255,.84)!important;
+  --border:rgba(52,156,165,.30)!important;
+  --accent:#0daee7!important;
+  --accent2:#19c9db!important;
+  --green:#4acb54!important;
+  --muted:#6f9895!important;
+  --text:#124f53!important;
+  --subtext:#477b79!important;
+  background:
+    linear-gradient(180deg,rgba(4,87,175,.06),rgba(219,255,255,.11) 45%,rgba(233,255,246,.18)),
+    url('mc-aero-wallpaper.webp') center top / cover fixed no-repeat!important;
+  color:var(--mca-ink)!important;
+  min-height:100vh;
+}
+
+/* Readability veil: transparent enough that the wallpaper remains the visual identity. */
+body.mc-mode::before{
+  content:''!important;
+  position:fixed!important;
+  inset:0!important;
+  z-index:-4!important;
+  pointer-events:none!important;
+  opacity:1!important;
+  background:
+    linear-gradient(180deg,rgba(17,125,214,.04) 0%,rgba(235,255,255,.08) 35%,rgba(236,255,246,.20) 100%),
+    radial-gradient(circle at 52% 37%,rgba(255,255,255,.04),transparent 38%)!important;
+}
+body.mc-mode::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  z-index:-3;
+  pointer-events:none;
+  background:linear-gradient(90deg,rgba(9,104,160,.05),transparent 18%,transparent 82%,rgba(9,104,160,.05));
+}
+body.mc-mode #app{background:transparent!important;isolation:isolate}
+body.mc-mode #mcx{position:relative;z-index:1;isolation:isolate}
+
+/* Floating decorative bubbles inserted by mc-frutiger-aero-overhaul.js. */
+#mca-bubbles{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#mca-bubbles i{position:absolute;border-radius:50%;background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.98) 0 7%,rgba(255,255,255,.42) 16%,rgba(93,224,255,.20) 45%,rgba(12,132,211,.12) 66%,transparent 71%);border:1px solid rgba(255,255,255,.60);box-shadow:inset 0 0 12px rgba(255,255,255,.55),0 8px 24px rgba(0,118,180,.12);opacity:.70;animation:mcaBubbleFloat var(--d,12s) ease-in-out infinite alternate}
+#mca-bubbles i:nth-child(1){width:54px;height:54px;left:4vw;top:20vh;--d:12s}
+#mca-bubbles i:nth-child(2){width:32px;height:32px;left:14vw;bottom:12vh;--d:10s}
+#mca-bubbles i:nth-child(3){width:76px;height:76px;right:5vw;top:24vh;--d:14s}
+#mca-bubbles i:nth-child(4){width:25px;height:25px;right:18vw;top:11vh;--d:9s}
+#mca-bubbles i:nth-child(5){width:43px;height:43px;right:29vw;bottom:8vh;--d:11s}
+@keyframes mcaBubbleFloat{from{transform:translate3d(0,0,0) scale(.98)}to{transform:translate3d(8px,-18px,0) scale(1.03)}}
+
+/* Header — glossy white/aqua Vista glass. */
+body.mc-mode #app>header{
+  min-height:78px!important;
+  padding:1rem 1.45rem!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.94) 0%,rgba(234,255,255,.87) 46%,rgba(189,244,239,.78) 48%,rgba(221,255,247,.84) 100%)!important;
+  border:1px solid rgba(255,255,255,.76)!important;
+  border-left:0!important;border-right:0!important;
+  border-bottom-color:rgba(38,142,157,.38)!important;
+  box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 rgba(24,127,139,.12),0 7px 26px rgba(0,83,113,.18)!important;
+  backdrop-filter:blur(18px) saturate(1.35)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(1.35)!important;
+}
+body.mc-mode #app>header::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:3px;background:linear-gradient(90deg,#2cc8f4,#70efba,#74d968,#32c8e9);opacity:.82}
+body.mc-mode #app>header .logo{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:1.15rem!important;font-weight:700!important;letter-spacing:.055em!important;color:#087d8a!important;text-shadow:0 1px 0 #fff,0 0 10px rgba(50,218,231,.18)!important}
+body.mc-mode #app>header .logo span{color:#45c957!important}
+body.mc-mode #tier-badge{border-radius:999px!important;padding:.36rem .7rem!important;background:linear-gradient(#fff,#eafff3 47%,#c0f3d8 49%,#e4ffef)!important;color:#17794e!important;border:1px solid #71cda6!important;box-shadow:var(--mca-inner),0 2px 7px rgba(15,112,86,.13)!important;text-shadow:0 1px 0 #fff!important}
+body.mc-mode .last-update{color:#578b87!important;text-shadow:0 1px 0 rgba(255,255,255,.8)}
+body.mc-mode #live-dot{background:#58d04f!important;box-shadow:0 0 0 2px rgba(255,255,255,.8),0 0 10px rgba(66,215,82,.75)!important}
+body.mc-mode .btn-logout{border-radius:11px!important;background:linear-gradient(#fff,#e9f8f5)!important;border:1px solid #83bdb4!important;color:#3e756e!important;box-shadow:var(--mca-inner)!important;text-shadow:0 1px 0 #fff!important}
+body.mc-mode .btn-logout:hover{border-color:#25b9d1!important;color:#087d8b!important;background:linear-gradient(#fff,#dffaff)!important}
+
+/* MC/RBX switch — bright glossy green. */
+body.mc-mode .mcx-toggle{gap:.55rem!important}
+body.mc-mode .mcx-lbl{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-weight:700!important;color:#39807a!important;letter-spacing:.055em!important;text-shadow:0 1px 0 #fff!important}
+body.mc-mode .mcx-sw{width:48px!important;height:27px!important;padding:2px!important;border-radius:999px!important;background:linear-gradient(#e7f4f0,#c2ddd6)!important;border:1px solid #70aaa0!important;box-shadow:inset 0 2px 5px rgba(15,96,81,.18),0 1px 0 #fff!important}
+body.mc-mode .mcx-sw.on{background:linear-gradient(180deg,#baff9d 0%,#64e464 45%,#34c847 48%,#78e982 100%)!important;border-color:#22933b!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 0 13px rgba(55,207,76,.37)!important}
+body.mc-mode .mcx-sw::after{width:21px!important;height:21px!important;background:radial-gradient(circle at 34% 28%,#fff 0 28%,#f3fffb 47%,#d2f1e9 100%)!important;border:1px solid rgba(40,121,103,.25)!important;box-shadow:0 2px 7px rgba(12,73,64,.28)!important}
+body.mc-mode .mcx-sw.on::after{transform:translateX(21px)!important}
+
+/* Navigation — frosted Aqua tab bar. */
+body.mc-mode .mcx-nav{
+  position:sticky;top:78px;z-index:20;
+  padding:.5rem 1.5rem .42rem!important;gap:.45rem!important;
+  background:linear-gradient(180deg,rgba(250,255,255,.90),rgba(207,250,245,.76))!important;
+  border-bottom:1px solid rgba(51,150,157,.28)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 5px 16px rgba(0,91,112,.11)!important;
+  backdrop-filter:blur(16px) saturate(1.25)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(1.25)!important;
+}
+body.mc-mode .mcx-nav button{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.72rem!important;font-weight:700!important;letter-spacing:.045em!important;border:1px solid transparent!important;border-radius:14px!important;padding:.62rem 1rem!important;color:#4f817c!important;text-shadow:0 1px 0 rgba(255,255,255,.9)!important;transition:transform .14s ease,background .14s ease,border-color .14s ease!important}
+body.mc-mode .mcx-nav button:hover{transform:translateY(-1px);background:linear-gradient(#fff,rgba(210,252,245,.78))!important;border-color:rgba(70,168,161,.28)!important;color:#147c79!important}
+body.mc-mode .mcx-nav button.active{color:#087c69!important;background:linear-gradient(180deg,#fff 0%,#ecfff8 44%,#b7f2d1 47%,#dbffe7 100%)!important;border-color:#70c89d!important;box-shadow:inset 0 1px 0 #fff,0 2px 7px rgba(26,126,94,.15)!important}
+
+/* Page rhythm — let the wallpaper breathe between glass islands. */
+body.mc-mode .mcx-wrap{max-width:1500px;margin:0 auto;padding:1.45rem 1.6rem 3rem!important;gap:1.15rem!important}
+body.mc-mode .sec-title{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.93rem!important;font-weight:700!important;letter-spacing:.045em!important;text-transform:none!important;color:#087b74!important;text-shadow:0 1px 0 #fff,0 0 12px rgba(90,239,213,.12)!important;margin-bottom:.65rem!important}
+body.mc-mode .sec-title::before{content:'';display:inline-block;width:10px;height:10px;margin-right:.45rem;border-radius:50%;vertical-align:-1px;background:radial-gradient(circle at 35% 30%,#fff 0 15%,#76ecda 28%,#35bf91 72%);box-shadow:0 1px 3px rgba(0,90,80,.20)}
+
+/* Shared glass panels. */
+body.mc-mode .mcx-panel,
+body.mc-mode .mcx-stat,
+body.mc-mode .mcx-card,
+body.mc-mode .mcpl-server{
+  position:relative;
+  overflow:hidden;
+  border-radius:18px!important;
+  border:1px solid rgba(255,255,255,.78)!important;
+  outline:1px solid rgba(44,151,159,.23);
+  background:linear-gradient(145deg,rgba(255,255,255,.90),rgba(225,255,251,.74) 54%,rgba(187,242,224,.68))!important;
+  box-shadow:var(--mca-inner),var(--mca-shadow)!important;
+  backdrop-filter:blur(15px) saturate(1.30)!important;
+  -webkit-backdrop-filter:blur(15px) saturate(1.30)!important;
+}
+body.mc-mode .mcx-panel::before,
+body.mc-mode .mcx-stat::before,
+body.mc-mode .mcx-card::before,
+body.mc-mode .mcpl-server::before{content:'';position:absolute;left:1px;right:1px;top:1px;height:38%;border-radius:17px 17px 52% 52%/17px 17px 16px 16px;background:linear-gradient(180deg,rgba(255,255,255,.56),rgba(255,255,255,.08));pointer-events:none;z-index:0}
+body.mc-mode .mcx-panel>* ,body.mc-mode .mcx-stat>* ,body.mc-mode .mcx-card>* ,body.mc-mode .mcpl-server>*{position:relative;z-index:1}
+body.mc-mode .mcx-panel{padding:1.05rem!important}
+body.mc-mode .mcx-stat{padding:.9rem 1rem!important;min-height:86px!important}
+body.mc-mode .mcx-card{padding:1rem 1.05rem!important;border-left:0!important;transition:transform .16s ease,box-shadow .16s ease!important}
+body.mc-mode .mcx-card::after{content:'';position:absolute;left:0;top:0;bottom:0;width:7px;background:linear-gradient(#82c7c1,#b9eee0)}
+body.mc-mode .mcx-card.on::after{background:linear-gradient(#b9ff9d,#34c94d,#80ea79);box-shadow:0 0 10px rgba(56,205,75,.42)}
+body.mc-mode .mcx-card.on{background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(226,255,240,.79) 55%,rgba(185,246,196,.70))!important;outline-color:rgba(55,179,83,.28)!important}
+body.mc-mode .mcx-card:hover,body.mc-mode .mcpl-server:hover{transform:translateY(-3px)!important;box-shadow:var(--mca-inner),0 22px 50px rgba(0,95,116,.24)!important}
+
+/* Stats — friendly glass meters instead of game HUD blocks. */
+body.mc-mode .mcx-stats{gap:.8rem!important}
+body.mc-mode .mcx-k{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.59rem!important;font-weight:700!important;letter-spacing:.055em!important;text-transform:uppercase!important;color:#56877e!important}
+body.mc-mode .mcx-v{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:1.42rem!important;font-weight:700!important;color:#078d84!important;text-shadow:0 1px 0 #fff!important;margin-top:.24rem!important}
+body.mc-mode .mcx-stat:nth-child(2) .mcx-v,body.mc-mode .mcx-stat:nth-child(4) .mcx-v{color:#31af4c!important}
+
+/* Server card type. */
+body.mc-mode .mcx-name{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.90rem!important;font-weight:700!important;color:#135a5b!important;text-shadow:0 1px 0 rgba(255,255,255,.9)!important}
+body.mc-mode .mcx-sub{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.61rem!important;color:#5c8984!important}
+body.mc-mode .mcx-meta{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.66rem!important;color:#648f88!important;gap:.42rem!important}
+body.mc-mode .mcx-meta b{color:#195d58!important;font-weight:700!important}
+body.mc-mode .mcx-motd{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.70rem!important;color:#477b76!important;line-height:1.42!important}
+body.mc-mode .mcx-b{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-weight:700!important;letter-spacing:.04em!important;border-radius:999px!important;padding:.20rem .48rem!important;background:linear-gradient(#fff,#ecf6f4)!important;color:#6f8e89!important;border:1px solid #9dbdb6!important;box-shadow:inset 0 1px 0 #fff!important}
+body.mc-mode .mcx-b.on{background:linear-gradient(#d2ffbc,#69e26c 48%,#36c94e 51%,#79e882)!important;color:#087029!important;border-color:#2da546!important;text-shadow:0 1px 0 rgba(255,255,255,.58)!important;box-shadow:inset 0 1px 0 #fff,0 0 10px rgba(51,201,73,.25)!important}
+
+/* Forms and controls — classic Aero glass controls. */
+body.mc-mode .mcx-f label{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-weight:700!important;color:#5b8580!important;letter-spacing:.035em!important;text-transform:none!important}
+body.mc-mode .mcx-in{
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;
+  font-size:.72rem!important;
+  color:#174e4c!important;
+  border:1px solid #79bfb6!important;
+  border-radius:11px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(233,255,250,.92))!important;
+  padding:.56rem .64rem!important;
+  box-shadow:inset 0 2px 4px rgba(21,104,91,.09),0 1px 0 #fff!important;
+}
+body.mc-mode .mcx-in:focus{border-color:#19badd!important;outline:none!important;box-shadow:0 0 0 3px rgba(39,190,219,.16),inset 0 1px 3px rgba(21,104,91,.08)!important}
+body.mc-mode .btn,body.mc-mode .ask-submit,body.mc-mode #mcx-refresh{
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;
+  font-weight:700!important;
+  letter-spacing:.015em!important;
+  border-radius:11px!important;
+  padding:.50rem .82rem!important;
+  border:1px solid #2e9f88!important;
+  background:linear-gradient(180deg,#fff 0%,#eafff7 43%,#90e5c4 47%,#c9f9e7 100%)!important;
+  color:#126653!important;
+  text-shadow:0 1px 0 #fff!important;
+  box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 rgba(18,117,88,.12),0 3px 9px rgba(20,116,95,.15)!important;
+  transition:transform .12s ease,filter .12s ease!important;
+}
+body.mc-mode .btn:hover,body.mc-mode .ask-submit:hover,body.mc-mode #mcx-refresh:hover{filter:saturate(1.12) brightness(1.04)!important;transform:translateY(-1px)!important}
+body.mc-mode .btn:active,body.mc-mode .ask-submit:active,body.mc-mode #mcx-refresh:active{transform:translateY(1px)!important;box-shadow:inset 0 2px 5px rgba(16,92,73,.17)!important}
+body.mc-mode .ask-submit,body.mc-mode .btn.btn-accent,body.mc-mode #mcx-refresh{background:linear-gradient(180deg,#f8ffff 0%,#cffff5 42%,#61dda9 46%,#a2efc8 100%)!important;color:#08704d!important;border-color:#239d70!important}
+body.mc-mode .btn.danger{background:linear-gradient(#fff,#fff0e8 45%,#ffc5ad 49%,#ffe5d9)!important;border-color:#d88970!important;color:#9f432c!important}
+
+/* Rows / watchlist. */
+body.mc-mode .mcx-row{border-radius:14px!important;border:1px solid rgba(77,160,151,.26)!important;background:linear-gradient(90deg,rgba(255,255,255,.80),rgba(221,255,245,.72))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 3px 10px rgba(15,98,87,.07)!important;padding:.66rem .75rem!important}
+body.mc-mode .mcx-watch{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-weight:700!important;border-radius:999px!important;padding:.18rem .42rem!important}
+body.mc-mode .mca-online{color:#086629!important;background:linear-gradient(#ceffb6,#5edb65)!important;border:1px solid #2da646!important}
+body.mc-mode .mca-offline{color:#657e79!important;background:linear-gradient(#fff,#e8efed)!important;border:1px solid #adc3bd!important}
+body.mc-mode .mca-seen{color:#7d6506!important;background:linear-gradient(#fff9bd,#efd75d)!important;border:1px solid #c8aa37!important}
+body.mc-mode .mca-unknown{color:#23738a!important;background:linear-gradient(#f4ffff,#aeeaf5)!important;border:1px solid #71c4d5!important}
+body.mc-mode .mca-note{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;background:rgba(255,255,255,.68)!important;border:1px solid rgba(63,149,136,.18)!important;color:#648983!important}
+body.mc-mode .mcx-warn{border-radius:15px!important;background:linear-gradient(135deg,rgba(255,255,255,.87),rgba(216,251,255,.76))!important;border:1px solid rgba(50,162,189,.31)!important;color:#2b7182!important;box-shadow:inset 0 1px 0 #fff,0 5px 15px rgba(18,122,143,.08)!important}
+
+/* Player roster chips — floating little aqua capsules. */
+body.mc-mode .mcx-chip,body.mc-mode .mcpl-player{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.57rem!important;font-weight:600!important;border-radius:999px!important;padding:.18rem .42rem!important;color:#245f5b!important;background:linear-gradient(#fff,#e7fbf6)!important;border:1px solid #9acfc3!important;box-shadow:inset 0 1px 0 #fff,0 2px 5px rgba(16,95,82,.08)!important}
+body.mc-mode .mcx-chip.hit,body.mc-mode .mcpl-player.watched{background:linear-gradient(#d9ffc2,#69e172)!important;color:#076127!important;border-color:#28a447!important;box-shadow:inset 0 1px 0 #fff,0 0 10px rgba(43,199,71,.23)!important}
+body.mc-mode .mcpl-server{padding:1rem!important}
+body.mc-mode .mcpl-state{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-weight:700!important;border-radius:999px!important;padding:.20rem .48rem!important}
+body.mc-mode .mcpl-state.full{background:linear-gradient(#d7ffc1,#61db68)!important;color:#075f25!important;border:1px solid #26a143!important}
+body.mc-mode .mcpl-state.sample{background:linear-gradient(#fff8b8,#ebcf53)!important;color:#735904!important;border:1px solid #c59b25!important}
+body.mc-mode .mcpl-state.hidden{background:linear-gradient(#fff,#e4efed)!important;color:#657c77!important;border:1px solid #aebfba!important}
+body.mc-mode .mcpl-state.empty{background:linear-gradient(#efffff,#9ce8f6)!important;color:#14647a!important;border:1px solid #64bdd0!important}
+
+/* Tables / history — clean Vista list-view feel. */
+body.mc-mode .mcx-table{border-collapse:separate!important;border-spacing:0!important;overflow:hidden!important;border-radius:12px!important}
+body.mc-mode .mcx-table th{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.58rem!important;font-weight:700!important;letter-spacing:.035em!important;color:#477b74!important;background:linear-gradient(#f8ffff,#d8f6ef)!important;border-bottom:1px solid #9bcbbf!important;text-shadow:0 1px 0 #fff!important}
+body.mc-mode .mcx-table td{font-family:'Segoe UI',Tahoma,Arial,sans-serif!important;font-size:.68rem!important;color:#315f5a!important;border-bottom:1px solid rgba(78,154,142,.14)!important;background:rgba(255,255,255,.42)!important}
+body.mc-mode .mcx-table tr:hover td{background:rgba(225,255,247,.72)!important}
+body.mc-mode .mcx-tag{border-radius:999px!important;padding:.14rem .35rem!important;background:rgba(255,255,255,.62)!important}
+body.mc-mode .mcx-tag.join{color:#15733a!important;border-color:#72c78b!important;background:#e8ffe9!important}
+body.mc-mode .mcx-tag.off{color:#9a4d32!important;border-color:#df9a82!important;background:#fff1eb!important}
+
+/* History chart shell gets its own glass inset. */
+body.mc-mode #mcx-history .mcx-panel:has(canvas){background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(211,251,247,.78))!important}
+body.mc-mode #mcx-chart{filter:saturate(1.12)}
+
+/* Scrollbars. */
+body.mc-mode *{scrollbar-width:thin;scrollbar-color:#54c79f rgba(225,251,244,.72)}
+body.mc-mode *::-webkit-scrollbar{width:9px;height:9px}
+body.mc-mode *::-webkit-scrollbar-track{background:rgba(225,251,244,.70);border-radius:999px}
+body.mc-mode *::-webkit-scrollbar-thumb{background:linear-gradient(#9ce6ca,#43bb8f);border:2px solid rgba(233,255,248,.92);border-radius:999px}
+
+/* Small phones/tablets. */
+@media(max-width:850px){
+  body.mc-mode #app>header{min-height:68px!important;padding:.78rem 1rem!important}
+  body.mc-mode .mcx-nav{top:68px;padding:.42rem .7rem .36rem!important}
+  body.mc-mode .mcx-nav button{padding:.55rem .72rem!important;font-size:.65rem!important}
+  body.mc-mode .mcx-wrap{padding:1rem .85rem 2.4rem!important}
+  body.mc-mode .mcx-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #mca-bubbles i:nth-child(1),#mca-bubbles i:nth-child(3){opacity:.38}
+}
+@media(max-width:560px){
+  body.mc-mode{background-position:56% top!important}
+  body.mc-mode .mcx-stat,body.mc-mode .mcx-panel,body.mc-mode .mcx-card,body.mc-mode .mcpl-server{border-radius:15px!important}
+  body.mc-mode .mcx-nav{gap:.25rem!important}
+  body.mc-mode .mcx-nav button{padding:.50rem .57rem!important;font-size:.60rem!important}
+  #mca-bubbles{display:none}
+}
+@media(prefers-reduced-motion:reduce){#mca-bubbles i{animation:none!important}body.mc-mode .mcx-card,body.mc-mode .mcpl-server,body.mc-mode .btn,body.mc-mode .ask-submit,body.mc-mode #mcx-refresh{transition:none!important}}
