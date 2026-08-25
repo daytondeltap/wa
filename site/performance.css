@@ -1,0 +1,99 @@
+/* Adaptive performance profile. Functional UI stays enabled; only ambient/GPU-heavy effects scale down. */
+
+body.lg-page-hidden #mca-bubbles i,
+body.lg-page-hidden #rbxm-decor i,
+body.lg-page-hidden.mc-mode #mcx::before,
+body.lg-page-hidden.mc-mode #mcx::after{
+  animation-play-state:paused!important;
+  transition:none!important;
+}
+
+/* Balanced devices: keep the visual language, reduce blur cost. */
+body.lg-perf-balanced.mc-mode #app>header,
+body.lg-perf-balanced.mc-mode .mcx-nav,
+body.lg-perf-balanced.mc-mode .mcx-panel,
+body.lg-perf-balanced.mc-mode .mcx-stat,
+body.lg-perf-balanced.mc-mode .mcx-card,
+body.lg-perf-balanced.mc-mode .mcpl-server{
+  backdrop-filter:blur(7px) saturate(1.12)!important;
+  -webkit-backdrop-filter:blur(7px) saturate(1.12)!important;
+}
+body.lg-perf-balanced.rbx-metro header,
+body.lg-perf-balanced.rbx-metro .page-nav,
+body.lg-perf-balanced.rbx-metro .filter-bar,
+body.lg-perf-balanced.rbx-metro .login-card,
+body.lg-perf-balanced.rbx-metro .panel,
+body.lg-perf-balanced.rbx-metro .presence-card,
+body.lg-perf-balanced.rbx-metro .user-tile,
+body.lg-perf-balanced.rbx-metro .insight-card,
+body.lg-perf-balanced.rbx-metro .tracked-row,
+body.lg-perf-balanced.rbx-metro .cg-panel,
+body.lg-perf-balanced.rbx-metro .cg-card,
+body.lg-perf-balanced.rbx-metro .cg-pack,
+body.lg-perf-balanced.rbx-metro .ex-panel{
+  backdrop-filter:blur(6px)!important;
+  -webkit-backdrop-filter:blur(6px)!important;
+}
+
+/* Lite devices: preserve the theme but remove the expensive continuous GPU work. */
+body.lg-perf-lite.mc-mode{
+  background-attachment:scroll!important;
+}
+body.lg-perf-lite.mc-mode #app>header,
+body.lg-perf-lite.mc-mode .mcx-nav,
+body.lg-perf-lite.mc-mode .mcx-panel,
+body.lg-perf-lite.mc-mode .mcx-stat,
+body.lg-perf-lite.mc-mode .mcx-card,
+body.lg-perf-lite.mc-mode .mcpl-server{
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.86),0 4px 12px rgba(0,91,120,.10)!important;
+}
+body.lg-perf-lite.mc-mode #mca-bubbles i:nth-child(n+3){display:none!important}
+body.lg-perf-lite.mc-mode #mca-bubbles i,
+body.lg-perf-lite.mc-mode #mcx::before,
+body.lg-perf-lite.mc-mode #mcx::after{
+  animation:none!important;
+}
+
+body.lg-perf-lite.rbx-metro header,
+body.lg-perf-lite.rbx-metro .page-nav,
+body.lg-perf-lite.rbx-metro .filter-bar,
+body.lg-perf-lite.rbx-metro .login-card,
+body.lg-perf-lite.rbx-metro .panel,
+body.lg-perf-lite.rbx-metro .presence-card,
+body.lg-perf-lite.rbx-metro .user-tile,
+body.lg-perf-lite.rbx-metro .insight-card,
+body.lg-perf-lite.rbx-metro .tracked-row,
+body.lg-perf-lite.rbx-metro .cg-panel,
+body.lg-perf-lite.rbx-metro .cg-card,
+body.lg-perf-lite.rbx-metro .cg-pack,
+body.lg-perf-lite.rbx-metro .cg-auction,
+body.lg-perf-lite.rbx-metro .cg-trade,
+body.lg-perf-lite.rbx-metro .ex-panel{
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.18)!important;
+}
+body.lg-perf-lite #rbxm-decor .rbxm-art2,
+body.lg-perf-lite #rbxm-decor .rbxm-dots,
+body.lg-perf-lite #rbxm-decor .rbxm-bar{display:none!important}
+body.lg-perf-lite #rbxm-decor .rbxm-art{
+  opacity:.18!important;
+  filter:none!important;
+}
+body.lg-perf-lite #rbxm-decor i{animation:none!important;transition:none!important}
+
+/* Let the browser skip paint/layout work for long off-screen lists on constrained devices. */
+body.lg-perf-lite .presence-card,
+body.lg-perf-lite #page-cards .cg-card,
+body.lg-perf-lite .mcx-card,
+body.lg-perf-lite .mcpl-server,
+body.lg-perf-lite .tracked-row{
+  content-visibility:auto;
+  contain-intrinsic-size:320px;
+}
+
+@media (pointer:coarse){
+  #rbxm-decor i{transition:none!important}
+}
