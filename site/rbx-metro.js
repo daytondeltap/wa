@@ -48,7 +48,7 @@
   }
 
   function pointerMotion(e){
-    if(!document.body.classList.contains('rbx-metro')||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    if(!document.body.classList.contains('rbx-metro')||document.hidden||document.body.classList.contains('lg-perf-lite')||matchMedia('(pointer:coarse)').matches||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
     cancelAnimationFrame(raf);
     raf=requestAnimationFrame(()=>{
       const x=e.clientX/innerWidth-.5,y=e.clientY/innerHeight-.5;
