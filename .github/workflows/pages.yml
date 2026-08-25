@@ -47,6 +47,7 @@ jobs:
               '<script src="mc-aero-final.js"></script>',
               '<script src="mc-frutiger-aero-overhaul.js"></script>',
               '<script src="rbx-metro.js"></script>',
+              '<script src="performance-runtime.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
