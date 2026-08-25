@@ -1,0 +1,32 @@
+name: Frontend checks
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
+      - name: Check adaptive performance assets
+        shell: bash
+        run: |
+          test -s site/performance-runtime.js
+          test -s site/performance.css

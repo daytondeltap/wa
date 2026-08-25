@@ -2,8 +2,13 @@
   const VERIFY_API = 'https://jwjxhxvahgrpkvaoyrzw.supabase.co/functions/v1/lg-card-verify';
   const S = { status: null, busy: false, timer: null, lastMessage: '' };
   const $ = id => document.getElementById(id);
-  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const toastSafe = message => { try { toast(message); } catch { console.log(message); } };
+
+  function hasKey() {
+    try { return typeof SITE_KEY === 'string' && SITE_KEY.trim().length > 0; }
+    catch { return false; }
+  }
 
   async function vapi(path, opts = {}) {
     const headers = new Headers(opts.headers || {});
@@ -186,6 +191,7 @@
   }
 
   async function syncStatus(silent = false) {
+    if (!hasKey()) return;
     try {
       S.status = await vapi('/status');
       patchViews();
@@ -199,10 +205,15 @@
       sessionStorage.removeItem('lg-profile-verified');
       setTimeout(() => toastSafe('Roblox account verified — your Cards packs are ready'), 150);
     }
-    const observer = new MutationObserver(() => patchViews());
-    observer.observe(document.documentElement, { childList:true, subtree:true });
+    const root = $('page-cards');
+    if (root) {
+      const observer = new MutationObserver(() => patchViews());
+      observer.observe(root, { childList:true, subtree:true });
+    }
     syncStatus(true);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncStatus(true); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') syncStatus(true);
+    });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
