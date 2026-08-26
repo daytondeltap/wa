@@ -10,6 +10,19 @@ body.lg-page-hidden #page-cards .cg-card[data-cte=pulse]{
   transition:none!important;
 }
 
+/* RBX heavy data tables use a small virtual window instead of keeping every row painted. */
+.lg-vtable-wrap{max-height:min(58vh,560px);overflow:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable}
+.lg-vtable-wrap table{table-layout:auto}
+.lg-vtable-wrap thead{position:sticky;top:0;z-index:3;background:var(--surface)}
+.lg-vtable-wrap th{background:var(--surface)}
+.lg-vtable-wrap td{white-space:nowrap}
+.lg-vtable-wrap .lg-vspace td{padding:0!important;border:0!important;background:transparent!important;pointer-events:none}
+
+/* Containment keeps a change in one data island from forcing layout/paint across the whole dashboard. */
+#page-monitor .presence-card,#page-monitor .user-tile,#page-monitor .panel,#page-monitor section,
+#page-leaderboard .lb-table tr,#page-history .insight-card{contain:layout paint style}
+#page-monitor .avatar,#page-leaderboard .avatar{content-visibility:auto}
+
 /* Balanced devices: keep the visual language, reduce blur cost. */
 body.lg-perf-balanced.mc-mode #app>header,
 body.lg-perf-balanced.mc-mode .mcx-nav,
@@ -36,11 +49,11 @@ body.lg-perf-balanced.rbx-metro .ex-panel{
   backdrop-filter:blur(6px)!important;
   -webkit-backdrop-filter:blur(6px)!important;
 }
+body.lg-perf-balanced #page-monitor .presence-card:hover{transform:none!important}
+body.lg-perf-balanced .lb-bar-fill{transition-duration:.2s!important}
 
 /* Lite devices: preserve the theme but remove the expensive continuous GPU work. */
-body.lg-perf-lite.mc-mode{
-  background-attachment:scroll!important;
-}
+body.lg-perf-lite.mc-mode{background-attachment:scroll!important}
 body.lg-perf-lite.mc-mode #app>header,
 body.lg-perf-lite.mc-mode .mcx-nav,
 body.lg-perf-lite.mc-mode .mcx-panel,
@@ -54,9 +67,7 @@ body.lg-perf-lite.mc-mode .mcpl-server{
 body.lg-perf-lite.mc-mode #mca-bubbles i:nth-child(n+3){display:none!important}
 body.lg-perf-lite.mc-mode #mca-bubbles i,
 body.lg-perf-lite.mc-mode #mcx::before,
-body.lg-perf-lite.mc-mode #mcx::after{
-  animation:none!important;
-}
+body.lg-perf-lite.mc-mode #mcx::after{animation:none!important}
 
 body.lg-perf-lite.rbx-metro header,
 body.lg-perf-lite.rbx-metro .page-nav,
@@ -75,30 +86,50 @@ body.lg-perf-lite.rbx-metro .cg-trade,
 body.lg-perf-lite.rbx-metro .ex-panel{
   backdrop-filter:none!important;
   -webkit-backdrop-filter:none!important;
-  box-shadow:0 5px 14px rgba(0,0,0,.18)!important;
+  box-shadow:0 4px 10px rgba(0,0,0,.14)!important;
 }
 body.lg-perf-lite:not(.mc-mode)::before{display:none!important}
 body.lg-perf-lite #rbxm-decor .rbxm-art2,
 body.lg-perf-lite #rbxm-decor .rbxm-dots,
 body.lg-perf-lite #rbxm-decor .rbxm-bar{display:none!important}
-body.lg-perf-lite #rbxm-decor .rbxm-art{
-  opacity:.18!important;
-  filter:none!important;
-}
+body.lg-perf-lite #rbxm-decor .rbxm-art{opacity:.15!important;filter:none!important}
 body.lg-perf-lite #rbxm-decor i{animation:none!important;transition:none!important}
 body.lg-perf-lite #page-cards .cg-card[data-cte=holo]::before,
 body.lg-perf-lite #page-cards .cg-card[data-cte=pulse]{animation:none!important}
+
+/* Main RBX page: eliminate non-functional animation and expensive hover/compositing on low-end phones. */
+body.lg-perf-lite #live-dot{animation:none!important;box-shadow:none!important}
+body.lg-perf-lite #page-monitor .presence-card,
+body.lg-perf-lite #page-monitor .user-tile,
+body.lg-perf-lite #page-monitor .panel,
+body.lg-perf-lite #page-monitor .filter-bar{box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.lg-perf-lite #page-monitor .presence-card{transition:border-color .1s!important}
+body.lg-perf-lite #page-monitor .presence-card:hover{transform:none!important}
+body.lg-perf-lite .lb-bar-fill{transition:none!important}
+body.lg-perf-lite .panel canvas{max-height:190px!important}
+body.lg-perf-lite .lg-vtable-wrap{max-height:52vh}
 
 /* Let the browser skip paint/layout work for long off-screen lists on constrained devices. */
 body.lg-perf-lite .presence-card,
 body.lg-perf-lite #page-cards .cg-card,
 body.lg-perf-lite .mcx-card,
 body.lg-perf-lite .mcpl-server,
-body.lg-perf-lite .tracked-row{
+body.lg-perf-lite .tracked-row,
+body.lg-perf-lite .user-tile{
   content-visibility:auto;
-  contain-intrinsic-size:320px;
+  contain-intrinsic-size:240px;
 }
 
-@media (pointer:coarse){
-  #rbxm-decor i{transition:none!important}
+@media(max-width:700px){
+  .lg-vtable-wrap{max-height:50vh}
+  #page-monitor .main{padding-left:.75rem!important;padding-right:.75rem!important;gap:.9rem!important}
+  #page-monitor .filter-bar{padding:.65rem .75rem!important;gap:.55rem!important}
+  #page-monitor .card-grid{grid-template-columns:1fr!important;gap:.6rem!important}
+  #page-monitor .presence-card{padding:.75rem .85rem!important}
+  #page-monitor .panel{padding:.8rem!important}
+  #page-monitor .user-tile{min-width:140px;padding:.65rem .75rem!important}
+  #page-monitor table{font-size:.72rem}
+  #page-monitor th,#page-monitor td{padding:.4rem .55rem}
 }
+
+@media (pointer:coarse){#rbxm-decor i{transition:none!important}}
