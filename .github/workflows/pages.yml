@@ -31,8 +31,41 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'Expected performance patch target missing in {path}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # Cards decorators only need to observe Cards. Keeping these observers on
+          # documentElement made every RBX presence DOM change wake three unrelated
+          # Cards passes, which is especially expensive on low-end phones.
+          replace_once(
+              'site/cards-polish.js',
+              "function boot(){injectStyles();new MutationObserver(patch).observe(document.documentElement,{childList:true,subtree:true});patch();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')patch()})}",
+              "function boot(){injectStyles();const lgObs=new MutationObserver(patch),lgRoot=document.getElementById('page-cards')||document.body;lgObs.observe(lgRoot,{childList:true,subtree:true});patch();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')patch()})}"
+          )
+          replace_once(
+              'site/dev-cards.js',
+              "function boot(){injectStyles();const obs=new MutationObserver(schedulePatch);obs.observe(document.documentElement,{childList:true,subtree:true});sync();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});setInterval(()=>{if(document.visibilityState==='visible'&&$('#page-cards')?.classList.contains('active'))sync()},30000)}",
+              "function boot(){injectStyles();const obs=new MutationObserver(schedulePatch),root=$('#page-cards')||document.body;obs.observe(root,{childList:true,subtree:true});sync();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});setInterval(()=>{if(document.visibilityState==='visible'&&$('#page-cards')?.classList.contains('active'))sync()},30000)}"
+          )
+          replace_once(
+              'site/custom-card-tiers.js',
+              "function boot(){css();const ob=new MutationObserver(()=>{clearTimeout(S.t);S.t=setTimeout(patch,35)});ob.observe(document.documentElement,{childList:true,subtree:true});sync();document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&sync());setInterval(()=>document.visibilityState==='visible'&&$('#page-cards')?.classList.contains('active')&&sync(),30000)}",
+              "function boot(){css();const ob=new MutationObserver(()=>{clearTimeout(S.t);S.t=setTimeout(patch,35)}),root=$('#page-cards');if(root)ob.observe(root,{childList:true,subtree:true});ob.observe(document.body,{childList:true,subtree:false});sync();document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&sync());setInterval(()=>document.visibilityState==='visible'&&$('#page-cards')?.classList.contains('active')&&sync(),30000)}"
+          )
+
           p = Path('site/index.html')
           s = p.read_text(encoding='utf-8')
+          # Let injected performance modules install before a saved-key auto-login
+          # performs the first large Monitor render. Login behavior itself is unchanged.
+          s = s.replace(
+              "if(SITE_KEY)login(SITE_KEY).catch(()=>logout());",
+              "if(SITE_KEY)setTimeout(()=>login(SITE_KEY).catch(()=>logout()),0);"
+          )
           tags = [
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
@@ -48,12 +81,19 @@ jobs:
               '<script src="mc-frutiger-aero-overhaul.js"></script>',
               '<script src="rbx-metro.js"></script>',
               '<script src="performance-runtime.js"></script>',
+              '<script src="rbx-data-performance.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
                   s = s.replace('</body>', tag + '\n</body>')
           p.write_text(s, encoding='utf-8')
           PY
+      - name: Validate optimized frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
+          grep -q 'rbx-data-performance.js' site/index.html
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
