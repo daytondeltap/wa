@@ -33,6 +33,12 @@ jobs:
           from pathlib import Path
           p = Path('site/index.html')
           s = p.read_text(encoding='utf-8')
+          # Let injected performance modules install before a saved-key auto-login
+          # performs the first large Monitor render. Login behavior itself is unchanged.
+          s = s.replace(
+              "if(SITE_KEY)login(SITE_KEY).catch(()=>logout());",
+              "if(SITE_KEY)setTimeout(()=>login(SITE_KEY).catch(()=>logout()),0);"
+          )
           tags = [
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
@@ -48,6 +54,7 @@ jobs:
               '<script src="mc-frutiger-aero-overhaul.js"></script>',
               '<script src="rbx-metro.js"></script>',
               '<script src="performance-runtime.js"></script>',
+              '<script src="rbx-data-performance.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
