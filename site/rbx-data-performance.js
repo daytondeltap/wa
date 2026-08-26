@@ -77,7 +77,7 @@
 
   function chartOptions(){
     const lite=perf()==='lite';
-    return {responsive:true,maintainAspectRatio:false,animation:false,normalized:true,devicePixelRatio:Math.min(window.devicePixelRatio||1,lite?1:1.5),interaction:{mode:'nearest',intersect:false},plugins:{legend:{display:false}},elements:{point:{radius:lite?0:2,hoverRadius:3}},scales:{x:{ticks:{color:'#8888aa',maxTicksLimit:lite?7:12},grid:{display:!lite,color:'#1e1e2e'}},y:{ticks:{color:'#8888aa',maxTicksLimit:lite?5:8,callback:v=>fmtSeconds(v)},grid:{display:!lite,color:'#1e1e2e'}}}};
+    return {responsive:true,maintainAspectRatio:false,animation:false,devicePixelRatio:Math.min(window.devicePixelRatio||1,lite?1:1.5),interaction:{mode:'nearest',intersect:false},plugins:{legend:{display:false}},elements:{point:{radius:lite?0:2,hoverRadius:3}},scales:{x:{ticks:{color:'#8888aa',maxTicksLimit:lite?7:12},grid:{display:!lite,color:'#1e1e2e'}},y:{ticks:{color:'#8888aa',maxTicksLimit:lite?5:8,callback:v=>fmtSeconds(v)},grid:{display:!lite,color:'#1e1e2e'}}}};
   }
   if(typeof renderCharts==='function')renderCharts=function(data){
     if(typeof Chart==='undefined')return;
@@ -105,7 +105,7 @@
   }
   function drawVirtual(tbody,force=false){
     const st=virtual.get(tbody),wrap=tbody.closest('.table-wrap');if(!st||!wrap||wrap.offsetParent===null)return;
-    const view=Math.max(260,wrap.clientHeight||440),overscan=8,start=Math.max(0,Math.floor(wrap.scrollTop/st.rowH)-overscan),count=Math.ceil(view/st.rowH)+overscan*2,end=Math.min(st.rows.length,start+count);
+    const view=Math.max(260,wrap.clientHeight||440),overscan=8,count=Math.ceil(view/st.rowH)+overscan*2,raw=Math.max(0,Math.floor(wrap.scrollTop/st.rowH)-overscan),maxStart=Math.max(0,st.rows.length-count),start=Math.min(raw,maxStart),end=Math.min(st.rows.length,start+count);
     if(!force&&start===st.lastStart&&end===st.lastEnd)return;st.lastStart=start;st.lastEnd=end;
     const top=start*st.rowH,bottom=Math.max(0,(st.rows.length-end)*st.rowH);
     tbody.innerHTML=`${top?`<tr class="lg-vspace"><td colspan="${st.cols}" style="height:${top}px"></td></tr>`:''}${st.rows.slice(start,end).map(st.rowHtml).join('')}${bottom?`<tr class="lg-vspace"><td colspan="${st.cols}" style="height:${bottom}px"></td></tr>`:''}`;
@@ -141,6 +141,7 @@
     monitorBusy=true;
     try{
       const uid=q('#user-filter')?.value||'',days=q('#days-filter')?.value||'',filter=`${uid}|${days}`,changed=filter!==lastFilter,mode=perf(),heavyEvery=mode==='lite'?30000:mode==='balanced'?20000:10000,full=Boolean(mark||changed||Date.now()-lastHeavy>=heavyEvery);
+      if(changed)qa('#sessions-table,#events-table').forEach(t=>{const w=t.closest('.table-wrap');if(w)w.scrollTop=0});
       const requests=[apiGet('/monitor/presence',{user_id:uid}),apiGet('/monitor/totals',{user_id:uid})];
       if(full)requests.push(apiGet('/monitor/charts',{user_id:uid,days:days||30}),apiGet('/monitor/top_games',{user_id:uid,days}),apiGet('/monitor/sessions',{user_id:uid,days}),apiGet('/monitor/events',{user_id:uid}));
       const out=await Promise.all(requests),presence=out[0],totals=out[1];
