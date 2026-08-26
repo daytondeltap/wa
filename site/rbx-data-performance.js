@@ -1,6 +1,4 @@
 (()=>{
-  /* RBX data-performance layer.
-     Keeps all RBX features/data, but avoids rebuilding large DOM trees every poll. */
   const q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)];
   const perf=()=>document.body.classList.contains('lg-perf-lite')?'lite':document.body.classList.contains('lg-perf-balanced')?'balanced':'full';
   const isHidden=()=>document.hidden||q('#app')?.classList.contains('hidden')||document.body.classList.contains('mc-mode');
@@ -11,14 +9,20 @@
 
   function fastSig(rows,fields){
     if(!Array.isArray(rows))return String(rows??'');
-    const n=rows.length;if(!n)return '0';
-    const pick=x=>fields.map(k=>String(x?.[k]??'')).join('~');
-    const a=rows[0],b=rows[Math.floor(n/2)],c=rows[n-1];
-    return `${n}|${pick(a)}|${pick(b)}|${pick(c)}`;
+    let h=2166136261>>>0;
+    for(const row of rows){
+      for(const k of fields){
+        const s=String(row?.[k]??'');
+        for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}
+        h^=124;h=Math.imul(h,16777619)>>>0;
+      }
+      h^=10;h=Math.imul(h,16777619)>>>0;
+    }
+    return `${rows.length}:${h.toString(36)}`;
   }
   function presenceSig(data){
     const users=data?.users||[],states=data?.states||{};
-    return users.map(u=>{const s=states[String(u.id)]||{};return [u.id,u.name,s.presence_type,s.last_location,s.place_id,s.game_id,s.updated_at,data?.avatars?.[String(u.id)]||''].join('~')}).join('|');
+    return fastSig(users.map(u=>{const s=states[String(u.id)]||{};return{id:u.id,name:u.name,p:s.presence_type,l:s.last_location,pl:s.place_id,g:s.game_id,t:s.updated_at,a:data?.avatars?.[String(u.id)]||''}}),['id','name','p','l','pl','g','t','a']);
   }
 
   function ensurePresenceDelegation(){
@@ -39,7 +43,7 @@
     for(const u of users){
       const id=String(u.id),s=states[id]||{presence_type:0},info=label[Number(s.presence_type)]||label[0],img=avatars[id]||'',join=Number(s.presence_type)===2&&account?.can_join&&s.place_id;
       keep.add(id);
-      let card=q(`.presence-card[data-rbx-user="${CSS.escape(id)}"]`,grid);
+      let card=q(`.presence-card[data-rbx-user="${id}"]`,grid);
       if(!card){
         card=document.createElement('div');card.dataset.rbxUser=id;
         card.innerHTML='<div class="card-head"><div class="avatar avatar-md lg-avatar-slot"></div><div><div class="card-username"></div><div class="tracked-id"></div></div></div><span class="card-status"></span><div class="card-game"></div><div class="card-time"></div>';
@@ -47,11 +51,11 @@
       }
       card.className=`presence-card ${info[0]}`;
       if(join)card.dataset.join=JSON.stringify({id:u.id,name:u.name,game:s.last_location||'',place:s.place_id,instance:s.game_id||'',avatar:img});else delete card.dataset.join;
-      const head=q('.card-head',card),slot=q('.lg-avatar-slot',card)||q('.avatar',card);
+      const slot=q('.lg-avatar-slot',card)||q('.avatar',card);
       if(img){
         let im=slot?.tagName==='IMG'?slot:null;
-        if(!im){im=document.createElement('img');im.className='avatar avatar-md lg-avatar-slot';im.alt='';im.loading='lazy';im.decoding='async';im.fetchPriority='low';slot?.replaceWith(im)}
-        if(im.src!==img)im.src=img;
+        if(!im){im=document.createElement('img');im.className='avatar avatar-md lg-avatar-slot';im.alt='';im.loading='lazy';im.decoding='async';im.fetchPriority='low';im.width=44;im.height=44;slot?.replaceWith(im)}
+        if(im.getAttribute('src')!==img)im.src=img;
       }else if(slot?.tagName==='IMG'){
         const ph=document.createElement('div');ph.className='avatar avatar-md lg-avatar-slot';slot.replaceWith(ph);
       }
@@ -61,7 +65,6 @@
       if(status){status.className=`card-status ${info[2]}`;if(status.textContent!==info[1])status.textContent=info[1]}
       if(game){const text=s.last_location?`🎮 ${s.last_location}`:'';game.hidden=!text;if(game.textContent!==text)game.textContent=text}
       if(time){const text=s.updated_at?'Updated '+fmtTs(s.updated_at):'Waiting for first poll';if(time.textContent!==text)time.textContent=text}
-      if(head)head.style.minWidth='0';
     }
     qa('.presence-card[data-rbx-user]',grid).forEach(card=>{if(!keep.has(card.dataset.rbxUser))card.remove()});
   };
@@ -80,13 +83,13 @@
     if(typeof Chart==='undefined')return;
     const d=data?.daily||[],h=data?.hourly||[],sig=fastSig(d,['day','total_seconds'])+'|'+fastSig(h,['hour','total_seconds']);if(sig===cache.charts)return;cache.charts=sig;
     const opts=chartOptions();
-    if(!dailyChart){dailyChart=new Chart(q('#daily-chart'),{type:'line',data:{labels:[],datasets:[{data:[],borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.08)',fill:true,tension:.2,pointRadius:opts.elements.point.radius}]},options:opts})}
+    if(!dailyChart)dailyChart=new Chart(q('#daily-chart'),{type:'line',data:{labels:[],datasets:[{data:[],borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.08)',fill:true,tension:.2,pointRadius:opts.elements.point.radius}]},options:opts});
     dailyChart.data.labels=d.map(x=>x.day);dailyChart.data.datasets[0].data=d.map(x=>x.total_seconds);dailyChart.options.devicePixelRatio=opts.devicePixelRatio;dailyChart.options.animation=false;dailyChart.update('none');
-    if(!hourlyChart){hourlyChart=new Chart(q('#hourly-chart'),{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:'rgba(255,60,95,.55)',borderColor:'#ff3c5f',borderWidth:1}]},options:opts})}
+    if(!hourlyChart)hourlyChart=new Chart(q('#hourly-chart'),{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:'rgba(255,60,95,.55)',borderColor:'#ff3c5f',borderWidth:1}]},options:opts});
     hourlyChart.data.labels=h.map(x=>String(x.hour).padStart(2,'0'));hourlyChart.data.datasets[0].data=h.map(x=>x.total_seconds);hourlyChart.options.devicePixelRatio=opts.devicePixelRatio;hourlyChart.options.animation=false;hourlyChart.update('none');
   };
 
-  function setVirtualTable(tbody,rows,rowHtml,cols,empty,cacheKey){
+  function setVirtualTable(tbody,rows,rowHtml,cols,empty){
     if(!tbody)return;
     const wrap=tbody.closest('.table-wrap'),threshold=perf()==='lite'?45:90;
     if(!rows?.length){virtual.delete(tbody);wrap?.classList.remove('lg-vtable-wrap');tbody.innerHTML=`<tr><td colspan="${cols}" class="empty">${empty}</td></tr>`;return}
@@ -97,7 +100,7 @@
       st={rows:[],rowHtml,cols,rowH:perf()==='lite'?43:40,lastStart:-1,lastEnd:-1,raf:0};virtual.set(tbody,st);
       wrap?.addEventListener('scroll',()=>{if(st.raf)return;st.raf=requestAnimationFrame(()=>{st.raf=0;drawVirtual(tbody)})},{passive:true});
     }
-    st.rows=rows;st.rowHtml=rowHtml;st.cols=cols;st.rowH=perf()==='lite'?43:40;st.cacheKey=cacheKey;st.lastStart=-1;st.lastEnd=-1;
+    st.rows=rows;st.rowHtml=rowHtml;st.cols=cols;st.rowH=perf()==='lite'?43:40;st.lastStart=-1;st.lastEnd=-1;
     drawVirtual(tbody,true);
   }
   function drawVirtual(tbody,force=false){
@@ -107,7 +110,7 @@
     const top=start*st.rowH,bottom=Math.max(0,(st.rows.length-end)*st.rowH);
     tbody.innerHTML=`${top?`<tr class="lg-vspace"><td colspan="${st.cols}" style="height:${top}px"></td></tr>`:''}${st.rows.slice(start,end).map(st.rowHtml).join('')}${bottom?`<tr class="lg-vspace"><td colspan="${st.cols}" style="height:${bottom}px"></td></tr>`:''}`;
   }
-  function redrawVirtuals(){virtual.forEach?.(()=>{});qa('.lg-vtable-wrap tbody').forEach(t=>drawVirtual(t,true))}
+  function redrawVirtuals(){qa('.lg-vtable-wrap tbody').forEach(t=>drawVirtual(t,true))}
 
   if(typeof renderGames==='function')renderGames=function(rows){
     const sig=fastSig(rows,['location_name','sessions','total_seconds','avg_seconds','max_seconds']);if(sig===cache.games)return;cache.games=sig;
@@ -115,12 +118,12 @@
   };
   if(typeof renderSessions==='function')renderSessions=function(rows){
     const sig=fastSig(rows,['id','user_id','username','location_name','start_time','end_time','duration_seconds']);if(sig===cache.sessions)return;cache.sessions=sig;
-    setVirtualTable(q('#sessions-table tbody'),rows,x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.location_name||'—')}</td><td>${fmtTs(x.start_time)}</td><td>${x.end_time?fmtTs(x.end_time):'LIVE'}</td><td>${x.end_time?fmtSeconds(x.duration_seconds):'LIVE'}</td></tr>`,5,'No sessions yet','sessions');
+    setVirtualTable(q('#sessions-table tbody'),rows,x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.location_name||'—')}</td><td>${fmtTs(x.start_time)}</td><td>${x.end_time?fmtTs(x.end_time):'LIVE'}</td><td>${x.end_time?fmtSeconds(x.duration_seconds):'LIVE'}</td></tr>`,5,'No sessions yet');
   };
   if(typeof renderEvents==='function')renderEvents=function(rows){
     const sig=fastSig(rows,['id','timestamp','username','event_type','old_location','new_location','old_status','new_status']);if(sig===cache.events)return;cache.events=sig;
     const cls=x=>x==='ENTERED_GAME'?'tag-entered':x==='LEFT_GAME'?'tag-left':x==='SWITCHED_GAME'?'tag-switched':'tag-started';
-    setVirtualTable(q('#events-table tbody'),rows,x=>`<tr><td>${fmtTs(x.timestamp)}</td><td>${esc(x.username)}</td><td><span class="tag ${cls(x.event_type)}">${esc(x.event_type)}</span></td><td>${esc(x.old_location||x.old_status||'—')}</td><td>${esc(x.new_location||x.new_status||'—')}</td></tr>`,5,'No events yet','events');
+    setVirtualTable(q('#events-table tbody'),rows,x=>`<tr><td>${fmtTs(x.timestamp)}</td><td>${esc(x.username)}</td><td><span class="tag ${cls(x.event_type)}">${esc(x.event_type)}</span></td><td>${esc(x.old_location||x.old_status||'—')}</td><td>${esc(x.new_location||x.new_status||'—')}</td></tr>`,5,'No events yet');
   };
 
   if(typeof refreshLeaderboard==='function')refreshLeaderboard=async function(){
