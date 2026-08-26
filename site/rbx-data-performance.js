@@ -25,10 +25,7 @@
     return fastSig(users.map(u=>{const s=states[String(u.id)]||{};return{id:u.id,name:u.name,p:s.presence_type,l:s.last_location,pl:s.place_id,g:s.game_id,t:s.updated_at,a:data?.avatars?.[String(u.id)]||''}}),['id','name','p','l','pl','g','t','a']);
   }
   const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
-  const idle=()=>new Promise(r=>{
-    if('requestIdleCallback'in window)requestIdleCallback(()=>r(),{timeout:120});
-    else setTimeout(r,0);
-  });
+  const idle=()=>new Promise(r=>{'requestIdleCallback'in window?requestIdleCallback(()=>r(),{timeout:120}):setTimeout(r,0)});
 
   function ensurePresenceDelegation(){
     const grid=q('#presence-grid');if(!grid||grid.dataset.lgPerfClick)return;
@@ -150,10 +147,12 @@
 
       const presenceP=apiGet('/monitor/presence',{user_id:uid});
       const totalsP=full?apiGet('/monitor/totals',{user_id:uid}):null;
-      const chartsP=full?apiGet('/monitor/charts',{user_id:uid,days:days||30}):null;
-      const gamesP=full?apiGet('/monitor/top_games',{user_id:uid,days}):null;
-      const sessionsP=full?apiGet('/monitor/sessions',{user_id:uid,days}):null;
-      const eventsP=full?apiGet('/monitor/events',{user_id:uid}):null;
+      const heavyP=full?Promise.all([
+        apiGet('/monitor/charts',{user_id:uid,days:days||30}),
+        apiGet('/monitor/top_games',{user_id:uid,days}),
+        apiGet('/monitor/sessions',{user_id:uid,days}),
+        apiGet('/monitor/events',{user_id:uid})
+      ]):null;
 
       const presence=await presenceP;
       renderPresence(presence);
@@ -163,7 +162,7 @@
       const totals=await totalsP;
       renderTotals(totals,presence?.avatars||{});
       await nextFrame();
-      const [charts,games,sessions,events]=await Promise.all([chartsP,gamesP,sessionsP,eventsP]);
+      const [charts,games,sessions,events]=await heavyP;
       if(!mark&&isHidden())return;
 
       renderCharts(charts);
