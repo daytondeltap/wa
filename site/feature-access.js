@@ -41,17 +41,20 @@
     syncMc();
   }
 
-  // Run after Exchange/Cards have wrapped buildNav, so CK restrictions get the
-  // final say over what the logged-in user can see.
-  if(typeof buildNav==='function'&&!buildNav.__lgFeatureAccess){
+  function wrapNav(){
+    if(typeof buildNav!=='function'||buildNav.__lgFeatureAccess)return;
     const old=buildNav;
     const patched=function(){old();prune()};
     patched.__lgFeatureAccess=true;
     buildNav=patched;
   }
+  // Wrap now, then once again after DOMContentLoaded. Cards/Exchange install their
+  // own wrappers during DOMContentLoaded, so the second pass guarantees CK pruning
+  // is the outermost/final navigation layer.
+  wrapNav();
 
   function openOnlyFeature(){
-    if((account?.tabs||[]).length)return;
+    if(!account||(account.tabs||[]).length)return;
     if(cardsAllowed()){
       const b=q('.page-nav-btn[data-tab="cards"]');
       if(b){b.click();return}
@@ -61,12 +64,12 @@
 
   window.addEventListener('lg-account-ready',e=>{
     if(e.detail?.auth_method==='google')SITE_KEY=GOOGLE_SENTINEL;
-    prune();
-    setTimeout(()=>{try{buildNav()}catch{};prune();openOnlyFeature()},0);
+    wrapNav();prune();
+    setTimeout(()=>{wrapNav();try{buildNav()}catch{};prune();openOnlyFeature()},0);
   });
 
   // Cards/MC modules may finish their own DOM boot immediately after this file.
-  // A few cheap retries handle that startup ordering without a permanent observer.
-  function boot(){let n=0;const t=setInterval(()=>{prune();if(account)openOnlyFeature();if(++n>=12)clearInterval(t)},100)}
+  // A few cheap retries handle startup ordering without a permanent observer.
+  function boot(){wrapNav();let n=0;const t=setInterval(()=>{wrapNav();prune();if(account)openOnlyFeature();if(++n>=12)clearInterval(t)},100)}
   document.readyState==='loading'?document.addEventListener('DOMContentLoaded',boot,{once:true}):boot();
 })();
