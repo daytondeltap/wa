@@ -1,6 +1,7 @@
 (()=>{
   const SUPA='https://jwjxhxvahgrpkvaoyrzw.supabase.co';
   const PUBLISHABLE='sb_publishable_T9WqodoC7td8fZ50GBu1qg_dq4528-r';
+  const GOOGLE_CLIENT_ID='116418828646-25qo5updqnfpv3g7qb68v7j51pj8osoh.apps.googleusercontent.com';
   const REDIRECT='https://daytondeltap.github.io/wa/';
   const SDK='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4';
   const FN_PREFIX=`${SUPA}/functions/v1/`;
@@ -8,7 +9,7 @@
   const TARGETS={
     'lg-api':'api','lg-cards':'cards','lg-card-verify':'card-verify','lg-card-names':'card-names','lg-card-gifts':'card-gifts','lg-mc':'mc'
   };
-  let sb=null,accessToken='',authBusy=false,signingOut=false;
+  let sb=null,accessToken='',authBusy=false,signingOut=false,providerReady=false;
   const nativeFetch=window.fetch.bind(window);
   const q=(s,r=document)=>r.querySelector(s);
 
@@ -45,7 +46,7 @@
 
   function css(){if(q('#lg-google-auth-style'))return;const s=document.createElement('style');s.id='lg-google-auth-style';s.textContent=`
     .lg-auth-or{display:flex;align-items:center;gap:.65rem;margin:.2rem 0;color:var(--muted);font:600 .58rem var(--font-mono);text-transform:uppercase;letter-spacing:.08em}.lg-auth-or::before,.lg-auth-or::after{content:'';height:1px;background:var(--border);flex:1}
-    .lg-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.55rem;font:700 .72rem var(--font-mono);padding:.67rem .8rem;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:border-color .15s,transform .15s}.lg-google-btn:hover{border-color:var(--accent2);transform:translateY(-1px)}.lg-google-btn:disabled{opacity:.55;cursor:wait;transform:none}
+    .lg-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.55rem;font:700 .72rem var(--font-mono);padding:.67rem .8rem;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:border-color .15s,transform .15s}.lg-google-btn:hover{border-color:var(--accent2);transform:translateY(-1px)}.lg-google-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
     .lg-google-g{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#4285f4;font:bold 13px Arial;box-shadow:0 0 0 1px #ddd}
     .tier-badge.tb-ck{color:#d08cff;border-color:#a95cff;box-shadow:0 0 8px rgba(169,92,255,.22)}
   `;document.head.appendChild(s)}
@@ -53,12 +54,25 @@
   function injectButton(){
     const form=q('#login-form');if(!form||q('#lg-google-login'))return;
     const or=document.createElement('div');or.className='lg-auth-or';or.textContent='or';
-    const b=document.createElement('button');b.type='button';b.id='lg-google-login';b.className='lg-google-btn';b.innerHTML='<span class="lg-google-g" aria-hidden="true">G</span><span>Sign in with Google</span>';
+    const b=document.createElement('button');b.type='button';b.id='lg-google-login';b.className='lg-google-btn';b.dataset.googleClientId=GOOGLE_CLIENT_ID;b.innerHTML='<span class="lg-google-g" aria-hidden="true">G</span><span>Sign in with Google</span>';
+    b.disabled=!providerReady;b.title=providerReady?'Sign in with the Google account linked to your LG key':'Google OAuth is not enabled in Supabase Auth yet';
     b.onclick=()=>signInGoogle();form.after(or,b);
   }
 
+  function syncGoogleButton(){const b=q('#lg-google-login');if(!b)return;b.disabled=!providerReady||authBusy;b.title=providerReady?'Sign in with the Google account linked to your LG key':'Google OAuth is not enabled in Supabase Auth yet'}
   function setError(message){const el=q('#login-error');if(!el)return;el.textContent=message;el.classList.remove('hidden')}
   function clearError(){q('#login-error')?.classList.add('hidden')}
+
+  async function checkProvider(){
+    try{
+      const r=await nativeFetch(`${SUPA}/auth/v1/settings`,{headers:{apikey:PUBLISHABLE}});
+      if(!r.ok)return false;
+      const j=await r.json();
+      providerReady=Boolean(j?.external?.google);
+      syncGoogleButton();
+      return providerReady;
+    }catch{providerReady=false;syncGoogleButton();return false}
+  }
 
   function loadSdk(){return new Promise((resolve,reject)=>{
     if(window.supabase?.createClient)return resolve(window.supabase);
@@ -123,27 +137,28 @@
 
   async function googleLogin(session){
     if(authBusy||SITE_KEY||!session?.access_token)return;
-    authBusy=true;accessToken=session.access_token;clearError();
-    const b=q('#lg-google-login');if(b)b.disabled=true;
+    authBusy=true;accessToken=session.access_token;clearError();syncGoogleButton();
     try{await finishLogin(null)}catch(e){
       q('#app')?.classList.add('hidden');q('#auth')?.classList.remove('hidden');
       setError(e?.message==='Access key rejected'?'This Google account is not linked to an active LG key.':(e?.message||'Google sign-in could not be linked to LG.'));
-    }finally{authBusy=false;if(b)b.disabled=false}
+    }finally{authBusy=false;syncGoogleButton()}
   }
 
   async function signInGoogle(){
     clearError();
-    const b=q('#lg-google-login');if(b)b.disabled=true;
+    if(!providerReady){setError('Google sign-in is not enabled yet. Configure the Google provider in Supabase Auth first.');return}
+    authBusy=true;syncGoogleButton();
     try{
       if(!sb)throw new Error('Google sign-in is still loading. Try again in a moment.');
       if(accessToken)await sb.auth.signOut({scope:'local'}).catch(()=>{});
       const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:REDIRECT,queryParams:{prompt:'select_account'}}});
       if(error)throw error;
-    }catch(e){setError(e?.message||'Could not start Google sign-in');if(b)b.disabled=false}
+    }catch(e){authBusy=false;syncGoogleButton();setError(e?.message||'Could not start Google sign-in')}
   }
 
   async function init(){
     css();injectButton();
+    await checkProvider();
     try{
       const lib=await loadSdk();
       sb=lib.createClient(SUPA,PUBLISHABLE,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}});
@@ -159,8 +174,11 @@
 
   window.LGGoogleAuth={
     client:null,
+    clientId:GOOGLE_CLIENT_ID,
     hasSession:()=>Boolean(accessToken),
     getAccessToken:()=>accessToken,
+    providerReady:()=>providerReady,
+    refreshProviderStatus:checkProvider,
     signIn:signInGoogle,
     signOut:async()=>{if(sb)await sb.auth.signOut({scope:'local'});accessToken=''},
     redirect:REDIRECT
