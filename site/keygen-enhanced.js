@@ -1,6 +1,6 @@
 (()=>{
   const F=[
-    ['monitor','RBX Monitor'],['leaderboard','Leaderboard'],['exchange','LG Exchange'],['history','History'],['adduser','User Adding'],['cards','Cards'],['mc','MC Detector']
+    ['monitor','RBX Monitor'],['leaderboard','Leaderboard'],['exchange','LG Exchange'],['history','History'],['adduser','User Adding'],['cards','Cards'],['mc','MC Detector'],['join','Join Game']
   ];
   const S={rows:[]};
   const q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -27,7 +27,7 @@
     if(![...tier.options].some(o=>o.value==='CK_'))tier.add(new Option('CK_ — Custom feature access','CK_'));
     const email=document.createElement('div');email.className='lg-key-extra';email.innerHTML='<label for="keygen-emails">Google emails (optional)</label><input class="ask-input" id="keygen-emails" maxlength="1000" placeholder="name@example.com · up to 5, comma separated"><div class="adduser-hint">Each linked Google account can sign in as this key. No Gmail permission is requested.</div>';
     const submit=form.querySelector('button[type="submit"]');form.insertBefore(email,submit);
-    const box=document.createElement('div');box.id='lg-ck-create';box.className='lg-ck-box';box.innerHTML=`<div class="lg-ck-title">CK allowed features</div><div class="adduser-hint">Checked features are enforced by the backend gateway, not just hidden in the UI.</div>${checklist('create',{},true)}`;form.after(box);
+    const box=document.createElement('div');box.id='lg-ck-create';box.className='lg-ck-box';box.innerHTML=`<div class="lg-ck-title">CK allowed features</div><div class="adduser-hint">Checked features are enforced by the backend, not just hidden in the UI.</div>${checklist('create',{},true)}`;form.after(box);
     const toggle=()=>box.classList.toggle('show',tier.value==='CK_');tier.addEventListener('change',toggle);toggle();
     form.onsubmit=async ev=>{
       ev.preventDefault();
@@ -44,7 +44,7 @@
     };
   }
 
-  function fixedFeatures(t){if(t==='PK_')return ['monitor','leaderboard','exchange','history','adduser','cards','mc'];if(t==='UPK_')return ['leaderboard','adduser','cards','mc'];if(t==='BK_')return ['monitor','adduser','cards','mc'];return []}
+  function fixedFeatures(t){if(t==='PK_')return ['monitor','leaderboard','exchange','history','adduser','cards','mc','join'];if(t==='UPK_')return ['leaderboard','adduser','cards','mc'];if(t==='BK_')return ['monitor','adduser','cards','mc'];return []}
   function featureHtml(x){const on=x.tier==='CK_'?F.filter(([k])=>x.permissions?.[k]).map(([k,n])=>[k,n]):F.filter(([k])=>fixedFeatures(x.tier).includes(k));return `<div class="lg-feature-list">${on.length?on.map(([k,n])=>`<span class="lg-feature-chip on">${e(n)}</span>`).join(''):'<span class="lg-feature-chip">None</span>'}</div>`}
 
   refreshKeys=async function(){
