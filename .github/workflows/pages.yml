@@ -60,13 +60,13 @@ jobs:
 
           p = Path('site/index.html')
           s = p.read_text(encoding='utf-8')
-          # Let injected performance modules install before a saved-key auto-login
-          # performs the first large Monitor render. Login behavior itself is unchanged.
+          # Let injected auth/performance modules install before a saved-key auto-login.
           s = s.replace(
               "if(SITE_KEY)login(SITE_KEY).catch(()=>logout());",
               "if(SITE_KEY)setTimeout(()=>login(SITE_KEY).catch(()=>logout()),0);"
           )
           tags = [
+              '<script src="google-auth.js"></script>',
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
               '<script src="profile-verify.js"></script>',
@@ -82,6 +82,8 @@ jobs:
               '<script src="rbx-metro.js"></script>',
               '<script src="performance-runtime.js"></script>',
               '<script src="rbx-data-performance.js"></script>',
+              '<script src="feature-access.js"></script>',
+              '<script src="keygen-enhanced.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
@@ -94,6 +96,9 @@ jobs:
           set -euo pipefail
           find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
           grep -q 'rbx-data-performance.js' site/index.html
+          grep -q 'google-auth.js' site/index.html
+          grep -q 'feature-access.js' site/index.html
+          grep -q 'keygen-enhanced.js' site/index.html
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
