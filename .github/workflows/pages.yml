@@ -60,13 +60,15 @@ jobs:
 
           p = Path('site/index.html')
           s = p.read_text(encoding='utf-8')
-          # Let injected performance modules install before a saved-key auto-login
-          # performs the first large Monitor render. Login behavior itself is unchanged.
-          s = s.replace(
-              "if(SITE_KEY)login(SITE_KEY).catch(()=>logout());",
-              "if(SITE_KEY)setTimeout(()=>login(SITE_KEY).catch(()=>logout()),0);"
-          )
+          # auth-ck.js owns saved-session bootstrap so Google and key sessions cannot
+          # race each other. Preserve the saved key for that module instead of logging
+          # in before the gateway interception layer is installed.
+          old = "if(SITE_KEY)login(SITE_KEY).catch(()=>logout());"
+          if old not in s:
+              raise SystemExit('Expected saved-key bootstrap target missing in site/index.html')
+          s = s.replace(old, "window.LG_LEGACY_SITE_KEY=SITE_KEY;", 1)
           tags = [
+              '<script src="auth-ck.js"></script>',
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
               '<script src="profile-verify.js"></script>',
@@ -93,6 +95,7 @@ jobs:
         run: |
           set -euo pipefail
           find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
+          grep -q 'auth-ck.js' site/index.html
           grep -q 'rbx-data-performance.js' site/index.html
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
