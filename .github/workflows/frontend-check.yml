@@ -34,6 +34,9 @@ jobs:
           grep -q "data-ckm-feature" site/ck-key-manager.js
           grep -q "Clear all" site/ck-key-manager.js
           grep -q "samePermissions" site/ck-key-manager.js
+          test -s site/ck-feature-guard.js
+          grep -q "No Features Enabled" site/ck-feature-guard.js
+          grep -q "page-ck-empty" site/ck-feature-guard.js
       - name: Check adaptive performance assets
         shell: bash
         run: |
