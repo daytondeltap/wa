@@ -87,6 +87,7 @@ jobs:
               '<script src="rbx-metro.js"></script>',
               '<script src="performance-runtime.js"></script>',
               '<script src="rbx-data-performance.js"></script>',
+              '<script src="ck-feature-guard.js"></script>',
           ]
           for tag in tags:
               if tag not in s:
@@ -103,6 +104,7 @@ jobs:
           grep -q 'ck-key-manager.js' site/index.html
           grep -q 'egress-runtime.js' site/index.html
           grep -q 'rbx-data-performance.js' site/index.html
+          grep -q 'ck-feature-guard.js' site/index.html
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
