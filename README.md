@@ -11,21 +11,21 @@ Browser / GitHub Pages
         |
         |-- LG access key (x-site-key)
         |-- OR Supabase Google session (Authorization: Bearer ...)
-        v
-lg-gateway
         |
-        +-- resolves both login methods to the same LG key/account
-        +-- enforces CK feature permissions
-        +-- proxies to existing LG Edge Functions
+        +-- legacy raw keys: direct to existing Edge Functions after login
+        |   (avoids an unnecessary gateway proxy hop)
         |
-        +-- RBX presence / history / key-scoped data
-        +-- Cards / verification / gifts / exchange
-        +-- MC server tracking / watchlists / history
+        +-- Google / CK: lg-gateway
+        |       +-- resolves identity to the same LG key/account
+        |       +-- enforces CK feature permissions
+        |       +-- proxies only where the compatibility boundary is needed
+        |
+        +-- Exchange reads: low-egress summary/sample endpoint
         v
-Postgres + scheduled background pollers
+Supabase Edge Functions + Postgres + scheduled background pollers
 ```
 
-The production frontend lives in `site/`. The Pages workflow starts from `site/index.html`, installs the authentication/gateway layer first, then injects the feature modules. The backend source is maintained in the `daytondeltap/Lg` repository.
+The production frontend lives in `site/`. The Pages workflow starts from `site/index.html`, captures the native fetch implementation, installs the authentication/gateway layer, installs the egress runtime, then injects the feature modules. The backend source is maintained in the `daytondeltap/Lg` repository.
 
 ## Login methods
 
@@ -73,6 +73,14 @@ The CK checklist can independently allow or deny:
 
 The backend is authoritative. Hiding a disabled feature in the browser is only presentation; `lg-gateway` also rejects requests for CK features that are switched off.
 
+### CK schema compatibility
+
+`public.site_keys.site_keys_tier_check` must include `CK_`. The production schema now permits:
+
+`DEV`, `PK_`, `UPK_`, `BK_`, `CK_`.
+
+This is important because an older constraint can make the gateway accept a CK request but have Postgres reject the actual insert. Keep this constraint and the frontend/backend tier lists synchronized when adding future key types.
+
 ## Key Generator
 
 The DEV Key Generator can:
@@ -92,9 +100,22 @@ RBX Detect is the default detector mode. It includes live presence, player total
 
 Join controls remain permission-aware. A CK key with Join Game disabled does not receive usable join capability even if Monitor is enabled.
 
+The backend Roblox poller still checks presence every **10 seconds**. Egress reduction is implemented by batching database writes rather than lowering detection freshness.
+
 ## LG Exchange
 
 The Exchange is a shared paper-market simulation around Roblox player markets. Values are site-only, non-redeemable, and have no real-world payout. It includes market watch, simulated price/history views, an order-book-style display, and market-pressure signals.
+
+### Low-egress Exchange reads
+
+The production dataset can contain hundreds of thousands of one-minute candles. The browser must therefore **not** repeatedly ask an Edge Function to download raw 24-hour candle sets merely to compute market cards.
+
+`site/egress-runtime.js` routes:
+
+- `/exchange/markets` to `lg-exchange-summary/markets`, where 24-hour high/low/volume/change are aggregated inside Postgres;
+- `/exchange/history` to `lg-exchange-summary/history`, where the selected range is reduced inside Postgres to approximately 160 chart points.
+
+If the low-egress endpoint fails, the frontend falls back to the legacy Exchange API rather than making the tab unusable.
 
 ## LG Cards
 
@@ -108,17 +129,30 @@ MC Detector tracks Java/Bedrock servers, server status, player rosters when expo
 
 The repository also contains a Chrome/Chromium Manifest V3 companion extension under `extension/rbx-detect/`. It continues to use LG access-key authentication, sync tracked Roblox users, perform background presence checks, and show local desktop notifications during its configured alert window.
 
-## Adaptive performance mode
+## Adaptive performance and egress control
 
 The frontend can reduce purely decorative GPU work on constrained devices while preserving detector polling, data refresh, Cards actions, Exchange behavior, and watchlists. Ambient decorative animation is paused when the tab is hidden.
+
+Network controls in `site/egress-runtime.js` additionally:
+
+- coalesce overlapping identical GET requests;
+- cache expensive monitor aggregates for short, feature-appropriate windows;
+- cache Exchange market summaries/history/orderbook/tape reads for short windows;
+- clear cached reads after mutations;
+- let established legacy raw-key sessions call their original Edge Function directly instead of going browser → gateway → original function;
+- keep Google and CK sessions on `lg-gateway` so identity translation and CK authorization remain server-enforced.
+
+These optimizations are intended to reduce Supabase egress/request amplification without making the 10-second Roblox presence detector stale.
 
 ## Frontend module map
 
 | File | Purpose |
 |---|---|
 | `site/index.html` | Stable base login, RBX monitor, leaderboard, history, user/key UI |
+| `site/fetch-bootstrap.js` | Captures browser-native fetch before auth routing is installed |
 | `site/auth-ck.js` | Key + Google login bridge, gateway routing, CK/email Key Generator UI, feature guards |
-| `site/exchange.js` | LG Exchange |
+| `site/egress-runtime.js` | Request de-duplication, short read caches, legacy direct routing, low-egress Exchange routing |
+| `site/exchange.js` | LG Exchange UI |
 | `site/cards.js` | Core Cards pages and APIs |
 | `site/profile-verify.js` | Roblox About/profile-code verification UI |
 | `site/profile-verify-bootstrap.js` | Reconnects the verifier after login/Cards re-renders |
@@ -151,8 +185,8 @@ The workflow:
 
 1. checks out the repository;
 2. changes saved-key bootstrap so `site/auth-ck.js` owns session selection;
-3. injects `auth-ck.js` before feature modules;
-4. validates JavaScript syntax;
+3. injects `fetch-bootstrap.js`, `auth-ck.js`, and `egress-runtime.js` before feature modules;
+4. validates all top-level `site/*.js` files with `node --check`;
 5. uploads `site/` as the Pages artifact;
 6. deploys the artifact with GitHub Pages.
 
@@ -167,5 +201,6 @@ Because the site is aggressively cached by browsers/CDNs, a hard refresh can be 
 - Keep DEV capabilities server-gated.
 - Keep CK authorization server-enforced.
 - Keep standard randomized Cards packs free and TC closed/non-redeemable.
+- Reduce egress with database-side aggregation, batching, request de-duplication, and short caches before lowering detector freshness.
 - Prefer additive modules over risky rewrites of the stable base page.
 - Update this README whenever architecture or user-visible behavior changes.
