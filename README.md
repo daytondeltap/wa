@@ -1,66 +1,66 @@
 # LG Presence Suite
 
-A static GitHub Pages frontend for **RBX Detect**, **MC Detector**, **LG Cards**, and the **LG Exchange**. The site talks to server-side Supabase Edge Functions and keeps Roblox and Minecraft detector data scoped to the same LG account while keeping the two detector modes logically separate.
+Static GitHub Pages frontend for **RBX Detect**, **MC Detector**, **LG Cards**, and the **LG Exchange**. Production data and authentication are backed by the `LgBackend` Supabase project. Backend source is maintained in `daytondeltap/Lg`.
 
 > **TC is a closed, site-only fictional unit. It has no cash value, cannot be redeemed, and is not a real financial asset. Standard randomized card packs are free.**
 
-## Architecture
+## Production architecture
 
 ```text
 Browser / GitHub Pages
         |
         |-- LG access key (x-site-key)
-        |-- OR Supabase Google session (Authorization: Bearer ...)
+        |-- OR Supabase Google session (Bearer token)
         |
-        +-- legacy raw keys: direct to existing Edge Functions after login
-        |   (avoids an unnecessary gateway proxy hop)
+        +-- auth-ck.js
+        |      Google/key login + normal CK gateway routing
         |
-        +-- Google / CK: lg-gateway
-        |       +-- resolves identity to the same LG key/account
-        |       +-- enforces CK feature permissions
-        |       +-- proxies only where the compatibility boundary is needed
+        +-- ck-key-manager.js (DEV key administration)
+        |      -> lg-key-admin
+        |           -> atomic service-role-only Postgres RPCs
         |
-        +-- Exchange reads: low-egress summary/sample endpoint
-        v
-Supabase Edge Functions + Postgres + scheduled background pollers
+        +-- established non-CK raw-key reads
+        |      -> original LG Edge Functions directly where safe
+        |
+        +-- Exchange summary/history reads
+               -> lg-exchange-summary
+
+Supabase Edge Functions -> Postgres + scheduled pollers
 ```
 
-The production frontend lives in `site/`. The Pages workflow starts from `site/index.html`, captures the native fetch implementation, installs the authentication/gateway layer, installs the egress runtime, then injects the feature modules. The backend source is maintained in the `daytondeltap/Lg` repository.
+The Pages build starts from `site/index.html` and injects the additive modules in a controlled order. Existing key login remains backward-compatible.
 
-## Login methods
+## Authentication
 
-LG supports two ways to enter the same account:
+LG supports two login methods that resolve to the same LG key/account.
 
-1. **Access key** — the original login method. The raw key is kept in browser `sessionStorage` for the current tab/session and requests are authorized through `x-site-key`.
-2. **Sign in with Google** — a Google account can be linked to an LG key by a DEV user. Supabase Auth validates the Google session, the gateway matches the confirmed Google email to a linked LG key, and all permissions/data are then taken from that key.
+### Access key
 
-Google login does **not** create a second LG account and does not bypass key permissions. If the linked key is revoked, the linked Google login is revoked too. Logging out clears both local key state and Google-session state.
+The browser keeps the raw key in `sessionStorage` for the current browser session and sends it as `x-site-key`. Server-side functions hash it with SHA-256 and use the first 16 hex characters as the stable `site_keys.key_id`.
 
-### Google OAuth configuration
+### Google OAuth
 
-Production site:
+A Google account can be linked to an LG key by a DEV user. Supabase Auth validates the Google session, the confirmed normalized email is resolved through `public.site_key_emails`, and the linked LG key supplies the permissions. Google login does not create a second LG permission model or bypass a revoked key.
 
-- **Google OAuth client ID:** `116418828646-25qo5updqnfpv3g7qb68v7j51pj8osoh.apps.googleusercontent.com`
-- **Authorized JavaScript origin in Google Cloud:** `https://daytondeltap.github.io`
-- **Authorized redirect URI in Google Cloud:** `https://jwjxhxvahgrpkvaoyrzw.supabase.co/auth/v1/callback`
-- **Supabase Auth Site URL:** `https://daytondeltap.github.io/wa/`
-- **Supabase Auth Redirect URL allow-list entry:** `https://daytondeltap.github.io/wa/`
+Production OAuth values:
 
-In **Supabase Dashboard → Authentication → Providers → Google**, enable Google and paste the client ID above plus the Google client secret. The client secret belongs only in Supabase/Google configuration and must never be committed to this repository.
+- Google OAuth client ID: `116418828646-25qo5updqnfpv3g7qb68v7j51pj8osoh.apps.googleusercontent.com`
+- Google Authorized JavaScript origin: `https://daytondeltap.github.io`
+- Google Authorized redirect URI: `https://jwjxhxvahgrpkvaoyrzw.supabase.co/auth/v1/callback`
+- Supabase Auth Site URL: `https://daytondeltap.github.io/wa/`
+- Supabase Redirect URL allow-list entry: `https://daytondeltap.github.io/wa/`
 
-For local development, add the exact local origin you actually use (for example `http://localhost:8000`) to Google Authorized JavaScript origins and the corresponding page URL (for example `http://localhost:8000/`) to Supabase Redirect URLs. The Google provider callback remains the Supabase callback URL shown above.
+The Google client secret belongs only in **Supabase Dashboard → Authentication → Providers → Google** and must never be committed to this repository.
 
-## Access keys and tiers
+## Access-key tiers
 
-Existing tiers remain supported:
+- `BK_` — Basic access
+- `UPK_` — Upgraded access
+- `PK_` — Full standard access
+- `DEV` — developer/admin access
+- `CK_` — configurable feature access
 
-- `BK_` — Basic access.
-- `UPK_` — Upgraded access.
-- `PK_` — Full standard access.
-- `DEV` — developer/admin access and Key Generator.
-- `CK_` — **Configurable Key**. DEV users choose its allowed features with a checklist.
-
-The CK checklist can independently allow or deny:
+`CK_` can independently enable or disable:
 
 - Monitor
 - Leaderboard
@@ -71,136 +71,123 @@ The CK checklist can independently allow or deny:
 - MC Detector
 - Join Game
 
-The backend is authoritative. Hiding a disabled feature in the browser is only presentation; `lg-gateway` also rejects requests for CK features that are switched off.
+A CK is now allowed to have **zero enabled features**, any subset, or all features. The browser presentation is not the security boundary: normal CK requests still pass through `lg-gateway`, which reads the current stored permission map and rejects disabled features server-side.
 
-### CK schema compatibility
+The production `site_keys_tier_check` permits `DEV`, `PK_`, `UPK_`, `BK_`, and `CK_`.
 
-`public.site_keys.site_keys_tier_check` must include `CK_`. The production schema now permits:
+## DEV Key Generator and CK manager
 
-`DEV`, `PK_`, `UPK_`, `BK_`, `CK_`.
+`site/ck-key-manager.js` is the hardened DEV administration layer. It supersedes the older checkbox editor inside `auth-ck.js` while leaving `auth-ck.js` responsible for login/session/gateway compatibility.
 
-This is important because an older constraint can make the gateway accept a CK request but have Postgres reject the actual insert. Keep this constraint and the frontend/backend tier lists synchronized when adding future key types.
-
-## Key Generator
-
-The DEV Key Generator can:
+The DEV manager can:
 
 - generate `BK_`, `UPK_`, `PK_`, or `CK_` keys;
-- assign an optional label;
-- link up to five Google email addresses to a key;
-- choose CK permissions from a checklist;
-- edit a generated key's label, linked Google emails, and CK permissions later;
-- revoke or reactivate keys.
+- assign a label;
+- link up to five Google email addresses;
+- toggle every CK feature independently;
+- use **Select all** or **Clear all**;
+- edit permissions and linked emails later;
+- revoke or reactivate keys;
+- prepare older keys for Google login by supplying the original raw key once.
 
-An email can be linked to only one LG key at a time. New keys are automatically prepared for Google login. Older keys created before Google-login support can still be linked, but the DEV UI asks for the original raw key once so the gateway can create the encrypted compatibility record required to proxy legacy Edge Functions. The raw key is never placed in the frontend source.
+CK controls are explicit button switches rather than relying on browser-native checkbox styling/behavior. On generate or **Save & Verify**, the frontend compares the server-returned permission map with the selected switch state. It does not show a successful save if they differ.
+
+### Atomic key administration
+
+DEV key-management traffic uses the dedicated `lg-key-admin` Edge Function. It authenticates a DEV raw key or linked Google DEV session, then calls service-role-only Postgres RPCs. Key creation and configuration are transactional across:
+
+- `public.site_keys`
+- `public.site_key_emails`
+- `public.site_key_login_secrets`
+
+This prevents partial states such as a key being created while its email or wrapped login secret fails to save. Email conflicts are checked before replacement of an existing key's links.
+
+New generated keys automatically receive the wrapped-key compatibility record required for Google login. Older keys only need their original raw key once when Google linking is first enabled.
+
+### Permission refresh
+
+A logged-in CK session periodically refreshes its account permissions and refreshes again when the page becomes visible. Newly disabled tabs are removed from navigation and normal API enforcement remains immediate on the backend.
 
 ## RBX Detect
 
-RBX Detect is the default detector mode. It includes live presence, player totals, charts, recent sessions/events, leaderboard data, retained game history, and key-scoped tracked-user management. Presence states include `OFFLINE`, `WEBSITE`, `IN GAME`, `STUDIO`, and `INVISIBLE`.
+RBX Detect includes live presence, totals, charts, recent sessions/events, leaderboard, retained game history, and key-scoped tracked-user management. Presence states include `OFFLINE`, `WEBSITE`, `IN GAME`, `STUDIO`, and `INVISIBLE`.
 
-Join controls remain permission-aware. A CK key with Join Game disabled does not receive usable join capability even if Monitor is enabled.
-
-The backend Roblox poller still checks presence every **10 seconds**. Egress reduction is implemented by batching database writes rather than lowering detection freshness.
+The backend Roblox poller still checks approximately every **10 seconds**. Egress reduction is achieved through batched database work rather than reducing presence freshness.
 
 ## LG Exchange
 
-The Exchange is a shared paper-market simulation around Roblox player markets. Values are site-only, non-redeemable, and have no real-world payout. It includes market watch, simulated price/history views, an order-book-style display, and market-pressure signals.
+The Exchange is a closed paper-market simulation around Roblox player markets. It has no cash value or payout.
 
-### Low-egress Exchange reads
+The production candle table can contain hundreds of thousands of one-minute rows, so the frontend uses compact reads:
 
-The production dataset can contain hundreds of thousands of one-minute candles. The browser must therefore **not** repeatedly ask an Edge Function to download raw 24-hour candle sets merely to compute market cards.
+- `/exchange/markets` -> `lg-exchange-summary/markets`, with 24-hour aggregation performed in Postgres;
+- `/exchange/history` -> `lg-exchange-summary/history`, with the selected range sampled in Postgres to a bounded chart result.
 
-`site/egress-runtime.js` routes:
-
-- `/exchange/markets` to `lg-exchange-summary/markets`, where 24-hour high/low/volume/change are aggregated inside Postgres;
-- `/exchange/history` to `lg-exchange-summary/history`, where the selected range is reduced inside Postgres to approximately 160 chart points.
-
-If the low-egress endpoint fails, the frontend falls back to the legacy Exchange API rather than making the tab unusable.
+`site/egress-runtime.js` also performs short caching and in-flight GET de-duplication. Legacy raw-key sessions can skip an unnecessary gateway proxy hop where the original Edge Function already authenticates the key; Google and CK remain on the gateway where required for authorization.
 
 ## LG Cards
 
-LG Cards is the site's collectible-card system. Standard randomized packs are free and use closed, non-redeemable TC for site-only features. It includes Roblox profile verification, packs, inventory actions, collections, direct trades, auctions inside the closed TC system, and DEV-only card tools. DEV operations continue to be checked server-side.
+LG Cards is the collectible-card system. Standard randomized packs are free. Card profile verification, collections, inventory actions, trades, closed-TC auctions, gifts, and DEV tools remain server-authorized.
 
 ## MC Detector
 
-MC Detector tracks Java/Bedrock servers, server status, player rosters when exposed by the server, per-server watchlists, uptime/history, and watched-player events. FULL/SAMPLE/HIDDEN roster confidence remains explicit so a missing sampled name is not incorrectly treated as proof that a player is offline.
+MC Detector tracks configured Java/Bedrock servers, server state/history, available player lists, per-server watchlists, and watched-player events. FULL/SAMPLE/HIDDEN confidence remains explicit so a sampled roster is not treated as a complete roster.
 
-## Companion RBX Detect browser extension
-
-The repository also contains a Chrome/Chromium Manifest V3 companion extension under `extension/rbx-detect/`. It continues to use LG access-key authentication, sync tracked Roblox users, perform background presence checks, and show local desktop notifications during its configured alert window.
-
-## Adaptive performance and egress control
-
-The frontend can reduce purely decorative GPU work on constrained devices while preserving detector polling, data refresh, Cards actions, Exchange behavior, and watchlists. Ambient decorative animation is paused when the tab is hidden.
-
-Network controls in `site/egress-runtime.js` additionally:
-
-- coalesce overlapping identical GET requests;
-- cache expensive monitor aggregates for short, feature-appropriate windows;
-- cache Exchange market summaries/history/orderbook/tape reads for short windows;
-- clear cached reads after mutations;
-- let established legacy raw-key sessions call their original Edge Function directly instead of going browser → gateway → original function;
-- keep Google and CK sessions on `lg-gateway` so identity translation and CK authorization remain server-enforced.
-
-These optimizations are intended to reduce Supabase egress/request amplification without making the 10-second Roblox presence detector stale.
-
-## Frontend module map
+## Frontend modules
 
 | File | Purpose |
 |---|---|
-| `site/index.html` | Stable base login, RBX monitor, leaderboard, history, user/key UI |
-| `site/fetch-bootstrap.js` | Captures browser-native fetch before auth routing is installed |
-| `site/auth-ck.js` | Key + Google login bridge, gateway routing, CK/email Key Generator UI, feature guards |
-| `site/egress-runtime.js` | Request de-duplication, short read caches, legacy direct routing, low-egress Exchange routing |
+| `site/index.html` | Stable base app/login/RBX pages |
+| `site/fetch-bootstrap.js` | Captures browser-native `fetch` before routing layers |
+| `site/auth-ck.js` | Key + Google login, gateway routing, CK feature guards, compatibility bootstrap |
+| `site/ck-key-manager.js` | Verified DEV key generator/config editor and CK permission switches |
+| `site/egress-runtime.js` | GET de-duplication, short caches, direct legacy routing, low-egress Exchange routing |
 | `site/exchange.js` | LG Exchange UI |
-| `site/cards.js` | Core Cards pages and APIs |
-| `site/profile-verify.js` | Roblox About/profile-code verification UI |
-| `site/profile-verify-bootstrap.js` | Reconnects the verifier after login/Cards re-renders |
-| `site/cards-polish.js` | Pack reveal and immediate action feedback |
-| `site/dev-cards.js` | DEV targeting and known-content gift packs |
-| `site/custom-card-tiers.js` | DEV custom tier presets and rendering |
-| `site/mc-detector.js` | MC mode, servers, watchlist, history |
-| `site/mc-player-lists.js` | Full/sample/hidden player-roster panel |
-| `site/mc-aero-final.js` | MC watch-confidence UI + Aero styling layer |
-| `site/mc-frutiger-aero-overhaul.js` | MC Frutiger Aero presentation layer |
+| `site/cards.js` | Core Cards UI/API integration |
+| `site/profile-verify.js` | Roblox profile verification UI |
+| `site/profile-verify-bootstrap.js` | Verifier reconnect/bootstrap |
+| `site/cards-polish.js` | Pack/action presentation |
+| `site/dev-cards.js` | DEV card tools |
+| `site/custom-card-tiers.js` | Custom card-tier presentation |
+| `site/mc-detector.js` | MC detector core UI |
+| `site/mc-player-lists.js` | MC roster panel |
+| `site/mc-aero-final.js` | MC confidence/Aero UI |
+| `site/mc-frutiger-aero-overhaul.js` | MC styling layer |
 | `site/rbx-metro.js` | RBX Metro/DORFic theme runtime |
-| `site/performance-runtime.js` | Adaptive device performance classification |
-| `site/performance.css` | Low-cost visual overrides for constrained devices |
+| `site/performance-runtime.js` | Adaptive rendering/performance controls |
+| `site/performance.css` | Low-cost visual overrides |
 
 ## Security notes
 
-- The Supabase **publishable** key may be present in browser code; the Supabase service-role/secret key is never embedded in the browser.
-- Google OAuth tokens are validated by Supabase Auth before the gateway accepts them.
-- A Google email is useful only if it maps to an active LG key.
-- CK permissions and DEV-only operations are enforced server-side.
-- Key/email mapping and wrapped-key tables have Row Level Security enabled and are accessed by server-side code rather than directly by public clients.
-- User-controlled values rendered into dynamic HTML are escaped/sanitized in the relevant modules.
-- Never commit real LG keys, Roblox cookies, Google OAuth client secrets, Supabase service-role keys, or other private credentials.
+- Never put the Supabase service-role/secret key in browser code.
+- A Supabase publishable key may be public; it is not an authorization bypass.
+- Never commit Google OAuth client secrets, Roblox cookies, raw LG keys, or wrapped-key plaintext.
+- CK authorization remains server-enforced through `lg-gateway`.
+- DEV key administration is server-gated through `lg-key-admin` and service-role-only database RPCs.
+- Key/email/wrapped-secret tables retain RLS and are not directly administered by public browser database calls.
+- User-rendered values should remain escaped before insertion into dynamic HTML.
 
-## Deployment
+## Deployment and checks
 
-GitHub Pages deploys from `.github/workflows/pages.yml` whenever `main` changes under `site/` or the Pages workflow itself changes.
+GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. The build injects modules in this order before the feature bundle:
 
-The workflow:
+1. `fetch-bootstrap.js`
+2. `auth-ck.js`
+3. `ck-key-manager.js`
+4. `egress-runtime.js`
 
-1. checks out the repository;
-2. changes saved-key bootstrap so `site/auth-ck.js` owns session selection;
-3. injects `fetch-bootstrap.js`, `auth-ck.js`, and `egress-runtime.js` before feature modules;
-4. validates all top-level `site/*.js` files with `node --check`;
-5. uploads `site/` as the Pages artifact;
-6. deploys the artifact with GitHub Pages.
+All top-level `site/*.js` files are checked with `node --check`. The separate frontend workflow also checks the CK manager contract, including the dedicated admin endpoint, switch controls, Clear All support, and save-verification logic.
 
-Because the site is aggressively cached by browsers/CDNs, a hard refresh can be useful immediately after a Pages deployment when testing changed JavaScript or CSS.
+A hard refresh can be useful immediately after a Pages deployment because browser/CDN caching may briefly retain older JavaScript.
 
 ## Project principles
 
-- Preserve key/client scoping and existing data.
-- Keep key login backward-compatible.
-- Treat Google as another proof of identity for an existing LG key, not as a permissions bypass.
-- Keep RBX and MC tracking data separate.
-- Keep DEV capabilities server-gated.
-- Keep CK authorization server-enforced.
-- Keep standard randomized Cards packs free and TC closed/non-redeemable.
-- Reduce egress with database-side aggregation, batching, request de-duplication, and short caches before lowering detector freshness.
-- Prefer additive modules over risky rewrites of the stable base page.
-- Update this README whenever architecture or user-visible behavior changes.
+- Preserve existing records and key/client scoping.
+- Keep raw-key login backward-compatible.
+- Treat Google as another proof of identity for an existing key, never a permission bypass.
+- Keep CK authorization server-side.
+- Keep DEV administration server-side and transactional.
+- Permit every CK feature combination, including all-off.
+- Reduce egress with aggregation, batching, de-duplication, and short caches before reducing detector freshness.
+- Prefer additive compatibility modules over risky rewrites of stable app code.
+- Update this README whenever authentication, key-management, deployment, or backend behavior changes.
