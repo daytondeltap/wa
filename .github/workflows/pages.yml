@@ -70,7 +70,7 @@ jobs:
           tags = [
               '<script src="fetch-bootstrap.js"></script>',
               '<script src="auth-ck.js"></script>',
-              '<script src="ck-key-manager.js"></script>',
+              '<script src="ck-key-manager.js?v=20260904-1"></script>',
               '<script src="egress-runtime.js"></script>',
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
@@ -87,7 +87,7 @@ jobs:
               '<script src="rbx-metro.js"></script>',
               '<script src="performance-runtime.js"></script>',
               '<script src="rbx-data-performance.js"></script>',
-              '<script src="ck-feature-guard.js"></script>',
+              '<script src="ck-feature-guard.js?v=20260904-1"></script>',
           ]
           for tag in tags:
               if tag not in s:
