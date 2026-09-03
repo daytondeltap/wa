@@ -25,6 +25,15 @@ jobs:
         run: |
           set -euo pipefail
           find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
+      - name: Check CK key manager contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s site/ck-key-manager.js
+          grep -q "lg-key-admin" site/ck-key-manager.js
+          grep -q "data-ckm-feature" site/ck-key-manager.js
+          grep -q "Clear all" site/ck-key-manager.js
+          grep -q "samePermissions" site/ck-key-manager.js
       - name: Check adaptive performance assets
         shell: bash
         run: |
