@@ -7,6 +7,12 @@
   const apiCache = new Map();
   const exchangeCache = new Map();
 
+  function currentAccount() {
+    try { return typeof account !== 'undefined' ? account : null; } catch { return null; }
+  }
+  function currentSiteKey() {
+    try { return typeof SITE_KEY !== 'undefined' ? String(SITE_KEY || '') : ''; } catch { return ''; }
+  }
   function rawUrl(input) {
     try { return typeof input === 'string' || input instanceof URL ? String(input) : input?.url || ''; }
     catch { return ''; }
@@ -21,17 +27,16 @@
     return m ? { url:u, slug:m[1], path:m[2] || '/' } : null;
   }
   function useDirectLegacy(raw) {
-    const f = originalFunction(raw);
-    if (!f || !window.account) return false;
-    if (account?.auth_method === 'google' || account?.tier === 'CK_') return false;
+    const f = originalFunction(raw), a = currentAccount();
+    if (!f || !a) return false;
+    if (a.auth_method === 'google' || a.tier === 'CK_') return false;
     if (f.slug === 'lg-api' && (/^\/(?:auth|account)(?:\/|$)/.test(f.path) || /^\/keys(?:\/|$)/.test(f.path))) return false;
     return true;
   }
   async function deduped(kind, fn, input, init) {
     if (methodOf(input, init) !== 'GET') return fn(input, init);
-    const raw = rawUrl(input);
-    const accountId = String(window.account?.key_id || 'boot');
-    const key = `${kind}|${accountId}|${raw}`;
+    const raw = rawUrl(input), a = currentAccount();
+    const key = `${kind}|${a?.key_id || 'boot'}|${raw}`;
     let p = inflight.get(key);
     if (!p) {
       p = Promise.resolve(fn(input, init));
@@ -53,22 +58,22 @@
   };
 
   function authHeaders() {
-    const h = new Headers();
-    if (account?.auth_method === 'google') {
+    const h = new Headers(), a = currentAccount();
+    if (a?.auth_method === 'google') {
       try {
         const s = JSON.parse(sessionStorage.getItem('lg_google_session') || 'null');
         if (s?.access_token) h.set('authorization', `Bearer ${s.access_token}`);
       } catch {}
     } else {
-      const raw = String(window.SITE_KEY || '').trim();
+      const raw = currentSiteKey().trim();
       if (raw) h.set('x-site-key', raw);
     }
     return h;
   }
   async function fastExchange(path) {
-    const now = Date.now();
+    const now = Date.now(), a = currentAccount();
     const ttl = path.startsWith('/history') ? 30000 : 18000;
-    const cacheKey = `${account?.key_id || ''}|${path}`;
+    const cacheKey = `${a?.key_id || ''}|${path}`;
     const hit = exchangeCache.get(cacheKey);
     if (hit?.data && hit.until > now) return hit.data;
     if (hit?.promise) return hit.promise;
@@ -111,7 +116,7 @@
         if (method !== 'GET') { apiCache.clear(); exchangeCache.clear(); }
         return baseApi(path, opts);
       }
-      const key = `${account?.key_id || ''}|${path}`;
+      const a = currentAccount(), key = `${a?.key_id || ''}|${path}`;
       const now = Date.now(), hit = apiCache.get(key);
       if (hit?.data !== undefined && hit.until > now) return hit.data;
       if (hit?.promise) return hit.promise;
