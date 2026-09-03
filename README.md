@@ -19,6 +19,9 @@ Browser / GitHub Pages
         |      -> lg-key-admin
         |           -> atomic service-role-only Postgres RPCs
         |
+        +-- ck-feature-guard.js
+        |      keeps disabled/all-off CK pages out of the active UI
+        |
         +-- established non-CK raw-key reads
         |      -> original LG Edge Functions directly where safe
         |
@@ -28,7 +31,7 @@ Browser / GitHub Pages
 Supabase Edge Functions -> Postgres + scheduled pollers
 ```
 
-The Pages build starts from `site/index.html` and injects the additive modules in a controlled order. Existing key login remains backward-compatible.
+The Pages build starts from `site/index.html` and injects additive compatibility modules in a controlled order. Existing key login remains backward-compatible.
 
 ## Authentication
 
@@ -71,7 +74,7 @@ The Google client secret belongs only in **Supabase Dashboard → Authentication
 - MC Detector
 - Join Game
 
-A CK is now allowed to have **zero enabled features**, any subset, or all features. The browser presentation is not the security boundary: normal CK requests still pass through `lg-gateway`, which reads the current stored permission map and rejects disabled features server-side.
+A CK is allowed to have **zero enabled features**, any subset, or all features. The browser presentation is not the security boundary: normal CK requests still pass through `lg-gateway`, which reads the current stored permission map and rejects disabled features server-side.
 
 The production `site_keys_tier_check` permits `DEV`, `PK_`, `UPK_`, `BK_`, and `CK_`.
 
@@ -104,9 +107,11 @@ This prevents partial states such as a key being created while its email or wrap
 
 New generated keys automatically receive the wrapped-key compatibility record required for Google login. Older keys only need their original raw key once when Google linking is first enabled.
 
-### Permission refresh
+### Permission refresh and disabled-page guard
 
 A logged-in CK session periodically refreshes its account permissions and refreshes again when the page becomes visible. Newly disabled tabs are removed from navigation and normal API enforcement remains immediate on the backend.
+
+`site/ck-feature-guard.js` handles UI edge cases after a permission change. If the currently visible feature becomes disabled it moves to the first allowed feature. If no app features are enabled, the site shows a dedicated **No Features Enabled** page instead of leaving the Monitor shell visible. This guard does not make network calls; it only reconciles the UI with the already-loaded CK account state.
 
 ## RBX Detect
 
@@ -141,6 +146,7 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 | `site/fetch-bootstrap.js` | Captures browser-native `fetch` before routing layers |
 | `site/auth-ck.js` | Key + Google login, gateway routing, CK feature guards, compatibility bootstrap |
 | `site/ck-key-manager.js` | Verified DEV key generator/config editor and CK permission switches |
+| `site/ck-feature-guard.js` | Redirects away from newly-disabled CK pages and renders the all-off state |
 | `site/egress-runtime.js` | GET de-duplication, short caches, direct legacy routing, low-egress Exchange routing |
 | `site/exchange.js` | LG Exchange UI |
 | `site/cards.js` | Core Cards UI/API integration |
@@ -169,16 +175,11 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 
 ## Deployment and checks
 
-GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. The build injects modules in this order before the feature bundle:
+GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. The build injects the authentication/key-management layers before the feature bundle and cache-busts the hardened CK manager/guard so clients do not remain stuck on an older buggy CK script after a deployment.
 
-1. `fetch-bootstrap.js`
-2. `auth-ck.js`
-3. `ck-key-manager.js`
-4. `egress-runtime.js`
+All top-level `site/*.js` files are checked with `node --check`. The separate frontend workflow also checks the CK manager contract, including the dedicated admin endpoint, switch controls, Clear All support, save-verification logic, and all-off guard.
 
-All top-level `site/*.js` files are checked with `node --check`. The separate frontend workflow also checks the CK manager contract, including the dedicated admin endpoint, switch controls, Clear All support, and save-verification logic.
-
-A hard refresh can be useful immediately after a Pages deployment because browser/CDN caching may briefly retain older JavaScript.
+A hard refresh is still useful immediately after a Pages deployment if the browser retained an older HTML shell.
 
 ## Project principles
 
