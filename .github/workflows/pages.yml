@@ -70,6 +70,7 @@ jobs:
           tags = [
               '<script src="fetch-bootstrap.js"></script>',
               '<script src="auth-ck.js"></script>',
+              '<script src="ck-key-manager.js"></script>',
               '<script src="egress-runtime.js"></script>',
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
@@ -99,6 +100,7 @@ jobs:
           find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
           grep -q 'fetch-bootstrap.js' site/index.html
           grep -q 'auth-ck.js' site/index.html
+          grep -q 'ck-key-manager.js' site/index.html
           grep -q 'egress-runtime.js' site/index.html
           grep -q 'rbx-data-performance.js' site/index.html
       - name: Upload static site
