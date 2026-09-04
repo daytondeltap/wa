@@ -24,6 +24,8 @@
     const users=data?.users||[],states=data?.states||{};
     return fastSig(users.map(u=>{const s=states[String(u.id)]||{};return{id:u.id,name:u.name,p:s.presence_type,l:s.last_location,pl:s.place_id,g:s.game_id,t:s.updated_at,a:data?.avatars?.[String(u.id)]||''}}),['id','name','p','l','pl','g','t','a']);
   }
+  const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>r()));
+  const idle=()=>new Promise(r=>{'requestIdleCallback'in window?requestIdleCallback(()=>r(),{timeout:120}):setTimeout(r,0)});
 
   function ensurePresenceDelegation(){
     const grid=q('#presence-grid');if(!grid||grid.dataset.lgPerfClick)return;
@@ -142,12 +144,35 @@
     try{
       const uid=q('#user-filter')?.value||'',days=q('#days-filter')?.value||'',filter=`${uid}|${days}`,changed=filter!==lastFilter,mode=perf(),heavyEvery=mode==='lite'?30000:mode==='balanced'?20000:10000,full=Boolean(mark||changed||Date.now()-lastHeavy>=heavyEvery);
       if(changed)qa('#sessions-table,#events-table').forEach(t=>{const w=t.closest('.table-wrap');if(w)w.scrollTop=0});
-      const requests=[apiGet('/monitor/presence',{user_id:uid}),apiGet('/monitor/totals',{user_id:uid})];
-      if(full)requests.push(apiGet('/monitor/charts',{user_id:uid,days:days||30}),apiGet('/monitor/top_games',{user_id:uid,days}),apiGet('/monitor/sessions',{user_id:uid,days}),apiGet('/monitor/events',{user_id:uid}));
-      const out=await Promise.all(requests),presence=out[0],totals=out[1];
-      renderPresence(presence);renderTotals(totals,presence?.avatars||{});
-      if(full){renderCharts(out[2]);renderGames(out[3]);renderSessions(out[4]);renderEvents(out[5]);lastHeavy=Date.now();lastFilter=filter}
+
+      const presenceP=apiGet('/monitor/presence',{user_id:uid});
+      const totalsP=full?apiGet('/monitor/totals',{user_id:uid}):null;
+      const heavyP=full?Promise.all([
+        apiGet('/monitor/charts',{user_id:uid,days:days||30}),
+        apiGet('/monitor/top_games',{user_id:uid,days}),
+        apiGet('/monitor/sessions',{user_id:uid,days}),
+        apiGet('/monitor/events',{user_id:uid})
+      ]):null;
+
+      const presence=await presenceP;
+      renderPresence(presence);
       if(mark&&q('#last-update'))q('#last-update').textContent=new Date().toLocaleTimeString();
+      if(!full)return;
+
+      const totals=await totalsP;
+      renderTotals(totals,presence?.avatars||{});
+      await nextFrame();
+      const [charts,games,sessions,events]=await heavyP;
+      if(!mark&&isHidden())return;
+
+      renderCharts(charts);
+      await idle();
+      renderGames(games);
+      await nextFrame();
+      renderSessions(sessions);
+      await idle();
+      renderEvents(events);
+      lastHeavy=Date.now();lastFilter=filter;
     }catch(e){if(mark||!document.hidden)toast(e.message)}finally{
       monitorBusy=false;
       if(pendingFull){pendingFull=false;setTimeout(()=>refreshMonitor(true),0)}
