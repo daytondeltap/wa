@@ -9,15 +9,21 @@ Static GitHub Pages frontend for **RBX Detect**, **MC Detector**, **LG Cards**, 
 ```text
 Browser / GitHub Pages
         |
-        |-- LG access key (x-site-key)
-        |-- OR Supabase Google session (Bearer token)
+        |-- standard DEV/PK_/UPK_/BK_ raw key
+        |      -> lg-api directly for login + normal legacy requests
+        |
+        |-- CK_ raw key or Google session
+        |      -> lg-gateway for identity/permission translation
         |
         +-- auth-ck.js
-        |      Google/key login + CK gateway routing
+        |      Google/key login + gateway routing
         |
-        +-- ck-key-manager.js (DEV key administration)
+        +-- login-resilience.js
+        |      bounded login/page hydration + safe recovery
+        |
+        +-- ck-key-manager.js + key-delete-runtime.js
         |      -> lg-key-admin
-        |           -> atomic service-role-only Postgres RPCs
+        |           -> atomic/service-role key administration
         |
         +-- ck-feature-guard.js
         |      keeps disabled/all-off CK pages out of the active UI
@@ -28,19 +34,25 @@ Browser / GitHub Pages
 Supabase Edge Functions -> Postgres + scheduled pollers
 ```
 
-The Pages build starts from `site/index.html` and injects additive compatibility modules in a controlled order. Existing key login remains backward-compatible.
+The Pages build starts from `site/index.html` and injects additive compatibility modules in a controlled order. Existing raw-key login remains backward-compatible.
 
 ## Authentication
 
-LG supports two login methods that resolve to the same LG key/account.
+LG supports raw access-key login plus Google OAuth linked to an existing LG key.
 
 ### Access key
 
 The browser keeps the raw key in `sessionStorage` for the current browser session and sends it as `x-site-key`. Server-side functions hash it with SHA-256 and use the first 16 hex characters as the stable `site_keys.key_id`.
 
+Standard legacy tiers (`DEV`, `PK_`, `UPK_`, `BK_`) authenticate directly against `lg-api`, including the initial `/auth` request before an `account` object exists. This avoids a circular dependency where login itself previously had to pass through `lg-gateway` before the frontend knew the key tier. After successful raw-key auth, the frontend normalizes the standard tier tabs/features to the authoritative tier matrix.
+
+`site/login-resilience.js` keeps successful authentication separate from secondary page hydration. Tracked-user loading is bounded, first-page loading is bounded, and a temporary Monitor/History request failure can no longer make a valid key look rejected or leave the login screen hanging indefinitely.
+
 ### Google OAuth
 
 A Google account can be linked to an LG key by a DEV user. Supabase Auth validates the Google session, the confirmed normalized email is resolved through `public.site_key_emails`, and the linked LG key supplies the permissions. Google login does not create a second LG permission model or bypass a revoked key.
+
+Google and CK requests continue through `lg-gateway` because they need server-side identity translation and/or custom permission enforcement.
 
 Production OAuth values:
 
@@ -54,7 +66,7 @@ The Google client secret belongs only in **Supabase Dashboard → Authentication
 
 ## Feature Pipeline for Tiers
 
-The standard tier pipeline is authoritative in both `lg-api` and `lg-gateway`.
+The standard tier pipeline is authoritative across frontend normalization, `lg-api`, `lg-gateway`, and feature-specific backend functions.
 
 ### Basic Version — `BK_`
 
@@ -119,13 +131,16 @@ The production `site_keys_tier_check` permits `DEV`, `PK_`, `UPK_`, `BK_`, and `
 - use **Select all** or **Clear all**;
 - edit permissions and linked emails later;
 - revoke or reactivate keys;
+- **permanently delete non-DEV keys** with explicit confirmation;
 - prepare older keys for Google login by supplying the original raw key once.
 
 CK controls are explicit button switches. On generate or **Save & Verify**, the frontend compares the server-returned permission map with the selected switch state and does not show success when they differ.
 
+Permanent Delete is intentionally separate from Revoke. `site/key-delete-runtime.js` accepts both supported delete route shapes, verifies the server response, and gives an explicit deployment-version error instead of a generic 404 when the backend is stale. DEV keys themselves are protected from permanent deletion.
+
 ### Atomic key administration
 
-DEV key-management traffic uses the dedicated `lg-key-admin` Edge Function. Key creation and configuration are transactional across `public.site_keys`, `public.site_key_emails`, and `public.site_key_login_secrets`, preventing partially-written key/email states.
+DEV key-management traffic uses the dedicated `lg-key-admin` Edge Function. Key creation and configuration are transactional across `public.site_keys`, `public.site_key_emails`, and `public.site_key_login_secrets`, preventing partially-written key/email states. Permanent deletion prefers the atomic delete RPC when available; the current Edge Function also contains a compatibility path for an older production migration state and restores removed login links if the final key-row deletion is blocked.
 
 ### Permission refresh and disabled-page guard
 
@@ -174,9 +189,11 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 | `site/index.html` | Stable base app/login/RBX pages |
 | `site/fetch-bootstrap.js` | Captures browser-native `fetch` before routing layers |
 | `site/auth-ck.js` | Key + Google login and gateway routing |
+| `site/login-resilience.js` | Login/page timeouts, hydration isolation, saved-key recovery |
+| `site/egress-runtime.js` | Pre-auth legacy direct routing, tier normalization, GET de-duplication, short caches |
 | `site/ck-key-manager.js` | Verified DEV key generator/config editor and CK permission switches |
+| `site/key-delete-runtime.js` | Confirmed permanent non-DEV key deletion UI |
 | `site/ck-feature-guard.js` | Redirects away from disabled CK pages and renders the all-off state |
-| `site/egress-runtime.js` | GET de-duplication, short caches, and low-egress routing |
 | `site/exchange.js` | LG Exchange UI |
 | `site/cards.js` | Core Cards UI/API integration |
 | `site/mc-detector.js` | MC detector core UI |
@@ -188,22 +205,25 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 - Never put the Supabase service-role/secret key in browser code.
 - Never commit Google OAuth client secrets, Roblox cookies, raw LG keys, or wrapped-key plaintext.
 - CK authorization remains server-enforced.
-- DEV key administration is server-gated through `lg-key-admin` and service-role-only database RPCs.
+- DEV key administration is server-gated through `lg-key-admin` and service-role-only database operations.
 - The optional second Roblox cookie belongs only in Supabase Vault as `roblox_cookie_2`.
 - Key/email/wrapped-secret and archive tables retain RLS and are not directly administered by public browser database calls.
+- Permanent deletion never permits a DEV target key.
 
 ## Deployment and checks
 
-GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. All top-level `site/*.js` files are checked with `node --check`; a separate workflow checks the CK manager contract and disabled-feature guard.
+GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. All top-level `site/*.js` files are checked with `node --check`. Frontend CI also locks the canonical UPK/BK feature matrix, pre-auth direct-routing markers, hydration timeouts, CK manager contract, and delete UI contract.
+
+The backend repository contains `.github/workflows/deploy-supabase-core.yml` for `lg-api`, `lg-gateway`, and `lg-key-admin`. It uses the Supabase CLI with API-based Edge Function deployment and requires the private repository secret `SUPABASE_ACCESS_TOKEN`; no Supabase credential belongs in source.
 
 ## Project principles
 
 - Preserve existing records and key/client scoping.
-- Keep raw-key login backward-compatible.
+- Keep raw-key login backward-compatible and independent of the gateway for standard tiers.
 - Treat Google as identity for an existing key, never a permission bypass.
 - Keep CK authorization server-side.
-- Keep DEV administration server-side and transactional.
-- Keep the Basic/Upgraded/Deluxe feature pipeline synchronized across UI, API, gateway, and documentation.
+- Keep DEV administration server-side and transactional/rollback-safe.
+- Keep the Basic/Upgraded/Deluxe feature pipeline synchronized across UI, API, gateway, feature endpoints, CI, and documentation.
 - Reduce database size using lossless compaction before sacrificing useful retained history.
 - Respect upstream API limits; dual credentials are for authorized load sharing and failover.
 - Update this README whenever authentication, tiers, key-management, polling, or backend behavior changes.
