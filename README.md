@@ -15,8 +15,11 @@ Browser / GitHub Pages
         |-- CK_ raw key or Google session
         |      -> lg-gateway for identity/permission translation
         |
+        +-- standard-key-login.js
+        |      early standard-key ownership + bounded direct auth
+        |
         +-- auth-ck.js
-        |      Google/key login + gateway routing
+        |      Google/CK login + gateway routing; delegates standard raw keys
         |
         +-- login-resilience.js
         |      bounded login/page hydration + safe recovery
@@ -46,9 +49,11 @@ The browser keeps the raw key in `sessionStorage` for the current browser sessio
 
 Standard legacy tiers (`DEV`, `PK_`, `UPK_`, `BK_`) authenticate directly against `lg-api`, including the initial `/auth` request before an `account` object exists. This avoids a circular dependency where login itself previously had to pass through `lg-gateway` before the frontend knew the key tier. After successful raw-key auth, the frontend normalizes the standard tier tabs/features to the authoritative tier matrix.
 
-`site/login-resilience.js` keeps successful authentication separate from secondary page hydration. Tracked-user loading is bounded, first-page loading is bounded, and a temporary Monitor/History request failure can no longer make a valid key look rejected or leave the login screen hanging indefinitely.
+`site/standard-key-login.js` is the authoritative owner for standard raw-key tiers and is deliberately loaded immediately after `fetch-bootstrap.js`, **before** `auth-ck.js`. It captures and temporarily clears any saved standard key before `auth-ck.js` can schedule its private bootstrap, owns standard-key form submissions in the capture phase, authenticates directly against `lg-api`, commits authenticated UI state before secondary data hydration, de-duplicates concurrent attempts for the same raw key, and restores the saved session only after the parser-blocking auth modules have finished loading.
 
-`site/standard-key-login.js` is the authoritative login owner for standard raw-key tiers. It installs synchronously, intercepts standard-key form submissions in the capture phase, stops the older `auth-ck.js` submit path from also running, authenticates directly against `lg-api`, and commits authenticated UI/session state before any secondary data hydration. Saved standard-key bootstrap also clears the legacy bootstrap inputs before `auth-ck.js`'s scheduled fallback can enter its older hydration-blocking path.
+`site/auth-ck.js` now explicitly delegates every `DEV`/`PK_`/`UPK_`/`BK_` raw key to `LGStandardKeyLogin.standardLogin()`. Standard keys therefore cannot enter the older `completeLogin()` path that waits for tracked-user and initial-page hydration. `CK_` and Google sessions continue to use the CK/Google path as designed.
+
+`site/login-resilience.js` keeps successful authentication separate from secondary page hydration. Tracked-user loading is bounded, first-page loading is bounded, and a temporary Monitor/History request failure can no longer make a valid key look rejected or leave the login screen hanging indefinitely.
 
 ### Google OAuth
 
@@ -190,9 +195,9 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 |---|---|
 | `site/index.html` | Stable base app/login/RBX pages |
 | `site/fetch-bootstrap.js` | Captures browser-native `fetch` before routing layers |
-| `site/auth-ck.js` | Key + Google login and gateway routing |
+| `site/standard-key-login.js` | Early authoritative direct login for standard raw-key tiers; blocks bootstrap/double-submit races |
+| `site/auth-ck.js` | Google/CK login and gateway routing; delegates standard raw keys to the standard owner |
 | `site/login-resilience.js` | Login/page timeouts, hydration isolation, saved-key recovery |
-| `site/standard-key-login.js` | Authoritative synchronous direct login for standard raw-key tiers; blocks legacy double-submit/bootstrap races |
 | `site/egress-runtime.js` | Pre-auth legacy direct routing, tier normalization, GET de-duplication, short caches |
 | `site/ck-key-manager.js` | Verified DEV key generator/config editor and CK permission switches |
 | `site/key-delete-runtime.js` | Confirmed permanent non-DEV key deletion UI |
@@ -215,20 +220,28 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 
 ## Deployment and checks
 
-GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. All top-level `site/*.js` files are checked with `node --check`. Frontend CI also locks the canonical UPK/BK feature matrix, pre-auth direct-routing markers, hydration timeouts, standard-key synchronous/capture ownership, CK manager contract, and delete UI contract.
+GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. All top-level `site/*.js` files are checked with `node --check`. Frontend CI locks the canonical UPK/BK feature matrix, direct standard-key auth contract, standard-before-CK script order, saved-key bootstrap guard, duplicate-attempt protection, `auth-ck` standard-key delegation, hydration timeouts, CK manager contract, and delete UI contract.
 
 The backend repository contains `.github/workflows/deploy-supabase-core.yml` for `lg-api`, `lg-gateway`, and `lg-key-admin`. It uses the Supabase CLI with API-based Edge Function deployment and requires the private repository secret `SUPABASE_ACCESS_TOKEN`; no Supabase credential belongs in source.
 
 ## Change log
 
-### 2026-09-16 — Standard/UPK login race fix
+### 2026-09-16 — Standard/UPK login bootstrap race v3
+
+- Reproduced the reported UPK failure with a dedicated production test key without committing or documenting the raw key.
+- Confirmed the exact production `lg-api /auth` request returns HTTP 200 with the correct `UPK_` account, proving the key, database row, and Edge Function authentication path were healthy.
+- Identified the remaining browser race: `auth-ck.js` scheduled `bootstrap()` with `setTimeout(0)` before the later external `standard-key-login.js` file had necessarily downloaded/executed. The parser could yield while waiting for that later script, allowing the old private bootstrap to win despite the v2 code claiming otherwise.
+- `standard-key-login.js?v=20260916-3` now loads immediately after `fetch-bootstrap.js` and before `auth-ck.js`, captures/clears saved standard bootstrap inputs immediately, de-duplicates concurrent attempts, and restores session persistence only after the parser-blocking auth scripts are loaded.
+- `auth-ck.js` now delegates standard raw keys to `LGStandardKeyLogin.standardLogin()` and explicitly prevents `DEV`/`PK_`/`UPK_`/`BK_` from entering its hydration-blocking `completeLogin()` path.
+- The exact deployed v3 auth stack was exercised in Chromium with the production UPK auth response: both a saved-session startup and a fresh/manual submit opened the app as `UPK_`, restored the session, produced no login error, and made exactly one `/auth` request.
+- GitHub Pages and frontend CI now assert that `standard-key-login.js` appears before `auth-ck.js` and that both sides of the delegation contract remain present.
+
+### 2026-09-16 — Standard/UPK login race fix v2
 
 - Confirmed production contains active UPK keys, so the remaining failure was frontend login control flow rather than missing tier data.
-- `standard-key-login.js` now installs synchronously at the end of the page, before `auth-ck.js`'s already-scheduled legacy bootstrap can execute.
-- Standard-key form submits are owned in the capture phase with `stopImmediatePropagation()`, preventing both the new direct handler and the older blocking handler from running for one click.
-- Saved `DEV`/`PK_`/`UPK_`/`BK_` sessions neutralize the old bootstrap inputs and restore the saved key only after direct `lg-api /auth` succeeds.
-- Direct auth has a hard 6.5-second timeout, restores the login control on failure, and never waits for tracked-user/page hydration before treating the user as signed in.
-- GitHub Pages cache-bust version advanced to `standard-key-login.js?v=20260916-2`, with CI checks added for the race guards.
+- Added a bounded direct standard-key login path and capture-phase form ownership.
+- Separated successful authentication from secondary tracked-user/page hydration.
+- This version reduced several failure modes but still loaded the standard-key module after `auth-ck.js`, leaving a parser/timer bootstrap race that v3 removes.
 
 ## Project principles
 
