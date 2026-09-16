@@ -50,9 +50,15 @@ jobs:
           grep -q "6500" site/standard-key-login.js
           grep -q "Commit authenticated state immediately" site/standard-key-login.js
           grep -q "stopImmediatePropagation" site/standard-key-login.js
-          grep -q "Install synchronously" site/standard-key-login.js
-          grep -q "Neutralize auth-ck" site/standard-key-login.js
+          grep -q "Guard saved standard keys before auth-ck" site/standard-key-login.js
+          grep -q "persistWhenScriptsReady" site/standard-key-login.js
+          grep -q "inFlightPromise" site/standard-key-login.js
           grep -q "Do not block the login promise on secondary data" site/standard-key-login.js
+
+          test -s site/auth-ck.js
+          grep -q "must never enter completeLogin" site/auth-ck.js
+          grep -q "LGStandardKeyLogin.standardLogin" site/auth-ck.js
+          grep -q "only CK_/Google" site/auth-ck.js
 
           test -s site/ck-key-manager.js
           grep -q "lg-key-admin" site/ck-key-manager.js
