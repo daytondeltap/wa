@@ -53,29 +53,36 @@
   }
 
   // Give the user immediate feedback instead of leaving the login button looking
-  // idle while /auth is in flight. This does not replace auth-ck's submit handler.
+  // idle while /auth is in flight. Restore it immediately on either success or a
+  // displayed auth error; the timeout is only a final network-failure fallback.
   const form = document.getElementById('login-form');
   const button = form?.querySelector('button[type="submit"]');
   if (form && button) {
     const original = button.textContent;
+    const restore = () => {
+      button.disabled = false;
+      button.textContent = original;
+    };
     form.addEventListener('submit', () => {
       button.disabled = true;
       button.textContent = 'Signing in…';
-      const restore = () => {
-        if (!document.getElementById('auth')?.classList.contains('hidden')) {
-          button.disabled = false;
-          button.textContent = original;
-        }
-      };
-      setTimeout(restore, 9000);
+      setTimeout(() => {
+        if (!document.getElementById('auth')?.classList.contains('hidden')) restore();
+      }, 9000);
     }, {capture:true});
-    const observer = new MutationObserver(() => {
-      if (document.getElementById('auth')?.classList.contains('hidden')) {
-        button.disabled = false;
-        button.textContent = original;
-      }
-    });
-    observer.observe(document.getElementById('auth') || document.body, {attributes:true, attributeFilter:['class']});
+
+    const auth = document.getElementById('auth');
+    if (auth) {
+      new MutationObserver(() => {
+        if (auth.classList.contains('hidden')) restore();
+      }).observe(auth, {attributes:true, attributeFilter:['class']});
+    }
+    const loginError = document.getElementById('login-error');
+    if (loginError) {
+      new MutationObserver(() => {
+        if (!loginError.classList.contains('hidden') && loginError.textContent.trim()) restore();
+      }).observe(loginError, {attributes:true, attributeFilter:['class'], childList:true, characterData:true, subtree:true});
+    }
   }
 
   // auth-ck schedules its saved-session bootstrap with setTimeout(0). These
