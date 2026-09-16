@@ -18,6 +18,9 @@
     if (k.startsWith('DEV')) return 'DEV';
     return null;
   };
+  const bootKey = String(window.LG_LEGACY_SITE_KEY || sessionStorage.getItem('lg_site_key') || '').trim();
+  const bootTier = tierFromRaw(bootKey);
+
   const withTimeout = (promise, ms, label) => {
     let timer;
     return Promise.race([
@@ -32,20 +35,35 @@
     e.classList.remove('hidden');
   };
   const hideError = () => $('login-error')?.classList.add('hidden');
+  const restoreButton = () => {
+    const button = $('login-form')?.querySelector('button[type="submit"]');
+    if (!button) return;
+    button.disabled = false;
+    button.textContent = button.dataset.lgOriginalText || 'Access System';
+  };
 
   async function directAuth(raw) {
     const inferred = tierFromRaw(raw);
     if (!inferred) return null;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6500);
+    let timeoutId;
     try {
-      const r = await nativeFetch(`${API}/auth`, {
+      const request = nativeFetch(`${API}/auth`, {
         method: 'POST',
         headers: {'x-site-key': raw, 'content-type':'application/json'},
         body: '{}',
         signal: controller.signal,
         cache: 'no-store',
       });
+      const r = await Promise.race([
+        request,
+        new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            controller.abort();
+            reject(new Error('Sign-in timed out. Please try again.'));
+          }, 6500);
+        }),
+      ]);
       let body = null;
       try { body = await r.json(); } catch {}
       if (r.status === 401) throw new Error('Access key rejected');
@@ -67,7 +85,7 @@
       if (e?.name === 'AbortError') throw new Error('Sign-in timed out. Please try again.');
       throw e;
     } finally {
-      clearTimeout(timer);
+      clearTimeout(timeoutId);
     }
   }
 
@@ -102,51 +120,61 @@
     hideError();
     const acct = await directAuth(raw);
 
-    // Commit authenticated state immediately. Network/data hydration is deliberately
-    // decoupled so a valid UPK can never sit forever on “Signing in…”.
+    // Commit authenticated state immediately. Nothing after /auth is allowed to
+    // convert a valid standard key back into a login-screen failure.
     SITE_KEY = raw;
     account = acct;
     sessionStorage.setItem('lg_site_key', raw);
+    window.LG_LEGACY_SITE_KEY = raw;
     $('auth')?.classList.add('hidden');
     $('app')?.classList.remove('hidden');
-    if (typeof applyTier === 'function') applyTier();
-    if (typeof buildNav === 'function') buildNav();
-    try { window.LGAuth?.applyGuards?.(); } catch {}
+    try { if (typeof applyTier === 'function') applyTier(); } catch (e) { console.warn('[LG login] tier UI failed', e); }
+    try { if (typeof buildNav === 'function') buildNav(); } catch (e) { console.warn('[LG login] nav UI failed', e); }
+    try { window.LGAuth?.applyGuards?.(); } catch (e) { console.warn('[LG login] guard UI failed', e); }
 
-    clearInterval(refreshTimer);
-    refreshTimer = setInterval(() => {
-      try {
-        if (activePage === 'monitor' && account?.features?.monitor !== false && typeof refreshMonitor === 'function') refreshMonitor(false);
-      } catch {}
-    }, 10000);
+    try {
+      clearInterval(refreshTimer);
+      refreshTimer = setInterval(() => {
+        try {
+          if (activePage === 'monitor' && account?.features?.monitor !== false && typeof refreshMonitor === 'function') refreshMonitor(false);
+        } catch {}
+      }, 10000);
+    } catch (e) {
+      console.warn('[LG login] refresh timer setup failed', e);
+    }
 
+    restoreButton();
     // Do not block the login promise on secondary data.
-    hydrateAfterLogin();
+    void hydrateAfterLogin();
     return true;
+  }
+
+  function resetFailedLogin(message) {
+    try { SITE_KEY = ''; } catch {}
+    try { account = null; } catch {}
+    sessionStorage.removeItem('lg_site_key');
+    showError(message || 'Sign-in failed');
+    $('app')?.classList.add('hidden');
+    $('auth')?.classList.remove('hidden');
+    restoreButton();
   }
 
   function install() {
     const form = $('login-form');
     if (!form || form.dataset.standardLoginInstalled === '1') return;
     form.dataset.standardLoginInstalled = '1';
-    const previousSubmit = form.onsubmit;
-    form.onsubmit = async event => {
+    const button = form.querySelector('button[type="submit"]');
+    if (button && !button.dataset.lgOriginalText) button.dataset.lgOriginalText = button.textContent || 'Access System';
+
+    // Capture-phase ownership prevents auth-ck's older target/bubble handler from
+    // also running for standard keys. stopImmediatePropagation is intentional.
+    form.addEventListener('submit', event => {
       const raw = String($('login-key')?.value || '').trim();
-      if (!tierFromRaw(raw)) {
-        if (typeof previousSubmit === 'function') return previousSubmit.call(form, event);
-        return;
-      }
+      if (!tierFromRaw(raw)) return;
       event.preventDefault();
-      event.stopPropagation();
-      try {
-        await standardLogin(raw);
-      } catch (e) {
-        SITE_KEY = '';
-        account = null;
-        sessionStorage.removeItem('lg_site_key');
-        showError(e?.message || 'Sign-in failed');
-      }
-    };
+      event.stopImmediatePropagation();
+      void standardLogin(raw).catch(e => resetFailedLogin(e?.message || 'Sign-in failed'));
+    }, {capture:true});
 
     const prior = window.LGAuth?.keyLogin;
     if (window.LGAuth) {
@@ -157,7 +185,23 @@
     }
   }
 
+  // The form already exists because this file is injected at the end of <body>.
+  // Install synchronously so auth-ck's already-scheduled setTimeout(0) cannot win
+  // the race and enter its older hydration-blocking keyLogin path.
+  install();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
-  else install();
+
+  if (bootTier) {
+    // Neutralize auth-ck's private legacy bootstrap inputs before its timer fires.
+    // This module then restores the key only after direct /auth succeeds.
+    window.LG_LEGACY_SITE_KEY = '';
+    sessionStorage.removeItem('lg_site_key');
+    setTimeout(() => {
+      const authVisible = !$('auth')?.classList.contains('hidden');
+      if (!authVisible || account) return;
+      void standardLogin(bootKey).catch(e => resetFailedLogin(e?.message || 'Saved key sign-in failed'));
+    }, 0);
+  }
+
   window.LGStandardKeyLogin = {install, standardLogin, directAuth, tierFromRaw};
 })();
