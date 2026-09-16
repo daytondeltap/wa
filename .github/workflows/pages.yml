@@ -99,7 +99,7 @@ jobs:
               '<script src="mc-player-lists.js"></script>',
               '<script src="mc-aero-final.js"></script>',
               '<script src="mc-frutiger-aero-overhaul.js"></script>',
-              '<script src="rbx-metro.js"></script>',
+              '<script src="rbx-metro.js?v=20260916-1"></script>',
               '<script src="performance-runtime.js"></script>',
               '<script src="rbx-data-performance.js"></script>',
               '<script src="ck-feature-guard.js?v=20260904-1"></script>',
@@ -121,6 +121,7 @@ jobs:
           grep -q 'ck-key-manager.js?v=20260916-3' site/index.html
           grep -q 'key-delete-runtime.js?v=20260916-4' site/index.html
           grep -q 'egress-runtime.js?v=20260916-4' site/index.html
+          grep -q 'rbx-metro.js?v=20260916-1' site/index.html
           python - <<'PY'
           from pathlib import Path
           s = Path('site/index.html').read_text(encoding='utf-8')
