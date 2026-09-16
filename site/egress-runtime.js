@@ -8,6 +8,12 @@
   const apiCache = new Map();
   const exchangeCache = new Map();
 
+  const LEGACY_TABS = {
+    DEV:  ['monitor','leaderboard','exchange','history','adduser','keys'],
+    PK_:  ['monitor','leaderboard','exchange','history','adduser'],
+    UPK_: ['monitor','leaderboard','history','adduser'],
+    BK_:  ['monitor','leaderboard','adduser'],
+  };
   const LEGACY_FEATURES = {
     DEV:  {monitor:true, leaderboard:true, exchange:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:true},
     PK_:  {monitor:true, leaderboard:true, exchange:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:false},
@@ -32,7 +38,9 @@
   function normalizeLegacyAccount(value, rawKey) {
     const tier = String(value?.tier || legacyTierFromRaw(rawKey) || '');
     const features = LEGACY_FEATURES[tier] ? {...LEGACY_FEATURES[tier]} : (value?.features || {});
-    return {...(value || {}), tier, features, auth_method:'key', email:null};
+    const tabs = LEGACY_TABS[tier] ? [...LEGACY_TABS[tier]] : (Array.isArray(value?.tabs) ? value.tabs : []);
+    const can_join = tier === 'DEV' || tier === 'PK_';
+    return {...(value || {}), tier, tabs, features, can_join, auth_method:'key', email:null};
   }
   function rawUrl(input) {
     try { return typeof input === 'string' || input instanceof URL ? String(input) : input?.url || ''; }
