@@ -85,6 +85,7 @@ jobs:
               '<script src="ck-key-manager.js?v=20260916-3"></script>',
               '<script src="key-delete-runtime.js?v=20260916-4"></script>',
               '<script src="egress-runtime.js?v=20260916-4"></script>',
+              '<script src="standard-key-login.js?v=20260916-1"></script>',
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
               '<script src="profile-verify.js"></script>',
@@ -118,9 +119,13 @@ jobs:
           grep -q 'ck-key-manager.js?v=20260916-3' site/index.html
           grep -q 'key-delete-runtime.js?v=20260916-4' site/index.html
           grep -q 'egress-runtime.js?v=20260916-4' site/index.html
+          grep -q 'standard-key-login.js?v=20260916-1' site/index.html
           grep -q 'legacyTierFromRaw' site/egress-runtime.js
           grep -q "UPK_: \['monitor','leaderboard','history','adduser'\]" site/egress-runtime.js
           grep -q 'UPK_.*cards:true' site/egress-runtime.js
+          grep -q "UPK_: {tabs:\['monitor','leaderboard','history','adduser'\]" site/standard-key-login.js
+          grep -q '6500' site/standard-key-login.js
+          grep -q 'Do not block the login promise on secondary data' site/standard-key-login.js
           grep -q 'Monitor + Leaderboard + User Adding + Cards + History' site/index.html
           grep -q 'static RBX poll cycle (about 2 minutes)' site/index.html
           grep -q 'rbx-data-performance.js' site/index.html
