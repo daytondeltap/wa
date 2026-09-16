@@ -77,5 +77,10 @@ jobs:
       - name: Check adaptive performance assets
         shell: bash
         run: |
+          set -euo pipefail
           test -s site/performance-runtime.js
           test -s site/performance.css
+          test -s site/rbx-metro.js
+          grep -q "lastMcMode" site/rbx-metro.js
+          grep -q "mc===lastMcMode" site/rbx-metro.js
+          grep -q "classList.contains('rbx-metro')!==metro" site/rbx-metro.js
