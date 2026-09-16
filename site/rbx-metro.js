@@ -1,7 +1,7 @@
 (()=>{
   const q=(s,r=document)=>r.querySelector(s);
   const DORFIC_KEY='lg-rbx-dorfic-mode';
-  let raf=0,observer=null;
+  let raf=0,observer=null,lastMcMode=null;
 
   function getDorfic(){try{return localStorage.getItem(DORFIC_KEY)==='1'}catch{return false}}
   function setDorfic(v){try{localStorage.setItem(DORFIC_KEY,v?'1':'0')}catch{}}
@@ -41,8 +41,8 @@
     ensureCss();ensureDecor();ensureToggle();
     const metro=!document.body.classList.contains('mc-mode');
     const dorfic=metro&&getDorfic();
-    document.body.classList.toggle('rbx-metro',metro);
-    document.body.classList.toggle('rbx-dorfic',dorfic);
+    if(document.body.classList.contains('rbx-metro')!==metro)document.body.classList.toggle('rbx-metro',metro);
+    if(document.body.classList.contains('rbx-dorfic')!==dorfic)document.body.classList.toggle('rbx-dorfic',dorfic);
     const d=q('#rbxm-decor');if(d)d.hidden=!metro;
     updateToggle(metro,dorfic);
   }
@@ -62,7 +62,8 @@
 
   function boot(){
     applyMode();
-    if(!observer){observer=new MutationObserver(applyMode);observer.observe(document.body,{attributes:true,attributeFilter:['class']})}
+    lastMcMode=document.body.classList.contains('mc-mode');
+    if(!observer){observer=new MutationObserver(()=>{const mc=document.body.classList.contains('mc-mode');if(mc===lastMcMode)return;lastMcMode=mc;applyMode()});observer.observe(document.body,{attributes:true,attributeFilter:['class']})}
     addEventListener('pointermove',pointerMotion,{passive:true});
     addEventListener('pageshow',applyMode,{passive:true});
     addEventListener('storage',e=>{if(e.key===DORFIC_KEY)applyMode()});
