@@ -9,11 +9,28 @@
   function report(stage, error) {
     console.warn(`[LG login] ${stage} failed after authentication`, error);
   }
+  function withTimeout(promise, ms, stage) {
+    let timer;
+    return Promise.race([
+      Promise.resolve(promise),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${stage} timed out`)), ms);
+      }),
+    ]).finally(() => clearTimeout(timer));
+  }
+  function showHydrationFallback(name) {
+    try {
+      if (typeof activePage !== 'undefined') activePage = name;
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(`page-${name}`)?.classList.add('active');
+      document.querySelectorAll('.page-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    } catch (_) {}
+  }
 
   if (typeof savedRefreshTracked === 'function') {
     window.refreshTracked = async function(...args) {
       try {
-        return await savedRefreshTracked.apply(this, args);
+        return await withTimeout(savedRefreshTracked.apply(this, args), 6000, 'Tracked-user loading');
       } catch (error) {
         report('tracked-user hydration', error);
         return [];
@@ -24,20 +41,41 @@
   if (typeof savedSwitchPage === 'function') {
     window.switchPage = async function(...args) {
       try {
-        return await savedSwitchPage.apply(this, args);
+        return await withTimeout(savedSwitchPage.apply(this, args), 8000, 'Page loading');
       } catch (error) {
         report('initial page hydration', error);
         const name = String(args[0] || 'monitor');
-        try {
-          if (typeof activePage !== 'undefined') activePage = name;
-          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-          document.getElementById(`page-${name}`)?.classList.add('active');
-          document.querySelectorAll('.page-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-        } catch (_) {}
-        if (typeof toast === 'function') toast('Signed in. Some page data is still loading.');
+        showHydrationFallback(name);
+        if (typeof toast === 'function') toast('Signed in. Some page data could not load yet.');
         return null;
       }
     };
+  }
+
+  // Give the user immediate feedback instead of leaving the login button looking
+  // idle while /auth is in flight. This does not replace auth-ck's submit handler.
+  const form = document.getElementById('login-form');
+  const button = form?.querySelector('button[type="submit"]');
+  if (form && button) {
+    const original = button.textContent;
+    form.addEventListener('submit', () => {
+      button.disabled = true;
+      button.textContent = 'Signing in…';
+      const restore = () => {
+        if (!document.getElementById('auth')?.classList.contains('hidden')) {
+          button.disabled = false;
+          button.textContent = original;
+        }
+      };
+      setTimeout(restore, 9000);
+    }, {capture:true});
+    const observer = new MutationObserver(() => {
+      if (document.getElementById('auth')?.classList.contains('hidden')) {
+        button.disabled = false;
+        button.textContent = original;
+      }
+    });
+    observer.observe(document.getElementById('auth') || document.body, {attributes:true, attributeFilter:['class']});
   }
 
   // auth-ck schedules its saved-session bootstrap with setTimeout(0). These
@@ -53,7 +91,7 @@
       } catch (error) {
         console.warn('[LG login] saved-key recovery failed', error);
       }
-    }, 900);
+    }, 1200);
   }
 
   window.LGLoginResilience = { installed: true };
