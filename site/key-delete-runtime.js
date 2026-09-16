@@ -23,19 +23,32 @@
     }
     return h;
   }
-
-  async function deleteKey(keyId) {
-    if (currentAccount()?.tier !== 'DEV') throw new Error('DEV authorization required');
-    const ok = confirm(`Permanently delete key ${keyId}?\n\nThis cannot be undone. Linked Google access for this key will also be removed.`);
-    if (!ok) return false;
-    const r = await nativeFetch(`${ADMIN_API}/${encodeURIComponent(keyId)}/delete`, {
+  async function requestDelete(path) {
+    const r = await nativeFetch(`${ADMIN_API}${path}`, {
       method: 'POST',
       headers: headers(),
       body: '{}',
     });
     let body = null;
     try { body = await r.json(); } catch {}
-    if (!r.ok) throw new Error(body?.error || body?.detail || `Delete failed (${r.status})`);
+    return {r, body};
+  }
+
+  async function deleteKey(keyId) {
+    if (currentAccount()?.tier !== 'DEV') throw new Error('DEV authorization required');
+    const ok = confirm(`Permanently delete key ${keyId}?\n\nThis cannot be undone. Linked Google access for this key will also be removed.`);
+    if (!ok) return false;
+
+    // Current key-admin accepts both route shapes. Trying both also handles one
+    // release of production skew without turning it into a misleading generic 404.
+    let result = await requestDelete(`/${encodeURIComponent(keyId)}/delete`);
+    if (result.r.status === 404) result = await requestDelete(`/keys/${encodeURIComponent(keyId)}/delete`);
+    if (!result.r.ok) {
+      const msg = result.body?.error || result.body?.detail || `Delete failed (${result.r.status})`;
+      if (result.r.status === 404) throw new Error('Permanent Delete backend is not deployed on this Supabase version yet.');
+      throw new Error(msg);
+    }
+    if (result.body?.deleted !== true && result.body?.ok !== true) throw new Error('Delete response could not be verified');
     return true;
   }
 
