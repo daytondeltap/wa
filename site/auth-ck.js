@@ -130,7 +130,16 @@
     await completeLogin();
   }
   async function keyLogin(key){
-    clearGoogle();SITE_KEY=String(key||'').trim();if(!SITE_KEY)throw Error('Enter an access key');
+    const raw=String(key||'').trim();if(!raw)throw Error('Enter an access key');
+    const standard=window.LGStandardKeyLogin?.tierFromRaw?.(raw);
+    if(standard){
+      // Standard DEV/PK_/UPK_/BK_ keys must never enter completeLogin(), because
+      // that path blocks authentication on tracked-user and first-page hydration.
+      if(!window.LGStandardKeyLogin?.standardLogin)throw Error('Standard key login module is not ready. Refresh and try again.');
+      clearGoogle();
+      return await window.LGStandardKeyLogin.standardLogin(raw);
+    }
+    clearGoogle();SITE_KEY=raw;
     await completeLogin();sessionStorage.setItem('lg_site_key',SITE_KEY);
   }
   window.logout=function(){
@@ -185,6 +194,8 @@
       absorbOAuthHash();googleSession=readStoredSession();
       if(googleSession){try{await googleLogin();return}catch(e){clearGoogle();SITE_KEY='';showLoginError(e.message||'This Google account is not linked to an active LG key.')}}
       const saved=window.LG_LEGACY_SITE_KEY||sessionStorage.getItem('lg_site_key')||'';
+      // keyLogin delegates standard raw keys to LGStandardKeyLogin; only CK_/Google
+      // are allowed to use this module's hydration-blocking completeLogin path.
       if(saved){try{await keyLogin(saved)}catch{logout()}}
     }finally{booting=false}
   }
