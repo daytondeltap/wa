@@ -1,17 +1,38 @@
 (() => {
   const SB = 'https://jwjxhxvahgrpkvaoyrzw.supabase.co';
   const FAST_EXCHANGE = `${SB}/functions/v1/lg-exchange-summary`;
+  const LEGACY_API = `${SB}/functions/v1/lg-api`;
   const nativeFetch = window.LG_NATIVE_FETCH || window.fetch.bind(window);
   const routedFetch = window.fetch.bind(window); // auth-ck gateway-aware fetch
   const inflight = new Map();
   const apiCache = new Map();
   const exchangeCache = new Map();
 
+  const LEGACY_FEATURES = {
+    DEV:  {monitor:true, leaderboard:true, exchange:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:true},
+    PK_:  {monitor:true, leaderboard:true, exchange:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:false},
+    UPK_: {monitor:true, leaderboard:true, exchange:false, history:true, adduser:true, cards:true, mc:false, join:false, keys:false},
+    BK_:  {monitor:true, leaderboard:true, exchange:false, history:false, adduser:true, cards:true, mc:false, join:false, keys:false},
+  };
+
   function currentAccount() {
     try { return typeof account !== 'undefined' ? account : null; } catch { return null; }
   }
   function currentSiteKey() {
     try { return typeof SITE_KEY !== 'undefined' ? String(SITE_KEY || '') : ''; } catch { return ''; }
+  }
+  function legacyTierFromRaw(raw) {
+    const key = String(raw || '').trim();
+    if (key.startsWith('UPK_')) return 'UPK_';
+    if (key.startsWith('BK_')) return 'BK_';
+    if (key.startsWith('PK_')) return 'PK_';
+    if (key.startsWith('DEV')) return 'DEV';
+    return null;
+  }
+  function normalizeLegacyAccount(value, rawKey) {
+    const tier = String(value?.tier || legacyTierFromRaw(rawKey) || '');
+    const features = LEGACY_FEATURES[tier] ? {...LEGACY_FEATURES[tier]} : (value?.features || {});
+    return {...(value || {}), tier, features, auth_method:'key', email:null};
   }
   function rawUrl(input) {
     try { return typeof input === 'string' || input instanceof URL ? String(input) : input?.url || ''; }
@@ -28,15 +49,23 @@
   }
   function useDirectLegacy(raw) {
     const f = originalFunction(raw), a = currentAccount();
-    if (!f || !a) return false;
-    if (a.auth_method === 'google' || a.tier === 'CK_') return false;
-    if (f.slug === 'lg-api' && (/^\/(?:auth|account)(?:\/|$)/.test(f.path) || /^\/keys(?:\/|$)/.test(f.path))) return false;
+    if (!f) return false;
+    if (a) {
+      if (a.auth_method === 'google' || a.tier === 'CK_') return false;
+      if (f.slug === 'lg-api' && /^\/keys(?:\/|$)/.test(f.path)) return false;
+      return true;
+    }
+    // Before /auth succeeds there is no account object yet. Infer only the
+    // standard legacy tier prefix from the raw key and let the original Edge
+    // Function perform the real hash/active-key authorization check.
+    if (!legacyTierFromRaw(currentSiteKey())) return false;
+    if (f.slug === 'lg-api' && /^\/keys(?:\/|$)/.test(f.path)) return false;
     return true;
   }
   async function deduped(kind, fn, input, init) {
     if (methodOf(input, init) !== 'GET') return fn(input, init);
     const raw = rawUrl(input), a = currentAccount();
-    const key = `${kind}|${a?.key_id || 'boot'}|${raw}`;
+    const key = `${kind}|${a?.key_id || legacyTierFromRaw(currentSiteKey()) || 'boot'}|${raw}`;
     let p = inflight.get(key);
     if (!p) {
       p = Promise.resolve(fn(input, init));
@@ -48,14 +77,35 @@
   }
 
   // Legacy DEV/PK_/UPK_/BK_ raw keys already authenticate inside each original
-  // Edge Function. Sending them through lg-gateway first only duplicated an Edge
-  // invocation and a site_keys lookup. Google and CK traffic still uses the gateway
-  // because it is the permission/security boundary for those login modes.
+  // Edge Function. This now applies during login as well as after login, which
+  // removes the circular dependency where /auth required lg-gateway before the
+  // frontend knew it was a legacy account. Google and CK still use the gateway.
   window.fetch = function(input, init = {}) {
     const raw = rawUrl(input);
     if (useDirectLegacy(raw)) return deduped('direct', nativeFetch, input, init);
     return deduped('routed', routedFetch, input, init);
   };
+
+  async function directLegacyAccount(path, opts = {}) {
+    const raw = currentSiteKey().trim();
+    const tier = legacyTierFromRaw(raw);
+    if (!tier) return null;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const headers = new Headers(opts.headers || {});
+      headers.set('x-site-key', raw);
+      if (opts.body && !headers.has('content-type')) headers.set('content-type', 'application/json');
+      const r = await nativeFetch(`${LEGACY_API}${path}`, {...opts, headers, signal:controller.signal});
+      let j = null; try { j = await r.json(); } catch {}
+      if (r.status === 401) throw new Error('Access key rejected');
+      if (!r.ok) throw new Error(j?.error || j?.detail || `Login request failed (${r.status})`);
+      return normalizeLegacyAccount(j, raw);
+    } catch (e) {
+      if (e?.name === 'AbortError') throw new Error('Login timed out. Check your connection and try again.');
+      throw e;
+    } finally { clearTimeout(timer); }
+  }
 
   function authHeaders() {
     const h = new Headers(), a = currentAccount();
@@ -103,6 +153,10 @@
     };
     const optimizedApi = async function(path, opts = {}) {
       const method = String(opts.method || 'GET').toUpperCase();
+      if ((path === '/auth' || path === '/account') && legacyTierFromRaw(currentSiteKey())) {
+        const direct = await directLegacyAccount(path, opts);
+        if (direct) return direct;
+      }
       if (method === 'GET' && path === '/exchange/markets') {
         try { return await fastExchange('/markets'); }
         catch (e) { console.warn('LG fast market summary fallback', e); return baseApi(path, opts); }
@@ -135,4 +189,5 @@
   }
 
   window.addEventListener('pageshow', () => { apiCache.clear(); exchangeCache.clear(); }, {passive:true});
+  window.LGEgressRuntime = {legacyTierFromRaw, normalizeLegacyAccount};
 })();
