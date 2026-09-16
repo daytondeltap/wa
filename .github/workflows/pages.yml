@@ -58,6 +58,17 @@ jobs:
               "function boot(){css();const ob=new MutationObserver(()=>{clearTimeout(S.t);S.t=setTimeout(patch,35)}),root=$('#page-cards');if(root)ob.observe(root,{childList:true,subtree:true});ob.observe(document.body,{childList:true,subtree:false});sync();document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&sync());setInterval(()=>document.visibilityState==='visible'&&$('#page-cards')?.classList.contains('active')&&sync(),30000)}"
           )
 
+          # Keep every visible tier description aligned with the server matrix.
+          old_tiers = '<option value="PK_">PK_ — Full access</option><option value="UPK_">UPK_ — Leaderboard + User Adding</option><option value="BK_">BK_ — Monitor + User Adding</option>'
+          new_tiers = '<option value="PK_">PK_ — Deluxe / all features except Key Generator</option><option value="UPK_">UPK_ — Monitor + Leaderboard + User Adding + Cards + History</option><option value="BK_">BK_ — Monitor + Leaderboard + User Adding + Cards</option>'
+          replace_once('site/index.html', old_tiers, new_tiers)
+          replace_once('site/ck-key-manager.js', old_tiers + '<option value="CK_">CK_ — Configurable feature access</option>', new_tiers + '<option value="CK_">CK_ — Configurable feature access</option>')
+          replace_once(
+              'site/index.html',
+              'The backend picks up new/removed users within one poll cycle (~10s).',
+              'The backend picks up new/removed users on the static RBX poll cycle (about 2 minutes).'
+          )
+
           p = Path('site/index.html')
           s = p.read_text(encoding='utf-8')
           # auth-ck.js owns saved-session bootstrap so Google and key sessions cannot
@@ -70,10 +81,10 @@ jobs:
           tags = [
               '<script src="fetch-bootstrap.js"></script>',
               '<script src="auth-ck.js"></script>',
-              '<script src="login-resilience.js?v=20260916-1"></script>',
-              '<script src="ck-key-manager.js?v=20260904-1"></script>',
-              '<script src="key-delete-runtime.js?v=20260916-1"></script>',
-              '<script src="egress-runtime.js"></script>',
+              '<script src="login-resilience.js?v=20260916-3"></script>',
+              '<script src="ck-key-manager.js?v=20260916-3"></script>',
+              '<script src="key-delete-runtime.js?v=20260916-3"></script>',
+              '<script src="egress-runtime.js?v=20260916-3"></script>',
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
               '<script src="profile-verify.js"></script>',
@@ -103,10 +114,14 @@ jobs:
           find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
           grep -q 'fetch-bootstrap.js' site/index.html
           grep -q 'auth-ck.js' site/index.html
-          grep -q 'login-resilience.js' site/index.html
-          grep -q 'ck-key-manager.js' site/index.html
-          grep -q 'key-delete-runtime.js' site/index.html
-          grep -q 'egress-runtime.js' site/index.html
+          grep -q 'login-resilience.js?v=20260916-3' site/index.html
+          grep -q 'ck-key-manager.js?v=20260916-3' site/index.html
+          grep -q 'key-delete-runtime.js?v=20260916-3' site/index.html
+          grep -q 'egress-runtime.js?v=20260916-3' site/index.html
+          grep -q 'legacyTierFromRaw' site/egress-runtime.js
+          grep -q 'UPK_.*cards:true' site/egress-runtime.js
+          grep -q 'Monitor + Leaderboard + User Adding + Cards + History' site/index.html
+          grep -q 'static RBX poll cycle (about 2 minutes)' site/index.html
           grep -q 'rbx-data-performance.js' site/index.html
           grep -q 'ck-feature-guard.js' site/index.html
       - name: Upload static site
