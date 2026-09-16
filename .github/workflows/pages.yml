@@ -81,10 +81,10 @@ jobs:
           tags = [
               '<script src="fetch-bootstrap.js"></script>',
               '<script src="auth-ck.js"></script>',
-              '<script src="login-resilience.js?v=20260916-3"></script>',
+              '<script src="login-resilience.js?v=20260916-4"></script>',
               '<script src="ck-key-manager.js?v=20260916-3"></script>',
-              '<script src="key-delete-runtime.js?v=20260916-3"></script>',
-              '<script src="egress-runtime.js?v=20260916-3"></script>',
+              '<script src="key-delete-runtime.js?v=20260916-4"></script>',
+              '<script src="egress-runtime.js?v=20260916-4"></script>',
               '<script src="exchange.js"></script>',
               '<script src="cards.js"></script>',
               '<script src="profile-verify.js"></script>',
@@ -114,11 +114,12 @@ jobs:
           find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
           grep -q 'fetch-bootstrap.js' site/index.html
           grep -q 'auth-ck.js' site/index.html
-          grep -q 'login-resilience.js?v=20260916-3' site/index.html
+          grep -q 'login-resilience.js?v=20260916-4' site/index.html
           grep -q 'ck-key-manager.js?v=20260916-3' site/index.html
-          grep -q 'key-delete-runtime.js?v=20260916-3' site/index.html
-          grep -q 'egress-runtime.js?v=20260916-3' site/index.html
+          grep -q 'key-delete-runtime.js?v=20260916-4' site/index.html
+          grep -q 'egress-runtime.js?v=20260916-4' site/index.html
           grep -q 'legacyTierFromRaw' site/egress-runtime.js
+          grep -q "UPK_: \['monitor','leaderboard','history','adduser'\]" site/egress-runtime.js
           grep -q 'UPK_.*cards:true' site/egress-runtime.js
           grep -q 'Monitor + Leaderboard + User Adding + Cards + History' site/index.html
           grep -q 'static RBX poll cycle (about 2 minutes)' site/index.html
