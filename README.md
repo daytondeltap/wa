@@ -48,6 +48,8 @@ Standard legacy tiers (`DEV`, `PK_`, `UPK_`, `BK_`) authenticate directly agains
 
 `site/login-resilience.js` keeps successful authentication separate from secondary page hydration. Tracked-user loading is bounded, first-page loading is bounded, and a temporary Monitor/History request failure can no longer make a valid key look rejected or leave the login screen hanging indefinitely.
 
+`site/standard-key-login.js` is the authoritative login owner for standard raw-key tiers. It installs synchronously, intercepts standard-key form submissions in the capture phase, stops the older `auth-ck.js` submit path from also running, authenticates directly against `lg-api`, and commits authenticated UI/session state before any secondary data hydration. Saved standard-key bootstrap also clears the legacy bootstrap inputs before `auth-ck.js`'s scheduled fallback can enter its older hydration-blocking path.
+
 ### Google OAuth
 
 A Google account can be linked to an LG key by a DEV user. Supabase Auth validates the Google session, the confirmed normalized email is resolved through `public.site_key_emails`, and the linked LG key supplies the permissions. Google login does not create a second LG permission model or bypass a revoked key.
@@ -190,6 +192,7 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 | `site/fetch-bootstrap.js` | Captures browser-native `fetch` before routing layers |
 | `site/auth-ck.js` | Key + Google login and gateway routing |
 | `site/login-resilience.js` | Login/page timeouts, hydration isolation, saved-key recovery |
+| `site/standard-key-login.js` | Authoritative synchronous direct login for standard raw-key tiers; blocks legacy double-submit/bootstrap races |
 | `site/egress-runtime.js` | Pre-auth legacy direct routing, tier normalization, GET de-duplication, short caches |
 | `site/ck-key-manager.js` | Verified DEV key generator/config editor and CK permission switches |
 | `site/key-delete-runtime.js` | Confirmed permanent non-DEV key deletion UI |
@@ -212,9 +215,20 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 
 ## Deployment and checks
 
-GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. All top-level `site/*.js` files are checked with `node --check`. Frontend CI also locks the canonical UPK/BK feature matrix, pre-auth direct-routing markers, hydration timeouts, CK manager contract, and delete UI contract.
+GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. All top-level `site/*.js` files are checked with `node --check`. Frontend CI also locks the canonical UPK/BK feature matrix, pre-auth direct-routing markers, hydration timeouts, standard-key synchronous/capture ownership, CK manager contract, and delete UI contract.
 
 The backend repository contains `.github/workflows/deploy-supabase-core.yml` for `lg-api`, `lg-gateway`, and `lg-key-admin`. It uses the Supabase CLI with API-based Edge Function deployment and requires the private repository secret `SUPABASE_ACCESS_TOKEN`; no Supabase credential belongs in source.
+
+## Change log
+
+### 2026-09-16 — Standard/UPK login race fix
+
+- Confirmed production contains active UPK keys, so the remaining failure was frontend login control flow rather than missing tier data.
+- `standard-key-login.js` now installs synchronously at the end of the page, before `auth-ck.js`'s already-scheduled legacy bootstrap can execute.
+- Standard-key form submits are owned in the capture phase with `stopImmediatePropagation()`, preventing both the new direct handler and the older blocking handler from running for one click.
+- Saved `DEV`/`PK_`/`UPK_`/`BK_` sessions neutralize the old bootstrap inputs and restore the saved key only after direct `lg-api /auth` succeeds.
+- Direct auth has a hard 6.5-second timeout, restores the login control on failure, and never waits for tracked-user/page hydration before treating the user as signed in.
+- GitHub Pages cache-bust version advanced to `standard-key-login.js?v=20260916-2`, with CI checks added for the race guards.
 
 ## Project principles
 
