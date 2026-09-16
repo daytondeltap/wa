@@ -39,6 +39,8 @@ jobs:
           grep -q "legacyTierFromRaw" site/egress-runtime.js
           grep -q "directLegacyAccount" site/egress-runtime.js
           grep -q "Login timed out" site/egress-runtime.js
+          grep -q "UPK_: \['monitor','leaderboard','history','adduser'\]" site/egress-runtime.js
+          grep -q "BK_:  \['monitor','leaderboard','adduser'\]" site/egress-runtime.js
           grep -q "UPK_.*monitor:true.*leaderboard:true.*history:true.*adduser:true.*cards:true" site/egress-runtime.js
           grep -q "BK_.*monitor:true.*leaderboard:true.*adduser:true.*cards:true" site/egress-runtime.js
 
@@ -50,7 +52,8 @@ jobs:
 
           test -s site/key-delete-runtime.js
           grep -q "Permanently delete key" site/key-delete-runtime.js
-          grep -q "/delete" site/key-delete-runtime.js
+          grep -q "/keys/.*delete" site/key-delete-runtime.js
+          grep -q "Permanent Delete backend is not deployed" site/key-delete-runtime.js
 
           test -s site/ck-feature-guard.js
           grep -q "No Features Enabled" site/ck-feature-guard.js
