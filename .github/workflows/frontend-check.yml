@@ -44,6 +44,13 @@ jobs:
           grep -q "UPK_.*monitor:true.*leaderboard:true.*history:true.*adduser:true.*cards:true" site/egress-runtime.js
           grep -q "BK_.*monitor:true.*leaderboard:true.*adduser:true.*cards:true" site/egress-runtime.js
 
+          test -s site/standard-key-login.js
+          grep -q "lg-api" site/standard-key-login.js
+          grep -q "UPK_: {tabs:\['monitor','leaderboard','history','adduser'\]" site/standard-key-login.js
+          grep -q "6500" site/standard-key-login.js
+          grep -q "Commit authenticated state immediately" site/standard-key-login.js
+          grep -q "Do not block the login promise on secondary data" site/standard-key-login.js
+
           test -s site/ck-key-manager.js
           grep -q "lg-key-admin" site/ck-key-manager.js
           grep -q "data-ckm-feature" site/ck-key-manager.js
