@@ -205,6 +205,7 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 | `site/exchange.js` | LG Exchange UI |
 | `site/cards.js` | Core Cards UI/API integration |
 | `site/mc-detector.js` | MC detector core UI |
+| `site/rbx-metro.js` | RBX Metro/DORFic presentation; body-class observer only reacts to real `mc-mode` transitions |
 | `site/performance-runtime.js` | Adaptive rendering/performance controls |
 | `site/performance.css` | Low-cost visual overrides |
 
@@ -220,11 +221,21 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 
 ## Deployment and checks
 
-GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. All top-level `site/*.js` files are checked with `node --check`. Frontend CI locks the canonical UPK/BK feature matrix, direct standard-key auth contract, standard-before-CK script order, saved-key bootstrap guard, duplicate-attempt protection, `auth-ck` standard-key delegation, hydration timeouts, CK manager contract, and delete UI contract.
+GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/` or the Pages workflow. All top-level `site/*.js` files are checked with `node --check`. Frontend CI locks the canonical UPK/BK feature matrix, direct standard-key auth contract, standard-before-CK script order, saved-key bootstrap guard, duplicate-attempt protection, `auth-ck` standard-key delegation, hydration timeouts, CK manager contract, delete UI contract, and the RBX Metro observer guard that prevents body-class feedback loops.
 
 The backend repository contains `.github/workflows/deploy-supabase-core.yml` for `lg-api`, `lg-gateway`, and `lg-key-admin`. It uses the Supabase CLI with API-based Edge Function deployment and requires the private repository secret `SUPABASE_ACCESS_TOKEN`; no Supabase credential belongs in source.
 
 ## Change log
+
+### 2026-09-16 — UPK post-login freeze / RBX Metro observer fix v4
+
+- Reproduced the reported freeze with a fresh production UPK test key without committing or documenting the raw key.
+- Confirmed the authentication path itself was not the blocker: the same deployed artifact became responsive when presentation modules were removed, then a script-by-script Chromium bisection stayed healthy through `mc-frutiger-aero-overhaul.js` and froze as soon as `rbx-metro.js` was added.
+- Root cause was the `rbx-metro.js` `MutationObserver` watching the `body.class` attribute and calling `applyMode()` on every class mutation while `applyMode()` itself writes Metro/DORFic body classes. Post-login class changes could therefore create a main-thread feedback loop and make the page appear permanently frozen after a valid UPK login.
+- `rbx-metro.js` now tracks the last `mc-mode` state, ignores unrelated body-class mutations, and only writes `rbx-metro` / `rbx-dorfic` when their state actually needs to change.
+- GitHub Pages now cache-busts the corrected module as `rbx-metro.js?v=20260916-1` so browsers do not keep the freezing copy.
+- The exact full frontend stack was rerun in Chromium after the patch with a valid `UPK_` auth response: the login screen hid, the account remained `UPK_`, Monitor became active, the main thread stayed responsive, and no page errors were produced.
+- Frontend CI now asserts the `lastMcMode` transition guard and no-op class-write guard remain in `rbx-metro.js`.
 
 ### 2026-09-16 — Standard/UPK login bootstrap race v3
 
