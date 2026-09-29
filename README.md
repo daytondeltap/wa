@@ -227,6 +227,12 @@ The backend repository contains `.github/workflows/deploy-supabase-core.yml` for
 
 ## Change log
 
+### 2026-09-29 — Presence Simulation button visibility fix
+
+- The Monitor **Presence Simulation** control now appears for any authenticated `DEV` account instead of depending on a separate capability flag.
+- GitHub Pages cache-busts the module as `dev-presence-simulation.js?v=20260929-2` so an already-cached hidden-button build is not reused.
+- Backend authorization still enforces the DEV-only boundary.
+
 ### 2026-09-29 — DEV Roblox presence simulation + Revert to Detector
 
 - Added `site/dev-presence-simulation.js`, loaded on GitHub Pages as `dev-presence-simulation.js?v=20260929-1`.
