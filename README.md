@@ -235,7 +235,7 @@ The backend repository contains `.github/workflows/deploy-supabase-core.yml` for
 - Revert calls the backend DELETE route so the manual state is removed and the Roblox detector becomes authoritative again.
 - Simulated live-presence cards are visually labeled when the backend returns `source=DEV_OVERRIDE`.
 - Frontend CI run 49 and GitHub Pages deployment run 58 completed successfully.
-- Final activation is waiting only for the correct owner binding because production currently contains two active DEV keys labeled `Existing DEV key 1` and `Existing DEV key 2`.
+- Activation is complete: the backend owner setting is bound to `Existing DEV key 1` (the `daytondeltap` DEV key). `Existing DEV key 2` does not receive `can_override_presence=true`.
 
 ### 2026-09-16 — UPK post-login freeze / RBX Metro observer fix v4
 
