@@ -227,6 +227,14 @@ The backend repository contains `.github/workflows/deploy-supabase-core.yml` for
 
 ## Change log
 
+### 2026-09-29 — Presence override UI polish
+
+- Removed the legacy `SIMULATED` badge and its render wrapper entirely, eliminating the stale badge that could remain after reverting.
+- Rebuilt the DEV control as a compact **Status Override** modal with cleaner layout, fallback wording, Join controls, loading states, and explicit detector/override state inside the DEV-only control.
+- **Revert to Detector** now immediately clears local override state and refreshes Monitor before a second follow-up refresh.
+- GitHub Pages cache-busts this build as `dev-presence-simulation.js?v=20260929-3`.
+- Frontend CI now fails if the old `SIMULATED` badge text is reintroduced.
+
 ### 2026-09-29 — Presence Simulation button visibility fix
 
 - The Monitor **Presence Simulation** control now appears for any authenticated `DEV` account instead of depending on a separate capability flag.
