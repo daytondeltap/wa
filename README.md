@@ -206,7 +206,7 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 | `site/cards.js` | Core Cards UI/API integration |
 | `site/mc-detector.js` | MC detector core UI |
 | `site/rbx-metro.js` | RBX Metro/DORFic presentation; body-class observer only reacts to real `mc-mode` transitions |
-| `site/performance-runtime.js` | Adaptive rendering/performance controls |
+| `site/dev-presence-simulation.js` | Owner-only Roblox presence simulation controls with detector revert and simulation labeling |\n| `site/performance-runtime.js` | Adaptive rendering/performance controls |
 | `site/performance.css` | Low-cost visual overrides |
 
 ## Security notes
@@ -226,6 +226,16 @@ GitHub Pages deploys from `.github/workflows/pages.yml` on changes under `site/`
 The backend repository contains `.github/workflows/deploy-supabase-core.yml` for `lg-api`, `lg-gateway`, and `lg-key-admin`. It uses the Supabase CLI with API-based Edge Function deployment and requires the private repository secret `SUPABASE_ACCESS_TOKEN`; no Supabase credential belongs in source.
 
 ## Change log
+
+### 2026-09-29 — DEV Roblox presence simulation + Revert to Detector
+
+- Added `site/dev-presence-simulation.js`, loaded on GitHub Pages as `dev-presence-simulation.js?v=20260929-1`.
+- The control remains hidden unless the authenticated account receives `can_override_presence=true` from the backend.
+- The owner control supports Offline, Website, and In Game states, optional Join metadata, **Set**, and **Revert to Detector**.
+- Revert calls the backend DELETE route so the manual state is removed and the Roblox detector becomes authoritative again.
+- Simulated live-presence cards are visually labeled when the backend returns `source=DEV_OVERRIDE`.
+- Frontend CI run 49 and GitHub Pages deployment run 58 completed successfully.
+- Final activation is waiting only for the correct owner binding because production currently contains two active DEV keys labeled `Existing DEV key 1` and `Existing DEV key 2`.
 
 ### 2026-09-16 — UPK post-login freeze / RBX Metro observer fix v4
 
