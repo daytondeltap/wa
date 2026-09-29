@@ -86,5 +86,9 @@ jobs:
           grep -q "classList.contains('rbx-metro')!==metro" site/rbx-metro.js
           test -s site/dev-presence-simulation.js
           grep -q "Revert to Detector" site/dev-presence-simulation.js
-          grep -q "SIMULATED" site/dev-presence-simulation.js
+          grep -q "Fallback control for detector outages" site/dev-presence-simulation.js
           grep -q "/dev/presence-overrides/" site/dev-presence-simulation.js
+          if grep -q "SIMULATED" site/dev-presence-simulation.js; then
+            echo "Legacy simulated badge text must not return"
+            exit 1
+          fi
