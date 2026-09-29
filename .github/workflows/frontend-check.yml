@@ -84,3 +84,7 @@ jobs:
           grep -q "lastMcMode" site/rbx-metro.js
           grep -q "mc===lastMcMode" site/rbx-metro.js
           grep -q "classList.contains('rbx-metro')!==metro" site/rbx-metro.js
+          test -s site/dev-presence-simulation.js
+          grep -q "Revert to Detector" site/dev-presence-simulation.js
+          grep -q "SIMULATED" site/dev-presence-simulation.js
+          grep -q "/dev/presence-overrides/" site/dev-presence-simulation.js
