@@ -3,7 +3,7 @@
   let overrides = new Map();
 
   function allowed(){
-    try{return typeof account!=='undefined'&&account?.can_override_presence===true}catch{return false}
+    try{return typeof account!=='undefined'&&account?.tier==='DEV'}catch{return false}
   }
 
   function ensureUi(){
