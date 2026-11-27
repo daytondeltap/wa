@@ -47,3 +47,123 @@
   #page-monitor .card-grid {grid-template-columns:repeat(auto-fill,minmax(min(100%,205px),1fr));gap:.6rem}
   #page-monitor .monitor-workspace>.panel {padding:.8rem}
 }
+
+/* Frutiger Metro. The status counters double as live filters. */
+#page-monitor {
+  --metro-cyan:#54dbef;
+  --metro-lime:#c7ee8a;
+  --metro-purple:#c5adff;
+  --metro-pink:#ffaac8;
+  --metro-ink:#101b2b;
+  --monitor-gutter:clamp(.85rem,3vw,2rem);
+}
+#page-monitor .monitor-heading {
+  position:relative;isolation:isolate;overflow:hidden;align-content:center;
+  display:grid;gap:.5rem;min-height:clamp(138px,17vw,200px);
+  width:min(1396px,calc(100% - 2 * var(--monitor-gutter)));margin:1.1rem auto 0;
+  padding:clamp(1.15rem,3.4vw,2.65rem);
+  background:#142c48;color:#fff;border-bottom:5px solid var(--metro-cyan);
+}
+.rbx-dorfic #page-monitor .monitor-heading {background:#4d2628;border-color:#f18a43}
+#page-monitor .monitor-heading h1 {
+  border:0;padding:0;
+  font:750 clamp(2.3rem,6.2vw,5.1rem)/.98 var(--font-ui);letter-spacing:-.07em;
+}
+#page-monitor .monitor-heading .monitor-update {color:#e1f2ff;min-height:1.2em;font-variant-numeric:tabular-nums}
+.monitor-art {
+  position:absolute;z-index:-1;pointer-events:none;inset:0 0 0 auto;width:60%;
+  background:
+    radial-gradient(circle at 82% 65%,#54dbef 0 3%,transparent 3.2% 8%,#54dbef 8.2% 11%,transparent 11.2% 18%,#54dbef 18.2% 21%,transparent 21.2%),
+    radial-gradient(circle at 93% 22%,#e684b7 0 5%,transparent 5.2% 8%,#e684b7 8.2% 9.8%,transparent 10%),
+    radial-gradient(circle at 70% 20%,#c7ee8a 0 1.2%,transparent 1.5%),
+    linear-gradient(145deg,transparent 0 50%,#2d4385 50% 66%,transparent 66% 77%,#426ab0 77% 88%,transparent 88%);
+}
+.rbx-dorfic .monitor-art {opacity:.55}
+#page-monitor .monitor-filters {
+  gap:.55rem .65rem;padding:1rem var(--monitor-gutter) .85rem;
+}
+#page-monitor .monitor-filters select {min-width:min(10rem,100%);padding-inline:.7rem}
+#page-monitor .monitor-filters .btn {
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding-inline:.78rem;
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+}
+#page-monitor .monitor-filters #manual-refresh {
+  background:var(--metro-cyan);border-color:var(--metro-cyan);color:var(--metro-ink);
+}
+#page-monitor .monitor-filters #activity-code-open {
+  border-color:var(--accent2);color:var(--accent2);
+}
+#page-monitor #manual-refresh span {font-size:1.24rem;line-height:1}
+#page-monitor .monitor-workspace {padding:.1rem var(--monitor-gutter) 2rem;gap:.9rem}
+#page-monitor .monitor-views {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.4rem;
+  border:0;padding:0;
+}
+#page-monitor [data-monitor-view="live"],#page-monitor [data-monitor-status="all"] {--tile-color:var(--metro-cyan)}
+#page-monitor [data-monitor-view="playtime"],#page-monitor [data-monitor-status="game"] {--tile-color:var(--metro-lime)}
+#page-monitor [data-monitor-view="sessions"],#page-monitor [data-monitor-status="other"] {--tile-color:var(--metro-purple)}
+#page-monitor [data-monitor-view="events"] {--tile-color:var(--metro-pink)}
+#page-monitor [data-monitor-status="online"] {--tile-color:#9cdeba}
+#page-monitor [data-monitor-status="offline"] {--tile-color:#c2cfdd}
+#page-monitor .monitor-views button {
+  display:flex;align-items:center;gap:.65rem;min-height:3.75rem;text-align:left;
+  padding:.55rem .85rem;background:var(--surface);color:var(--text);
+  border:1px solid var(--border);border-top:3px solid var(--tile-color);
+  font-size:clamp(.83rem,1.7vw,1.1rem);border-radius:0;
+}
+#page-monitor .monitor-views button span {color:var(--tile-color);font-size:1.5em;line-height:1}
+#page-monitor .monitor-views button[aria-selected="true"] {
+  color:var(--metro-ink);background:var(--tile-color);border-color:var(--tile-color);
+}
+#page-monitor .monitor-views button[aria-selected="true"] span {color:inherit}
+.rbx-dorfic #page-monitor .monitor-views button:not([aria-selected="true"]) span {color:#7f451e}
+#page-monitor .monitor-views button:hover {border-color:var(--accent2)}
+#page-monitor .monitor-status-filters {
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.4rem;
+}
+#page-monitor .monitor-status-filters button {
+  display:flex;align-items:flex-start;justify-content:center;flex-direction:column;
+  gap:.22rem;min-height:4.1rem;padding:.55rem .7rem;
+  text-align:left;border:0;border-inline-start:3px solid var(--tile-color);
+  border-radius:0;background:var(--surface);color:var(--text);
+}
+#page-monitor .monitor-status-filters button[aria-pressed="true"] {
+  background:var(--tile-color);color:var(--metro-ink);
+}
+#page-monitor .monitor-status-filters button:hover {box-shadow:inset 0 0 0 1px var(--accent2)}
+#page-monitor .monitor-status-filters span {
+  order:-1;padding:0;font-size:clamp(1.2rem,3.1vw,2rem);font-weight:750;line-height:1;
+}
+#page-monitor .monitor-section-head {margin:.4rem 0 .7rem}
+#page-monitor .monitor-section-head h2 {letter-spacing:-.04em;font-size:clamp(1.36rem,3vw,2rem)}
+#page-monitor .presence-card {
+  display:flex;flex-direction:column;align-items:flex-start;
+  background:var(--surface);border-left-width:1px;border-top:3px solid var(--border);border-radius:0;
+}
+#page-monitor .presence-card.ingame {border-top-color:var(--metro-lime)}
+#page-monitor .presence-card.website {border-top-color:var(--metro-cyan)}
+#page-monitor .presence-card.invisible {border-top-color:var(--metro-purple)}
+#page-monitor .presence-card.studio {border-top-color:#ffd68b}
+#page-monitor .card-username {font-size:1.03rem;line-height:1.12}
+#page-monitor .card-status {border-radius:0;padding:.26rem .45rem}
+#page-monitor .monitor-card-actions {width:100%;margin-top:auto;padding-top:.6rem}
+#page-monitor .monitor-card-actions .btn {
+  background:var(--metro-lime);color:var(--metro-ink);border-color:var(--metro-lime);
+  font-weight:750;
+}
+#page-monitor .monitor-card-actions .btn::after {content:"↗" / "";margin-inline-start:.45rem}
+#page-monitor :is(.monitor-card-actions .btn,#manual-refresh):hover {filter:brightness(1.1)}
+#page-monitor .monitor-pager .btn {min-height:2.5rem;border-color:var(--border);border-radius:0;padding-inline:.8rem}
+#page-monitor .monitor-playtime-grid .panel,
+#page-monitor .monitor-workspace > .panel {border-top:3px solid var(--accent2)}
+@media (max-width:700px) {
+  #page-monitor .monitor-heading {min-height:136px;margin-top:.7rem}
+  .monitor-art {width:55%;opacity:.52}
+  #page-monitor .monitor-views button {min-height:3.05rem;padding:.45rem;gap:.32rem}
+  #page-monitor .monitor-status-filters {grid-template-columns:repeat(3,minmax(0,1fr))}
+  #page-monitor .monitor-status-filters button {min-height:3.55rem}
+}
+@media (max-width:400px) {
+  #page-monitor .monitor-views {grid-template-columns:repeat(2,minmax(0,1fr))}
+  #page-monitor .monitor-filters #lg-override-open {margin-inline-start:0}
+}

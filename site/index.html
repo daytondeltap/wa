@@ -75,9 +75,9 @@
   #activity-code-dialog .activity-code-actions {display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.65rem}
 </style>
 <link rel="stylesheet" href="history.css?v=20261127-1">
-<link rel="stylesheet" href="monitor.css?v=1">
 <link rel="stylesheet" href="rbx-metro.css?v=3">
-<link rel="stylesheet" href="mc-frutiger-aero-overhaul.css?v=4">
+<link rel="stylesheet" href="monitor.css?v=2">
+<link rel="stylesheet" href="mc-frutiger-aero-overhaul.css?v=5">
 <link rel="stylesheet" href="motion.css?v=1">
 <script defer src="history.js?v=20261127-1"></script>
 <script defer src="activity-checkin.js?v=1"></script>
@@ -123,12 +123,13 @@
   <div class="monitor-heading">
     <h1>Roblox Monitor</h1>
     <span id="monitor-update" class="monitor-update" role="status"></span>
+    <div class="monitor-art" aria-hidden="true"></div>
   </div>
   <div class="filter-bar monitor-filters">
     <label>Player<select id="user-filter"><option value="">All players</option></select></label>
     <label id="monitor-period" hidden>Period<select id="days-filter"><option value="">All retained history</option><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="60">Last 60 days</option></select></label>
-    <button type="button" class="btn" id="manual-refresh">Refresh</button>
-    <button type="button" class="btn" id="activity-code-open" hidden>Request check-in</button>
+    <button type="button" class="btn" id="manual-refresh"><span aria-hidden="true">↻</span> Refresh</button>
+    <button type="button" class="btn" id="activity-code-open" hidden><span aria-hidden="true">✓</span> Request check-in</button>
   </div>
   <dialog id="activity-code-dialog" aria-labelledby="activity-code-title">
     <h2 id="activity-code-title">Request a Roblox check-in</h2>
@@ -148,10 +149,10 @@
   </dialog>
   <div class="main monitor-workspace">
     <div class="monitor-views" role="tablist" aria-label="Monitor views">
-      <button type="button" id="monitor-tab-live" role="tab" aria-selected="true" aria-controls="monitor-live" data-monitor-view="live">Live</button>
-      <button type="button" id="monitor-tab-playtime" role="tab" aria-selected="false" aria-controls="monitor-playtime" tabindex="-1" data-monitor-view="playtime">Playtime</button>
-      <button type="button" id="monitor-tab-sessions" role="tab" aria-selected="false" aria-controls="monitor-sessions" tabindex="-1" data-monitor-view="sessions">Sessions</button>
-      <button type="button" id="monitor-tab-events" role="tab" aria-selected="false" aria-controls="monitor-events" tabindex="-1" data-monitor-view="events">Event log</button>
+      <button type="button" id="monitor-tab-live" role="tab" aria-selected="true" aria-controls="monitor-live" data-monitor-view="live"><span aria-hidden="true">◉</span> Live</button>
+      <button type="button" id="monitor-tab-playtime" role="tab" aria-selected="false" aria-controls="monitor-playtime" tabindex="-1" data-monitor-view="playtime"><span aria-hidden="true">◷</span> Playtime</button>
+      <button type="button" id="monitor-tab-sessions" role="tab" aria-selected="false" aria-controls="monitor-sessions" tabindex="-1" data-monitor-view="sessions"><span aria-hidden="true">▥</span> Sessions</button>
+      <button type="button" id="monitor-tab-events" role="tab" aria-selected="false" aria-controls="monitor-events" tabindex="-1" data-monitor-view="events"><span aria-hidden="true">≡</span> Event log</button>
     </div>
     <p id="monitor-message" class="monitor-message" role="status" hidden></p>
     <section id="monitor-live" role="tabpanel" aria-labelledby="monitor-tab-live">

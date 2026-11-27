@@ -28,12 +28,12 @@ async function api(path,options={}) {
 }
 
 function workspace() {
-  const navigation = sections.map(([id,label],i)=>`<button type="button" id="mc-tab-${id}" data-mx="${id}" role="tab" aria-selected="${i===0}" aria-controls="mcx-${id}" tabindex="${i===0?0:-1}">${label}</button>`).join('');
+  const navigation = sections.map(([id,label],i)=>`<button type="button" id="mc-tab-${id}" data-mx="${id}" role="tab" aria-selected="${i===0}" aria-controls="mcx-${id}" tabindex="${i===0?0:-1}"><span class="mcx-orb" aria-hidden="true"></span>${label}</button>`).join('');
   return `<div id="mcx">
     <div class="mcx-banner">
       <div class="mcx-hero">
         <div><h1>Minecraft Detector</h1><p id="mcx-freshness" role="status"></p></div>
-        <button type="button" id="mcx-refresh" class="btn">Refresh</button>
+        <button type="button" id="mcx-refresh" class="btn"><span aria-hidden="true">↻</span> Refresh</button>
       </div>
       <div class="mcx-nav" role="tablist" aria-label="Minecraft workspace">${navigation}</div>
     </div>
