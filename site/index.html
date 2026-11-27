@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roblox Presence Monitor</title>
+<title>WA · Roblox &amp; Minecraft</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -75,39 +75,47 @@
 </style>
 <link rel="stylesheet" href="history.css?v=20261127-1">
 <link rel="stylesheet" href="monitor.css?v=1">
+<link rel="stylesheet" href="rbx-metro.css?v=2">
+<link rel="stylesheet" href="mc-frutiger-aero-overhaul.css?v=2">
 <script defer src="history.js?v=20261127-1"></script>
 <script defer src="activity-checkin.js?v=1"></script>
+<script defer src="workspace-search.js?v=1"></script>
 </head>
-<body>
+<body class="rbx-metro">
 
-<section id="auth" class="auth">
-  <div class="login-card">
-    <div class="logo">RBX<span>/</span>MONITOR</div>
-    <div class="login-sub">RESTRICTED ACCESS — KEY REQUIRED</div>
-    <form id="login-form">
-      <label for="login-key">Access Key</label>
-      <input type="password" id="login-key" placeholder="••••••••••••••••••••" autocomplete="off" autofocus required>
-      <div id="login-error" class="error-msg hidden"></div>
-      <button type="submit" class="btn-login">Enter</button>
-    </form>
-    <div class="login-footer">Authorized personnel only</div>
+<section id="auth" class="auth" aria-labelledby="login-title">
+  <div class="signin-shell">
+    <div class="signin-brand" aria-hidden="true">
+      <div class="signin-tiles"><i></i><i></i><i></i><i></i></div>
+      <strong>WA</strong><span>Roblox &amp; Minecraft</span>
+    </div>
+    <div class="login-card">
+      <h1 id="login-title">Sign in</h1>
+      <p class="login-sub">Use your access key.</p>
+      <form id="login-form">
+        <label for="login-key">Access key</label>
+        <input type="password" id="login-key" autocomplete="off" autofocus required>
+        <div id="login-error" class="error-msg hidden" role="alert"></div>
+        <button type="submit" class="btn-login">Sign in</button>
+      </form>
+    </div>
   </div>
 </section>
 
 <div id="app" class="hidden">
 <header>
-  <div style="display:flex;align-items:center;gap:.75rem;">
-    <div class="logo">RBX<span>/</span>MONITOR</div>
+  <div class="app-brand">
+    <div class="logo">WA<span>/</span>Roblox</div>
     <span id="tier-badge" class="tier-badge"></span>
   </div>
   <div class="header-right">
     <div id="live-dot"></div>
     <span class="last-update" id="last-update">--:--:--</span>
-    <button type="button" id="logout-btn" class="btn-logout">🔒 Logout</button>
+    <button type="button" id="logout-btn" class="btn-logout">Sign out</button>
   </div>
 </header>
 
-<nav class="page-nav" id="page-nav"></nav>
+<nav class="page-nav" id="page-nav" aria-label="Roblox workspace"></nav>
 
 <div class="page active" id="page-monitor">
   <div class="monitor-heading">
@@ -193,7 +201,10 @@
 </div>
 
 <div class="page" id="page-leaderboard">
-  <div class="lb-wrap"><section><div class="sec-title">Gametime Leaderboard</div><div class="table-wrap"><table class="lb-table" id="lb-table"><thead><tr><th>#</th><th>Player</th><th class="lb-bar-cell">Playtime</th><th>Total Time</th><th>Sessions</th></tr></thead><tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></section></div>
+  <div class="workspace-shell">
+    <div class="workspace-title"><h1>Leaderboard</h1><label>Find a player<input type="search" id="leaderboard-search" class="ask-input" placeholder="Name or user ID" data-filter-list="lb-table" autocomplete="off"></label></div>
+    <section class="insight-card"><div class="table-wrap" tabindex="0" aria-label="Playtime leaderboard"><table class="lb-table" id="lb-table"><thead><tr><th>Rank</th><th>Player</th><th class="lb-bar-cell">Playtime</th><th>Total time</th><th>Sessions</th></tr></thead><tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div><p class="workspace-search-empty" data-empty-list="lb-table" hidden>No players match your search.</p></section>
+  </div>
 </div>
 
 <div class="page" id="page-history">
@@ -234,22 +245,48 @@
 </div>
 
 <div class="page" id="page-adduser">
-  <div class="adduser-wrap">
-    <section class="insight-card"><div class="sec-title">Track a New User</div><form class="adduser-form" id="adduser-form"><div class="adduser-field"><label for="adduser-id">Roblox User ID</label><input class="ask-input" id="adduser-id" type="number" min="1" inputmode="numeric" placeholder="e.g. 1876419070" required></div><div class="adduser-field"><label for="adduser-name">Display Name</label><input class="ask-input" id="adduser-name" type="text" maxlength="50" placeholder="e.g. daytondeltap" required></div><button class="ask-submit" id="adduser-submit" type="submit">+ Add User</button></form><div class="adduser-msg" id="adduser-msg"></div><div class="adduser-hint">Saved server-side for this account. The backend picks up new/removed users within one poll cycle (~10s).</div></section>
-    <section class="insight-card"><div class="sec-title">Currently Tracked</div><div class="tracked-list" id="tracked-list">Loading…</div></section>
+  <div class="workspace-shell">
+    <div class="workspace-title"><h1>Tracked players</h1></div>
+    <div class="workspace-split">
+      <section class="insight-card">
+        <h2>Add a player</h2>
+        <form class="adduser-form" id="adduser-form">
+          <div class="adduser-field"><label for="adduser-id">Roblox user ID</label><input class="ask-input" id="adduser-id" type="number" min="1" inputmode="numeric" placeholder="e.g. 1876419070" required></div>
+          <div class="adduser-field"><label for="adduser-name">Display name</label><input class="ask-input" id="adduser-name" type="text" maxlength="50" placeholder="Name shown in Monitor" required></div>
+          <button class="ask-submit" id="adduser-submit" type="submit">Track player</button>
+        </form>
+        <div class="adduser-msg" id="adduser-msg" role="status"></div>
+        <div class="adduser-hint">The backend picks up new/removed users within one poll cycle (~10s).</div>
+      </section>
+      <section class="insight-card">
+        <div class="workspace-section-head"><h2>Currently tracked</h2><label>Find a player<input type="search" class="ask-input" data-filter-list="tracked-list" placeholder="Name or user ID" autocomplete="off"></label></div>
+        <div class="tracked-list" id="tracked-list">Loading…</div><p class="workspace-search-empty" data-empty-list="tracked-list" hidden>No players match your search.</p>
+      </section>
+    </div>
   </div>
 </div>
 
 <div class="page" id="page-keys">
-  <div class="insights-wrap">
-    <section class="insight-card"><div class="sec-title">Generate New Access Key</div><form class="adduser-form" id="keygen-form"><div class="adduser-field"><label for="keygen-tier">Key Weight</label><select class="ask-input" id="keygen-tier" required><option value="PK_">PK_ — Full access</option><option value="UPK_">UPK_ — Leaderboard + User Adding</option><option value="BK_">BK_ — Monitor + User Adding</option></select></div><div class="adduser-field"><label for="keygen-label">Label (optional)</label><input class="ask-input" id="keygen-label" maxlength="60" placeholder="e.g. client-acme"></div><button class="ask-submit" type="submit">+ Generate Key</button></form><div id="keygen-result"></div></section>
-    <section class="insight-card"><div class="sec-title">All Generated Keys</div><div class="table-wrap"><table id="keys-table"><thead><tr><th>Tier</th><th>Label</th><th>Key ID</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table></div></section>
+  <div class="workspace-shell">
+    <div class="workspace-title"><h1>Access keys</h1></div>
+    <div class="workspace-split workspace-split-keys">
+      <section class="insight-card">
+        <h2>Generate a key</h2>
+        <form class="adduser-form" id="keygen-form"><div class="adduser-field"><label for="keygen-tier">Key type</label><select class="ask-input" id="keygen-tier" required><option value="PK_">PK_ — Full access</option><option value="UPK_">UPK_ — Leaderboard + User Adding</option><option value="BK_">BK_ — Monitor + User Adding</option></select></div><div class="adduser-field"><label for="keygen-label">Label (optional)</label><input class="ask-input" id="keygen-label" type="text" maxlength="60" placeholder="e.g. client-alpha"></div><button class="ask-submit" id="keygen-submit" type="submit">Generate key</button></form>
+        <div id="keygen-result" aria-live="polite"></div>
+      </section>
+      <section class="insight-card">
+        <div class="workspace-section-head"><h2>Generated keys</h2><label>Find a key<input type="search" class="ask-input" data-filter-list="keys-table" placeholder="Label, key ID, or email" autocomplete="off"></label></div>
+        <div class="table-wrap" tabindex="0" aria-label="Generated keys"><table id="keys-table"><thead><tr><th>Tier</th><th>Label</th><th>Key ID</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table></div>
+        <p class="workspace-search-empty" data-empty-list="keys-table" hidden>No keys match your search.</p>
+      </section>
+    </div>
   </div>
 </div>
 </div>
 
 <div id="join-overlay" class="join-overlay hidden">
-  <div class="join-modal"><img id="join-avatar" class="join-modal-avatar" src="" alt=""><div class="join-modal-name" id="join-name"></div><div class="join-modal-game" id="join-game"></div><div class="join-modal-q" id="join-question">Join their game?</div><div class="join-modal-btns"><button class="join-yes" id="join-yes">✓ YES</button><button class="join-no" id="join-no">✕ NO</button></div><div class="join-hint">Roblox may ask permission to open the app.</div></div>
+  <div class="join-modal" role="dialog" aria-modal="true" aria-labelledby="join-question"><img id="join-avatar" class="join-modal-avatar" src="" alt=""><div class="join-modal-name" id="join-name"></div><div class="join-modal-game" id="join-game"></div><div class="join-modal-q" id="join-question">Join their game?</div><div class="join-modal-btns"><button class="join-yes" id="join-yes">Continue</button><button class="join-no" id="join-no">Cancel</button></div><div class="join-hint">Roblox may ask permission to open the app.</div></div>
 </div>
 <div id="toast" class="toast hidden"></div>
 

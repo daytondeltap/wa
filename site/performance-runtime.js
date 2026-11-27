@@ -7,7 +7,7 @@
     const link=document.createElement('link');
     link.id='lg-performance-css';
     link.rel='stylesheet';
-    link.href='performance.css';
+    link.href='performance.css?v=2';
     document.head.appendChild(link);
   }
 

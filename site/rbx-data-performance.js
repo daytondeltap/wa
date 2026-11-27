@@ -75,6 +75,8 @@
     mounted.clear();
     cards.clear();
     lastAvatars = {};
+    leaderboardSignature = '';
+    get('lb-table').tBodies[0].replaceChildren();
     for (const kind of Object.keys(pages)) pages[kind] = 0;
     statusFilter = 'all';
     for (const search of ['monitor-search','monitor-sessions-search','monitor-events-search']) get(search).value = '';
@@ -446,8 +448,14 @@
   }
   if(typeof refreshLeaderboard==='function')refreshLeaderboard=async function(){
     try{
-      const rows=await api('/leaderboard'),sig=fastSig(rows,['rank','user_id','username','title','total_seconds','sessions','avatar_url']);if(sig===leaderboardSignature)return;leaderboardSignature=sig;
-      const max=Math.max(1,...rows.map(x=>Number(x.total_seconds||0))),body=q('#lb-table tbody');if(!body)return;
+      const viewerAtRequest = currentViewer();
+      const rows = await api('/leaderboard');
+      if (viewerAtRequest !== currentViewer()) return;
+      const sig = fastSig(rows,['rank','user_id','username','title','total_seconds','sessions','avatar_url']);
+      if (sig === leaderboardSignature) return;
+      const body = get('lb-table').tBodies[0];
+      const max = rows.reduce((highest,row)=>Math.max(highest,Number(row.total_seconds||0)),1);
+      leaderboardSignature = sig;
       body.innerHTML=rows.length?rows.map((x,i)=>`<tr><td class="lb-rank lb-rank-${i+1}">${x.rank}</td><td><div class="lb-user-cell">${x.avatar_url?`<img class="avatar avatar-md" ${imgAttrs} width="44" height="44" src="${esc(x.avatar_url)}" alt="">`:''}<div><div class="lb-username">${esc(x.username)}</div>${x.title?`<div class="lb-title">${esc(x.title)}</div>`:''}<div class="lb-userid">${x.user_id}</div></div></div></td><td class="lb-bar-cell"><div class="lb-bar-track"><div class="lb-bar-fill" style="width:${Math.max(2,Math.round(Number(x.total_seconds||0)/max*100))}%"></div></div></td><td class="lb-time">${fmtSeconds(x.total_seconds)}</td><td class="lb-sessions">${x.sessions}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No players yet</td></tr>';
     }catch(e){toast(e.message)}
   };

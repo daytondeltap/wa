@@ -86,7 +86,7 @@
       const back=location.origin+location.pathname;
       location.href=`${SB}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(back)}`;
     };
-    const sub=document.querySelector('.login-sub');if(sub)sub.textContent='RESTRICTED ACCESS — KEY OR LINKED GOOGLE ACCOUNT';
+    const sub=document.querySelector('.login-sub');if(sub)sub.textContent='Use your access key or linked Google account.';
   }
   function showLoginError(msg){const e=$('login-error');if(!e)return;e.textContent=msg;e.classList.remove('hidden')}
   function hideLoginError(){$('login-error')?.classList.add('hidden')}

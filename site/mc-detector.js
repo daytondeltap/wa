@@ -1,10 +1,78 @@
-(()=>{
-const A='https://jwjxhxvahgrpkvaoyrzw.supabase.co/functions/v1/lg-mc',S={on:localStorage.lg_detector_mode==='mc',tab:'monitor',d:null,t:null,c:null,b:false};
-const q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)],e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),ts=x=>x?new Date(x).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—',dur=x=>{x=+x||0;let d=Math.floor(x/86400),h=Math.floor(x%86400/3600),m=Math.floor(x%3600/60);return d?`${d}d ${h}h`:h?`${h}h ${m}m`:`${m}m`},say=x=>{try{toast(x)}catch{console.log(x)}};
-async function api(p,o={}){if(typeof SITE_KEY==='undefined'||!SITE_KEY)throw Error('Log in first');let h=new Headers(o.headers||{});h.set('x-site-key',SITE_KEY);if(o.body)h.set('content-type','application/json');let r=await fetch(A+p,{...o,headers:h}),j={};try{j=await r.json()}catch{}if(!r.ok)throw Error(j.error||j.detail||`Request failed (${r.status})`);return j}
-function css(){if(q('#mcx-style'))return;let s=document.createElement('style');s.id='mcx-style';s.textContent=`.mc-mode #app>.page-nav,.mc-mode #app>.page{display:none!important}.mc-mode #mcx{display:block!important}#mcx{display:none}.mcx-toggle{display:flex;align-items:center;gap:.45rem}.mcx-lbl{font:600 .56rem var(--font-mono);color:var(--subtext);letter-spacing:.08em;text-transform:uppercase}.mcx-sw{width:42px;height:24px;padding:2px;border:0;border-radius:99px;background:#2b2b37;box-shadow:inset 0 0 0 1px var(--border);cursor:pointer;transition:.24s}.mcx-sw:after{content:'';display:block;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 6px #0008;transition:transform .28s cubic-bezier(.2,.8,.2,1)}.mcx-sw.on{background:var(--green)}.mcx-sw.on:after{transform:translateX(18px)}.mcx-nav{display:flex;padding:0 2rem;background:var(--surface);border-bottom:1px solid var(--border);overflow:auto}.mcx-nav button{font:400 .68rem var(--font-mono);letter-spacing:.09em;text-transform:uppercase;padding:.7rem 1.1rem;color:var(--subtext);border:0;border-bottom:2px solid transparent;background:none;cursor:pointer}.mcx-nav button.active{color:var(--green);border-color:var(--green)}.mcx-page{display:none}.mcx-page.active{display:block}.mcx-wrap{padding:1.4rem 2rem;display:flex;flex-direction:column;gap:1.15rem}.mcx-toolbar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}.mcx-note{font:400 .62rem var(--font-mono);color:var(--subtext);line-height:1.5}.mcx-warn{padding:.65rem;border:1px solid #ffb00044;background:#ffb0000d;border-radius:5px;color:#c8a04c}.mcx-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem}.mcx-stat,.mcx-panel,.mcx-card{background:var(--surface);border:1px solid var(--border);border-radius:8px}.mcx-stat{padding:.8rem}.mcx-k{font:400 .52rem var(--font-mono);color:var(--muted);text-transform:uppercase}.mcx-v{font:700 1.1rem var(--font-mono);color:var(--accent2);margin-top:.2rem}.mcx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.8rem}.mcx-card{padding:.95rem;border-left:3px solid var(--muted);min-width:0}.mcx-card.on{border-left-color:var(--green)}.mcx-top,.mcx-row{display:flex;align-items:center;gap:.65rem}.mcx-top{justify-content:space-between}.mcx-name{font-weight:800;overflow-wrap:anywhere}.mcx-sub{font:400 .58rem var(--font-mono);color:var(--muted);overflow-wrap:anywhere}.mcx-b{font:400 .54rem var(--font-mono);border:1px solid var(--border);padding:.12rem .3rem;border-radius:3px}.mcx-b.on{color:var(--green);border-color:#39ff1466}.mcx-meta{display:grid;grid-template-columns:1fr 1fr;gap:.3rem;margin-top:.7rem;font:400 .61rem var(--font-mono);color:var(--subtext)}.mcx-meta b{color:var(--text);font-weight:400}.mcx-motd{font-size:.7rem;color:var(--subtext);white-space:pre-line;margin-top:.55rem;max-height:3em;overflow:hidden}.mcx-chips{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.5rem}.mcx-chip{font:400 .52rem var(--font-mono);border:1px solid var(--border);border-radius:99px;padding:.12rem .28rem;color:var(--subtext)}.mcx-chip.hit{color:var(--green);border-color:#39ff1477}.mcx-panel{padding:1rem}.mcx-form{display:grid;grid-template-columns:2fr .7fr 1fr auto;gap:.55rem;align-items:end}.mcx-f{display:flex;flex-direction:column;gap:.25rem}.mcx-f label{font:400 .53rem var(--font-mono);color:var(--muted);text-transform:uppercase}.mcx-in{width:100%;font:400 .7rem var(--font-mono);color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:.46rem .52rem;outline:none}.mcx-in:focus{border-color:var(--accent2)}.mcx-list{display:flex;flex-direction:column;gap:.45rem}.mcx-row{padding:.6rem .7rem;border:1px solid var(--border);border-radius:6px}.mcx-grow{flex:1;min-width:0}.mcx-empty{text-align:center;padding:1rem;font:400 .68rem var(--font-mono);color:var(--muted)}.mcx-watch{font:400 .54rem var(--font-mono);color:var(--muted)}.mcx-watch.on{color:var(--green)}.mcx-table{width:100%;border-collapse:collapse}.mcx-table th,.mcx-table td{padding:.45rem .6rem;border-bottom:1px solid var(--border);text-align:left}.mcx-table th{font:400 .52rem var(--font-mono);color:var(--muted);text-transform:uppercase}.mcx-table td{font-size:.68rem}.mcx-tag{font:400 .51rem var(--font-mono);border:1px solid var(--border);border-radius:3px;padding:.1rem .25rem}.mcx-tag.join{color:var(--green);border-color:#39ff1466}.mcx-tag.off{color:var(--accent);border-color:#ff3c5f66}@media(max-width:850px){.mcx-stats{grid-template-columns:1fr 1fr}.mcx-form{grid-template-columns:1fr 1fr}.mcx-form .mcx-f:first-child,.mcx-form button{grid-column:1/-1}.mcx-lbl{display:none}}@media(max-width:700px){.mcx-nav,.mcx-wrap{padding-left:1rem;padding-right:1rem}}`;document.head.appendChild(s)}
-function html(){return `<div id="mcx"><nav class="mcx-nav"><button data-mx="monitor" class="active">Monitor</button><button data-mx="servers">Servers</button><button data-mx="watchlist">Watchlist</button><button data-mx="history">History</button></nav><div class="mcx-page active" id="mcx-monitor"><div class="mcx-wrap"><div class="mcx-toolbar"><button id="mcx-refresh" class="btn btn-accent">↺ Refresh view</button><span class="mcx-note">Background checks run about once per minute.</span></div><div id="mcx-stats" class="mcx-stats"></div><section><div class="sec-title">Live Servers</div><div id="mcx-grid" class="mcx-grid"></div></section><section class="mcx-panel"><div class="sec-title">Recent MC Events</div><div style="overflow:auto"><table class="mcx-table"><thead><tr><th>Time</th><th>Server</th><th>Event</th><th>Player</th></tr></thead><tbody id="mcx-recent"></tbody></table></div></section></div></div><div class="mcx-page" id="mcx-servers"><div class="mcx-wrap"><section class="mcx-panel"><div class="sec-title">Track Minecraft Server</div><form id="mcx-server-form" class="mcx-form"><div class="mcx-f"><label>Server IP / address</label><input id="mcx-address" class="mcx-in" placeholder="play.example.net:25565" required></div><div class="mcx-f"><label>Edition</label><select id="mcx-edition" class="mcx-in"><option>JAVA</option><option>BEDROCK</option></select></div><div class="mcx-f"><label>Label</label><input id="mcx-label" class="mcx-in" maxlength="50" placeholder="Main SMP"></div><button class="ask-submit">+ Add server</button></form><div id="mcx-server-msg" class="mcx-note" style="margin-top:.5rem"></div></section><section><div class="sec-title">Tracked Servers</div><div id="mcx-server-list" class="mcx-list"></div></section></div></div><div class="mcx-page" id="mcx-watchlist"><div class="mcx-wrap"><div class="mcx-note mcx-warn">Player detection uses names the server publicly exposes. Many servers only provide a small sample or hide names, so “not detected” does not always mean offline.</div><section class="mcx-panel"><div class="sec-title">Add Player Watch</div><form id="mcx-watch-form" class="mcx-form" style="grid-template-columns:1.4fr 1.2fr auto"><div class="mcx-f"><label>Server</label><select id="mcx-watch-server" class="mcx-in"></select></div><div class="mcx-f"><label>Username</label><input id="mcx-watch-name" class="mcx-in" maxlength="32" required></div><button class="ask-submit">+ Watch player</button></form><div id="mcx-watch-msg" class="mcx-note" style="margin-top:.5rem"></div></section><section><div class="sec-title">Watchlist</div><div id="mcx-watch-list" class="mcx-list"></div></section></div></div><div class="mcx-page" id="mcx-history"><div class="mcx-wrap mc-history">
-<h1>Server history</h1>
+(() => {
+const API = 'https://jwjxhxvahgrpkvaoyrzw.supabase.co/functions/v1/lg-mc';
+const q = (selector,root=document) => root.querySelector(selector);
+const qa = (selector,root=document) => [...root.querySelectorAll(selector)];
+const e = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ts = value => value ? new Date(value).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+const dur = value => {
+  const seconds = Number(value) || 0;
+  const days = Math.floor(seconds/86400), hours = Math.floor(seconds%86400/3600), minutes = Math.floor(seconds%3600/60);
+  return days ? `${days}d ${hours}h` : hours ? `${hours}h ${minutes}m` : `${minutes}m`;
+};
+const say = message => toast(message);
+const S = {on:false,tab:'monitor',d:null,c:null,viewer:null,pending:null,checked:0};
+const sections = [['monitor','Monitor'],['servers','Servers'],['watchlist','Watchlist'],['history','History']];
+const drawCache = new Map();
+let cardLimit = 12;
+const openRosters = new Set();
+
+async function api(path,options={}) {
+  if (!SITE_KEY) throw Error('Log in first');
+  const headers = new Headers(options.headers||{});
+  headers.set('x-site-key',SITE_KEY);
+  if (options.body) headers.set('content-type','application/json');
+  const response = await fetch(API+path,{...options,headers});
+  const body = await response.json().catch(()=>({}));
+  if (!response.ok) throw Error(body.error||body.detail||`Request failed (${response.status})`);
+  return body;
+}
+
+function workspace() {
+  const navigation = sections.map(([id,label],i)=>`<button type="button" id="mc-tab-${id}" data-mx="${id}" role="tab" aria-selected="${i===0}" aria-controls="mcx-${id}" tabindex="${i===0?0:-1}">${label}</button>`).join('');
+  return `<div id="mcx">
+    <div class="mcx-banner">
+      <div class="mcx-hero">
+        <div><h1>Minecraft Detector</h1><p id="mcx-freshness" role="status"></p></div>
+        <button type="button" id="mcx-refresh" class="btn">Refresh</button>
+      </div>
+      <div class="mcx-nav" role="tablist" aria-label="Minecraft workspace">${navigation}</div>
+    </div>
+    <p id="mcx-load-error" class="mcx-notice" role="status" hidden></p>
+    <section class="mcx-page active" id="mcx-monitor" role="tabpanel" aria-labelledby="mc-tab-monitor">
+      <div class="mcx-wrap">
+        <div id="mcx-stats" class="mcx-stats"></div>
+        <div class="mcx-section-head"><h2>Live servers</h2><label>Find a server<input type="search" id="mcx-search" class="mcx-in" placeholder="Name or address" autocomplete="off"></label></div>
+        <div id="mcx-grid" class="mcx-grid"></div>
+        <button type="button" id="mcx-more-servers" class="btn" hidden>Show more servers</button>
+        <section class="mcx-panel"><h2>Recent events</h2><div class="mcx-table-wrap" tabindex="0" aria-label="Recent Minecraft events"><table class="mcx-table"><thead><tr><th>Time</th><th>Server</th><th>Event</th><th>Player</th></tr></thead><tbody id="mcx-recent"></tbody></table></div></section>
+      </div>
+    </section>
+    <section class="mcx-page" id="mcx-servers" role="tabpanel" aria-labelledby="mc-tab-servers" hidden><div class="mcx-wrap">
+      <h2>Manage servers</h2>
+      <div class="mcx-split">
+        <section class="mcx-panel"><h3>Track a server</h3><form id="mcx-server-form" class="mcx-form">
+          <label class="mcx-f">Server address<input id="mcx-address" class="mcx-in" placeholder="play.example.net:25565" required></label>
+          <label class="mcx-f">Edition<select id="mcx-edition" class="mcx-in"><option value="JAVA">Java</option><option value="BEDROCK">Bedrock</option></select></label>
+          <label class="mcx-f">Label (optional)<input id="mcx-label" class="mcx-in" maxlength="50" placeholder="Main SMP"></label>
+          <button type="submit" class="ask-submit">Add server</button>
+        </form><p id="mcx-server-msg" class="mcx-note" role="status"></p></section>
+        <section class="mcx-panel"><h3>Tracked servers</h3><div id="mcx-server-list" class="mcx-list"></div></section>
+      </div>
+    </div></section>
+    <section class="mcx-page" id="mcx-watchlist" role="tabpanel" aria-labelledby="mc-tab-watchlist" hidden><div class="mcx-wrap">
+      <h2>Player watchlist</h2>
+      <div class="mcx-note mcx-warn">A complete roster can confirm that a player is absent. A sample can confirm a sighting and may omit other players.</div>
+      <div class="mcx-split">
+        <section class="mcx-panel"><h3>Watch a player</h3><form id="mcx-watch-form" class="mcx-form">
+          <label class="mcx-f">Server<select id="mcx-watch-server" class="mcx-in"></select></label>
+          <label class="mcx-f">Username<input id="mcx-watch-name" class="mcx-in" maxlength="32" required></label>
+          <button type="submit" class="ask-submit">Add player</button>
+        </form><p id="mcx-watch-msg" class="mcx-note" role="status"></p></section>
+        <section class="mcx-panel"><h3>Watched players</h3><div id="mcx-watch-list" class="mcx-list"></div></section>
+      </div>
+    </div></section>
+    <section class="mcx-page" id="mcx-history" role="tabpanel" aria-labelledby="mc-tab-history" hidden><div class="mcx-wrap mc-history">
+<h2>Server history</h2>
 <div class="mc-history-controls">
   <label>Server<select id="mcx-hserver" class="mcx-in"></select></label>
   <label>Period<select id="mcx-hours" class="mcx-in"><option value="1">Last hour</option><option value="6">Last 6 hours</option><option value="24" selected>Last 24 hours</option><option value="168">Last 7 days</option><option value="720">Last 30 days</option></select></label>
@@ -26,23 +94,264 @@ function html(){return `<div id="mcx"><nav class="mcx-nav"><button data-mx="moni
   <div style="overflow:auto"><table class="mcx-table"><thead><tr><th>Time</th><th>Event</th><th>Player</th><th>Details</th></tr></thead><tbody id="mcx-events"></tbody></table></div>
   <button type="button" id="mcx-more-events" class="btn" hidden>Show more events</button>
 </details>
-</div></div></div>`}
-function ui(){css();let h=q('#app header');if(!h)return false;if(!q('#mcx-sw')){let w=document.createElement('div');w.className='mcx-toggle';w.innerHTML='<span class="mcx-lbl">MC detector</span><button id="mcx-sw" class="mcx-sw" role="switch"></button>';q('#tier-badge').before(w);q('#mcx-sw').onclick=()=>mode(!S.on)}if(!q('#mcx')){let x=document.createElement('div');x.innerHTML=html();q('#page-nav').after(x.firstElementChild);bind()}return true}
-function bind(){qa('[data-mx]').forEach(b=>b.onclick=()=>tab(b.dataset.mx));q('#mcx-refresh').onclick=()=>load();q('#mcx-server-form').onsubmit=addServer;q('#mcx-watch-form').onsubmit=addWatch;q('#mcx-hserver').onchange=()=>{eventLimit=12;renderHistoryEvents();chart()};q('#mcx-hours').onchange=()=>{eventLimit=12;renderHistoryEvents();chart()};q('#mcx-history-refresh').onclick=()=>chart(true);q('#mcx-sample').oninput=()=>inspectSample(true);q('#mcx-history-events').ontoggle=()=>renderHistoryEvents();q('#mcx-more-events').onclick=()=>{eventLimit+=12;renderHistoryEvents()};document.addEventListener('click',async ev=>{let b=ev.target.closest?.('[data-ms],[data-mw]');if(!b)return;try{if(b.dataset.ms){if(!confirm('Stop tracking this Minecraft server?'))return;await api('/servers/'+b.dataset.ms,{method:'DELETE'})}else{let [s,w]=b.dataset.mw.split(':');await api(`/servers/${s}/watchlist/${w}`,{method:'DELETE'})}await load();say('Updated')}catch(x){say(x.message)}})}
-function mode(on){S.on=!!on;localStorage.lg_detector_mode=S.on?'mc':'rbx';document.body.classList.toggle('mc-mode',S.on);q('#mcx-sw')?.classList.toggle('on',S.on);q('#mcx-sw')?.setAttribute('aria-checked',String(S.on));let l=q('#app header .logo');if(l)l.innerHTML=S.on?'MC<span>/</span>DETECTOR':'RBX<span>/</span>MONITOR';clearInterval(S.t);S.t=null;if(S.on){if(typeof SITE_KEY!=='undefined'&&SITE_KEY)load();S.t=setInterval(()=>{if(S.on&&!document.hidden&&!q('#app')?.classList.contains('hidden')&&typeof SITE_KEY!=='undefined'&&SITE_KEY)load(false)},15000)}}
-function tab(x){S.tab=x;qa('[data-mx]').forEach(b=>b.classList.toggle('active',b.dataset.mx===x));qa('.mcx-page').forEach(p=>p.classList.toggle('active',p.id==='mcx-'+x));if(x==='history'){chart();renderHistoryEvents()}}
-function maps(){let d=S.d||{servers:[],states:[],watchlist:[],events:[],uptime:{}};return{...d,sm:new Map(d.states.map(x=>[+x.server_id,x])),mm:new Map(d.servers.map(x=>[+x.id,x]))}}
-async function load(mark=true){if(S.b)return;try{S.b=true;S.d=await api('/bootstrap');render();if(mark&&q('#last-update'))q('#last-update').textContent=new Date().toLocaleTimeString();if(S.tab==='history'){chart();renderHistoryEvents()}}catch(x){say(x.message)}finally{S.b=false}}
-function render(){let d=maps(),sv=d.servers,st=d.states,w=d.watchlist,on=st.filter(x=>x.online).length,pl=st.reduce((n,x)=>n+(+x.players_online||0),0),vis=w.filter(x=>x.last_present).length;q('#mcx-stats').innerHTML=[[sv.length,'Tracked servers'],[on,'Online now'],[pl,'Players online'],[vis,'Watched visible']].map(x=>`<div class="mcx-stat"><div class="mcx-k">${x[1]}</div><div class="mcx-v">${x[0]}</div></div>`).join('');cards(d);servers(d);watch(d);events(d);selects(d)}
-function cards(d){q('#mcx-grid').innerHTML=d.servers.length?d.servers.map(s=>{let x=d.sm.get(+s.id)||{},u=d.uptime[String(s.id)]||{seconds:0,sessions:0},sample=Array.isArray(x.player_sample)?x.player_sample:[],hits=new Set(d.watchlist.filter(w=>+w.server_id===+s.id&&w.last_present).map(w=>w.username.toLowerCase()));return `<div class="mcx-card ${x.online?'on':''}"><div class="mcx-top"><div><div class="mcx-name">${e(s.label||s.address)}</div><div class="mcx-sub">${e(s.address)} · ${e(s.edition)}</div></div><span class="mcx-b ${x.online?'on':''}">${x.online?'ONLINE':'OFFLINE'}</span></div><div class="mcx-meta"><span>Players <b>${+x.players_online||0} / ${+x.players_max||'—'}</b></span><span>Version <b>${e(x.version_name||'—')}</b></span><span>Uptime <b>${dur(u.seconds)}</b></span><span>Sessions <b>${u.sessions||0}</b></span></div>${x.motd?`<div class="mcx-motd">${e(x.motd)}</div>`:''}${sample.length?`<div class="mcx-chips">${sample.slice(0,18).map(p=>`<span class="mcx-chip ${hits.has(String(p.name).toLowerCase())?'hit':''}">${e(p.name)}</span>`).join('')}</div>`:x.online&&+x.players_online?'<div class="mcx-note" style="margin-top:.5rem">Player names hidden / sample unavailable.</div>':''}<div class="mcx-sub" style="margin-top:.5rem">${x.checked_at?'Checked '+ts(x.checked_at):'Waiting for first poll'}</div></div>`}).join(''):'<div class="mcx-empty">No Minecraft servers yet. Add one in Servers.</div>'}
-function servers(d){q('#mcx-server-list').innerHTML=d.servers.length?d.servers.map(s=>{let x=d.sm.get(+s.id)||{};return `<div class="mcx-row"><div class="mcx-grow"><div class="mcx-name">${e(s.label||s.address)}</div><div class="mcx-sub">${e(s.address)} · ${e(s.edition)} · ${x.online?'online':'offline'} · ${+x.players_online||0}/${+x.players_max||'—'}</div></div><button class="btn danger" data-ms="${s.id}">Remove</button></div>`}).join(''):'<div class="mcx-empty">No tracked servers</div>'}
-function watch(d){q('#mcx-watch-list').innerHTML=d.watchlist.length?d.watchlist.map(w=>{let s=d.mm.get(+w.server_id),x=d.sm.get(+w.server_id)||{},hidden=x.online&&+x.players_online&&!x.player_list_available;return `<div class="mcx-row"><div class="mcx-grow"><div class="mcx-name">${e(w.username)}</div><div class="mcx-sub">${e(s?.label||s?.address||'Server')} · ${hidden?'player list hidden/sample-only':w.last_seen_at?'last detected '+ts(w.last_seen_at):'not detected yet'}</div></div><span class="mcx-watch ${w.last_present?'on':''}">${w.last_present?'VISIBLE NOW':'WATCHING'}</span><button class="btn danger" data-mw="${w.server_id}:${w.id}">Remove</button></div>`}).join(''):'<div class="mcx-empty">No watched players</div>'}
-function tag(x){return x==='WATCH_PLAYER_JOINED'?'join':x==='SERVER_OFFLINE'?'off':''}function lbl(x){return x==='WATCH_PLAYER_JOINED'?'PLAYER JOIN DETECTED':x.replaceAll('_',' ')}
+    </div></section>
+  </div>`;
+}
+
+function canUse() {
+  return Boolean(account && SITE_KEY && (account.features?.mc ?? ['DEV','PK_'].includes(account.tier)));
+}
+function identity() {
+  return canUse() && !q('#app').classList.contains('hidden') ? JSON.stringify([account.key_id,SITE_KEY]) : null;
+}
+function preferredMode() {
+  try {return localStorage.lg_detector_mode === 'mc';} catch {return false;}
+}
+function setPreference(on) {
+  try {localStorage.lg_detector_mode=on?'mc':'rbx';} catch {}
+  syncMode();
+}
+function syncMode() {
+  const viewer = identity();
+  if (viewer !== S.viewer) {
+    S.viewer = viewer;
+    S.d = null;
+    S.pending = null;
+    S.checked = 0;
+    drawCache.clear();
+    openRosters.clear();
+    cardLimit = 12;
+    q('#mcx-search').value = '';
+    for (const id of ['mcx-address','mcx-label','mcx-watch-name']) q('#'+id).value = '';
+    for (const id of ['mcx-server-msg','mcx-watch-msg','mcx-chart-status','mcx-freshness']) q('#'+id).textContent = '';
+    for (const id of ['mcx-stats','mcx-grid','mcx-recent','mcx-server-list','mcx-watch-list','mcx-events']) q('#'+id).replaceChildren();
+    if (S.c) S.c.destroy();
+    S.c = null;
+    chartVersion++;
+    renderKey = null;
+    eventSignature = null;
+    historyCache.clear();
+    q('#mcx-chart-wrap').hidden = true;
+    q('#mcx-load-error').hidden = true;
+    q('#mcx-history-events').open = false;
+    q('#mcx-more-events').hidden = true;
+    q('#mcx-more-servers').hidden = true;
+    eventLimit = 12;
+    // Keep the selected history range, but discard server selections at sign-out.
+    selects({servers:[]});
+  }
+  const wasOn = S.on;
+  S.on = Boolean(viewer && preferredMode());
+  document.body.classList.toggle('mc-mode',S.on);
+  const button = q('#mcx-sw');
+  button.closest('.mcx-toggle').hidden = !viewer;
+  button.setAttribute('aria-checked',String(S.on));
+  const logo = q('#app header .logo');
+  const brand = S.on ? 'WA<span>/</span>Minecraft' : 'WA<span>/</span>Roblox';
+  if (logo.innerHTML !== brand) logo.innerHTML = brand;
+  if (S.on && !wasOn) {
+    render();
+    load();
+  }
+}
+
+function selectTab(id) {
+  S.tab = id;
+  for (const tab of qa('[data-mx]')) {
+    const active = tab.dataset.mx === id;
+    tab.setAttribute('aria-selected',String(active));
+    tab.tabIndex = active ? 0 : -1;
+    const section = document.getElementById(tab.getAttribute('aria-controls'));
+    section.hidden = !active;
+    section.classList.toggle('active',active);
+  }
+  render();
+}
+
+function mount() {
+  const area = document.createElement('div');
+  area.innerHTML = workspace();
+  q('#page-nav').after(area.firstElementChild);
+  const toggle = document.createElement('div');
+  toggle.className = 'mcx-toggle';
+  toggle.innerHTML = '<span class="mcx-lbl" id="mcx-mode-label">Minecraft</span><button id="mcx-sw" class="mcx-sw" type="button" role="switch" aria-labelledby="mcx-mode-label" aria-checked="false"></button>';
+  q('#tier-badge').before(toggle);
+  q('#mcx-sw').onclick = () => setPreference(!S.on);
+  const tabs = qa('[data-mx]');
+  tabs.forEach((button,index)=>{
+    button.onclick = ()=>selectTab(button.dataset.mx);
+    button.onkeydown = event=>{
+      const next = ({ArrowLeft:(index+tabs.length-1)%tabs.length,ArrowRight:(index+1)%tabs.length,Home:0,End:tabs.length-1})[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      tabs[next].focus();
+      tabs[next].click();
+    };
+  });
+  q('#mcx-refresh').onclick = ()=>S.tab==='history' ? Promise.all([load(),chart(true)]) : load();
+  q('#mcx-server-form').onsubmit = addServer;
+  q('#mcx-watch-form').onsubmit = addWatch;
+  for (const id of ['mcx-hserver','mcx-hours']) q('#'+id).onchange = ()=>{eventLimit=12;renderHistoryEvents();chart()};
+  q('#mcx-history-refresh').onclick = ()=>chart(true);
+  q('#mcx-sample').oninput = ()=>inspectSample(true);
+  q('#mcx-history-events').ontoggle = renderHistoryEvents;
+  q('#mcx-more-events').onclick = ()=>{eventLimit+=12;renderHistoryEvents()};
+  q('#mcx-search').oninput = ()=>{cardLimit=12;cards(maps())};
+  q('#mcx-more-servers').onclick = ()=>{cardLimit+=12;cards(maps())};
+  q('#mcx-grid').addEventListener('toggle',event=>{
+    const roster = event.target;
+    if (!roster.dataset.roster || !roster.isConnected) return;
+    const id = Number(roster.dataset.roster);
+    if (roster.open) {openRosters.add(id); fillRoster(roster,maps());}
+    else openRosters.delete(id);
+  },true);
+  q('#mcx').addEventListener('click',async event=>{
+    const button = event.target.closest('[data-ms],[data-mw]');
+    if (!button || !S.on) return;
+    try {
+      if (button.dataset.ms) {
+        if (!confirm('Stop tracking this Minecraft server?')) return;
+        await api('/servers/'+button.dataset.ms,{method:'DELETE'});
+      } else {
+        const [server,watchId] = button.dataset.mw.split(':');
+        await api(`/servers/${server}/watchlist/${watchId}`,{method:'DELETE'});
+      }
+      await refreshAfterChange();
+      say('Updated');
+    } catch (error) {say(error.message);}
+  });
+}
+
+function maps() {
+  const data = S.d ?? {servers:[],states:[],watchlist:[],events:[],uptime:{}};
+  return {...data,sm:new Map(data.states.map(row=>[Number(row.server_id),row])),mm:new Map(data.servers.map(row=>[Number(row.id),row]))};
+}
+async function load() {
+  const viewer = identity();
+  if (!S.on || !viewer || document.hidden) return;
+  if (S.pending) return S.pending;
+  const task = api('/bootstrap').then(data=>{
+    if (viewer !== identity() || viewer !== S.viewer || !S.on) return;
+    S.d = data;
+    S.checked = Date.now();
+    q('#mcx-load-error').hidden = true;
+    render();
+  },error=>{
+    if (viewer !== identity() || !S.on) return;
+    q('#mcx-load-error').textContent = error.message;
+    q('#mcx-load-error').hidden = false;
+  }).finally(()=>{if(S.pending===task)S.pending=null});
+  S.pending = task;
+  return task;
+}
+
+async function refreshAfterChange() {
+  if (S.pending) await S.pending;
+  await load();
+}
+
+function change(id,markup) {
+  if (drawCache.get(id) === markup) return false;
+  drawCache.set(id,markup);
+  q('#'+id).innerHTML = markup;
+  return true;
+}
+function render() {
+  const data = maps();
+  if (!S.d) {
+    q('#mcx-freshness').textContent = 'Loading server data…';
+    return;
+  }
+  q('#mcx-freshness').textContent = 'Updated ' + new Date(S.checked).toLocaleTimeString();
+  if (S.tab === 'monitor') {
+    const stats = [
+      ['Tracked servers',data.servers.length],
+      ['Online',data.states.filter(state=>state.online).length],
+      ['Players online',data.states.reduce((total,state)=>total+(Number(state.players_online)||0),0)],
+      ['Watch sightings',data.watchlist.filter(watch=>watch.last_present).length],
+    ];
+    change('mcx-stats',stats.map(([label,value])=>`<div class="mcx-stat"><span>${label}</span><strong>${value}</strong></div>`).join(''));
+    cards(data);
+    events(data);
+  } else if (S.tab === 'servers') servers(data);
+  else if (S.tab === 'watchlist') { selects(data); watch(data); }
+  else { selects(data); chart(); renderHistoryEvents(); }
+}
+
+const empty = message => `<p class="mcx-empty">${message}</p>`;
+function statusBadge(state) {
+  const label = state ? state.online ? 'Online' : 'Offline' : 'Awaiting poll';
+  return `<span class="mcx-b ${state?.online?'on':''}">${label}</span>`;
+}
+function roster(state) {
+  const list = Array.isArray(state?.player_sample) ? state.player_sample.filter(player=>player?.name) : [];
+  const count = Number(state?.players_online)||0;
+  const full = Boolean(state?.online && (state.player_list_complete ?? list.length===count));
+  return {list,count,full};
+}
+
+function cards(data) {
+  if (!S.d) return;
+  const term = q('#mcx-search').value.trim().toLocaleLowerCase();
+  const matching = data.servers.filter(server=>[server.label,server.address].some(value=>String(value||'').toLocaleLowerCase().includes(term)));
+  const openBefore = new Set(qa('details[data-roster][open]',q('#mcx-grid')).map(details=>Number(details.dataset.roster)));
+  for (const id of openBefore) openRosters.add(id);
+  const markup = matching.slice(0,cardLimit).map(server=>{
+    const id = Number(server.id), state = data.sm.get(id), info = data.uptime[String(id)] ?? {};
+    const {count,full,list} = roster(state);
+    const rosterLabel = !state?.online ? 'Player roster' : full ? 'Full roster' : list.length ? 'Sampled roster' : 'Player roster';
+    return `<article class="mcx-card ${state?.online?'on':''}">
+      <div class="mcx-top"><div><h3>${e(server.label||server.address)}</h3><p class="mcx-sub">${e(server.address)} · ${e(server.edition)}</p></div>${statusBadge(state)}</div>
+      <dl class="mcx-meta"><div><dt>Players</dt><dd>${state?.online?count:'—'}${state?.players_max?' / '+Number(state.players_max):''}</dd></div><div><dt>Tracked uptime</dt><dd>${dur(info.seconds)}</dd></div><div><dt>Version</dt><dd>${e(state?.version_name||'—')}</dd></div><div><dt>Sessions</dt><dd>${Number(info.sessions)||0}</dd></div></dl>
+      ${state?.motd?`<p class="mcx-motd">${e(state.motd)}</p>`:''}
+      <details class="mcx-roster" data-roster="${id}"><summary>${rosterLabel}</summary><div></div></details>
+      <p class="mcx-sub">${state?.checked_at?'Checked '+ts(state.checked_at):'Waiting for first poll'}</p>
+    </article>`;
+  }).join('') || empty(data.servers.length?'No servers match your search.':'No servers tracked yet. Add one in Servers.');
+  if (change('mcx-grid',markup)) {
+    for (const details of qa('details[data-roster]',q('#mcx-grid'))) {
+      if (openRosters.has(Number(details.dataset.roster))) {details.open=true;fillRoster(details,data);}
+    }
+  } else for (const details of qa('details[data-roster][open]',q('#mcx-grid'))) fillRoster(details,data);
+  q('#mcx-more-servers').hidden = cardLimit>=matching.length;
+}
+
+function fillRoster(details,data) {
+  const id = Number(details.dataset.roster), state = data.sm.get(id);
+  const {list,count,full} = roster(state);
+  const watched = new Set(data.watchlist.filter(row=>Number(row.server_id)===id).map(row=>String(row.username).toLowerCase()));
+  const body = details.querySelector('div');
+  const markup = !state ? empty('Waiting for first poll.') : !state.online ? empty('Server is offline.') :
+    count === 0 ? empty('No players online.') : !list.length ? empty('This server does not expose player names.') :
+    `<p class="mcx-note">${full?'All reported players':`Showing ${list.length} of ${count} reported players`}</p><ul class="mcx-chips">${list.map(player=>`<li class="${watched.has(String(player.name).toLowerCase())?'hit':''}">${e(player.name)}</li>`).join('')}</ul>`;
+  if (body.dataset.markup !== markup) { body.innerHTML = markup; body.dataset.markup = markup; }
+}
+
+function servers(data) {
+  change('mcx-server-list',data.servers.map(server=>{
+    return `<div class="mcx-row"><div class="mcx-grow"><strong>${e(server.label||server.address)}</strong><p class="mcx-sub">${e(server.address)} · ${e(server.edition)}</p></div>${statusBadge(data.sm.get(Number(server.id)))}<button type="button" class="btn danger" data-ms="${Number(server.id)}">Remove</button></div>`;
+  }).join('') || empty('No tracked servers.'));
+}
+
+function watch(data) {
+  change('mcx-watch-list',data.watchlist.map(watch=>{
+    const id = Number(watch.server_id), server = data.mm.get(id), state = data.sm.get(id), info = roster(state);
+    const appears = info.list.some(player=>String(player.name).toLowerCase()===String(watch.username).toLowerCase());
+    const [label,kind] = !state ? ['Awaiting poll',''] : !state.online ? ['Server offline',''] :
+      appears ? info.full ? ['Online','on'] : ['Seen in sample','on'] :
+      info.full ? ['Absent',''] : ['Unconfirmed',''];
+    return `<div class="mcx-row"><div class="mcx-grow"><strong>${e(watch.username)}</strong><p class="mcx-sub">${e(server?.label||server?.address||'Server')}${watch.last_seen_at?' · Seen '+ts(watch.last_seen_at):''}</p></div><span class="mcx-b ${kind}">${label}</span><button type="button" class="btn danger" data-mw="${id}:${Number(watch.id)}">Remove</button></div>`;
+  }).join('') || empty('No watched players.'));
+}
+
+function tag(type) { return type==='WATCH_PLAYER_JOINED'?'join':type==='SERVER_OFFLINE'?'off':''; }
+function lbl(type) { return type==='WATCH_PLAYER_JOINED'?'Player join detected':String(type||'').replaceAll('_',' '); }
 function events(d) {
-  q('#mcx-recent').innerHTML = d.events.slice(0,12).map(x => {
+  const markup = d.events.slice(0,12).map(x => {
     const server = d.mm.get(+x.server_id);
     return `<tr><td>${ts(x.timestamp)}</td><td>${e(server?.label || server?.address || x.server_id)}</td><td><span class="mcx-tag ${tag(x.event_type)}">${e(lbl(x.event_type))}</span></td><td>${e(x.username || '—')}</td></tr>`;
   }).join('') || '<tr><td colspan="4" class="mcx-empty">No MC events yet</td></tr>';
+  change('mcx-recent',markup);
 }
 function selects(d) {
   const options = d.servers.map(s => `<option value="${s.id}">${e(s.label || s.address)} · ${e(s.edition)}</option>`).join('') || '<option value="">Add a server first</option>';
@@ -55,8 +364,40 @@ function selects(d) {
     if ([...select.options].some(option => option.value === value)) select.value = value;
   }
 }
-async function addServer(ev){ev.preventDefault();let b=ev.submitter,m=q('#mcx-server-msg');try{b.disabled=true;b.textContent='Checking…';m.textContent='Checking with mcstatus.io…';await api('/servers',{method:'POST',body:JSON.stringify({address:q('#mcx-address').value.trim(),edition:q('#mcx-edition').value,label:q('#mcx-label').value.trim()})});q('#mcx-address').value=q('#mcx-label').value='';m.textContent='Server added. Background tracking is active.';await load();say('Minecraft server added')}catch(x){m.textContent=x.message}finally{b.disabled=false;b.textContent='+ Add server'}}
-async function addWatch(ev){ev.preventDefault();let b=ev.submitter,m=q('#mcx-watch-msg'),s=+q('#mcx-watch-server').value;if(!s)return m.textContent='Add a server first.';try{b.disabled=true;b.textContent='Adding…';await api(`/servers/${s}/watchlist`,{method:'POST',body:JSON.stringify({username:q('#mcx-watch-name').value.trim()})});q('#mcx-watch-name').value='';m.textContent='Player added to this server watchlist.';await load();say('Watch added')}catch(x){m.textContent=x.message}finally{b.disabled=false;b.textContent='+ Watch player'}}
+async function submitForm(event,path,body,messageId,fields,success) {
+  event.preventDefault();
+  const button = event.submitter ?? event.currentTarget.querySelector('button[type="submit"]');
+  const message = q('#'+messageId);
+  button.disabled = true;
+  message.textContent = 'Saving…';
+  try {
+    await api(path,{method:'POST',body:JSON.stringify(body)});
+    for (const field of fields) q(field).value = '';
+    message.textContent = success;
+    await refreshAfterChange();
+  } catch (error) {
+    message.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function addServer(event) {
+  return submitForm(event,'/servers',{
+    address:q('#mcx-address').value.trim(),edition:q('#mcx-edition').value,label:q('#mcx-label').value.trim(),
+  },'mcx-server-msg',['#mcx-address','#mcx-label'],'Server added.');
+}
+function addWatch(event) {
+  const server = Number(q('#mcx-watch-server').value);
+  if (!server) {
+    event.preventDefault();
+    q('#mcx-watch-msg').textContent = 'Add a server first.';
+    return;
+  }
+  return submitForm(event,`/servers/${server}/watchlist`,{username:q('#mcx-watch-name').value.trim()},
+    'mcx-watch-msg',['#mcx-watch-name'],'Player added to this server.');
+}
+
 const historyCache = new Map();
 const historyAge = 120_000;
 const tickTime = new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit'});
@@ -151,7 +492,7 @@ async function chart(force = false) {
     wrap.hidden = true;
     status.textContent = 'Loading samples…';
   }
-  const current = () => version === chartVersion && S.on && S.tab === 'history' && JSON.stringify(historySelection()) === key;
+  const current = () => version === chartVersion && identity() === S.viewer && S.on && S.tab === 'history' && JSON.stringify(historySelection()) === key;
   try {
     const rows = await historyData(key, server, hours, force);
     if (!current()) return;
@@ -202,6 +543,14 @@ async function chart(force = false) {
     if (current()) status.textContent = error.message;
   }
 }
-function boot(){if(!ui())return;mode(S.on);setInterval(()=>{if(ui()&&S.on&&!document.hidden&&!q('#app')?.classList.contains('hidden')&&typeof SITE_KEY!=='undefined'&&SITE_KEY&&!S.d)load(false)},1200)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+function boot() {
+  mount();
+  syncMode();
+  new MutationObserver(syncMode).observe(q('#app'),{attributes:true,attributeFilter:['class']});
+  addEventListener('pageshow',syncMode,{passive:true});
+  document.addEventListener('visibilitychange',()=>{ if (!document.hidden && S.on) load(); });
+  setInterval(()=>{ syncMode(); if (S.on) load(); },30_000);
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
+else boot();
 })();
