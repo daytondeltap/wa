@@ -41,8 +41,8 @@ jobs:
           grep -q "Login timed out" site/egress-runtime.js
           grep -q "UPK_: \['monitor','leaderboard','history','adduser'\]" site/egress-runtime.js
           grep -q "BK_:  \['monitor','leaderboard','adduser'\]" site/egress-runtime.js
-          grep -q "UPK_.*monitor:true.*leaderboard:true.*history:true.*adduser:true.*cards:true" site/egress-runtime.js
-          grep -q "BK_.*monitor:true.*leaderboard:true.*adduser:true.*cards:true" site/egress-runtime.js
+          grep -q "UPK_.*monitor:true.*leaderboard:true.*history:true.*adduser:true" site/egress-runtime.js
+          grep -q "BK_.*monitor:true.*leaderboard:true.*adduser:true" site/egress-runtime.js
 
           test -s site/standard-key-login.js
           grep -q "lg-api" site/standard-key-login.js
@@ -77,7 +77,8 @@ jobs:
       - name: Check retired feature is absent from Pages
         run: |
           test ! -e site/exchange.js
-          if git grep -in 'exchange' -- site .github/workflows/pages.yml; then
+          test ! -e site/cards.js
+          if git grep -inE 'exchange|LG Cards|lg-card(s|-)|page-cards|profile-verify' -- site .github/workflows/pages.yml; then
             exit 1
           fi
       - name: Check adaptive performance assets

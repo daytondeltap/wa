@@ -13,10 +13,10 @@
     BK_:  ['monitor','leaderboard','adduser'],
   };
   const LEGACY_FEATURES = {
-    DEV:  {monitor:true, leaderboard:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:true},
-    PK_:  {monitor:true, leaderboard:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:false},
-    UPK_: {monitor:true, leaderboard:true, history:true, adduser:true, cards:true, mc:false, join:false, keys:false},
-    BK_:  {monitor:true, leaderboard:true, history:false, adduser:true, cards:true, mc:false, join:false, keys:false},
+    DEV:  {monitor:true, leaderboard:true, history:true, adduser:true,  mc:true, join:true, keys:true},
+    PK_:  {monitor:true, leaderboard:true, history:true, adduser:true,  mc:true, join:true, keys:false},
+    UPK_: {monitor:true, leaderboard:true, history:true, adduser:true,  mc:false, join:false, keys:false},
+    BK_:  {monitor:true, leaderboard:true, history:false, adduser:true,  mc:false, join:false, keys:false},
   };
 
   function currentAccount() {
@@ -50,7 +50,7 @@
   function originalFunction(raw) {
     let u; try { u = new URL(raw, location.href); } catch { return null; }
     if (u.origin !== SB) return null;
-    const m = u.pathname.match(/^\/functions\/v1\/(lg-api|lg-cards|lg-card-verify|lg-card-names|lg-card-gifts|lg-mc)(\/.*)?$/);
+    const m = u.pathname.match(/^\/functions\/v1\/(lg-api|lg-mc)(\/.*)?$/);
     return m ? { url:u, slug:m[1], path:m[2] || '/' } : null;
   }
   function useDirectLegacy(raw) {

@@ -7,10 +7,6 @@
   const nativeFetch=window.fetch.bind(window);
   const fnMap={
     'lg-api':'api',
-    'lg-cards':'cards',
-    'lg-card-verify':'card-verify',
-    'lg-card-names':'card-names',
-    'lg-card-gifts':'card-gifts',
     'lg-mc':'mc',
   };
   const featureDefs=[
@@ -18,7 +14,6 @@
     ['leaderboard','Leaderboard'],
     ['history','History'],
     ['adduser','User Adding'],
-    ['cards','LG Cards'],
     ['mc','MC Detector'],
     ['join','Join Game'],
   ];
@@ -56,7 +51,7 @@
   function rewriteUrl(raw){
     let u;try{u=new URL(raw,location.href)}catch{return null}
     if(u.origin!==SB)return null;
-    const m=u.pathname.match(/^\/functions\/v1\/(lg-api|lg-cards|lg-card-verify|lg-card-names|lg-card-gifts|lg-mc)(\/.*)?$/);
+    const m=u.pathname.match(/^\/functions\/v1\/(lg-api|lg-mc)(\/.*)?$/);
     if(!m)return null;
     u.pathname=`/functions/v1/lg-gateway/${fnMap[m[1]]}${m[2]||''}`;
     return u.href;
@@ -105,8 +100,6 @@
   }
   function applyGuards(){
     if(!account)return;const f=account.features||{};
-    document.querySelectorAll('[data-tab="cards"]').forEach(x=>x.classList.toggle('hidden',f.cards===false));
-    const cp=$('page-cards');if(cp&&f.cards===false){cp.classList.remove('active');cp.style.display='none'}else if(cp)cp.style.display='';
     document.querySelectorAll('.mcx-toggle').forEach(x=>x.classList.toggle('hidden',f.mc===false));
     if(f.mc===false){try{localStorage.lg_detector_mode='rbx';document.body.classList.remove('mc-mode');document.getElementById('mcx-sw')?.classList.remove('on')}catch{}}
   }
@@ -118,7 +111,6 @@
     await refreshTracked();
     const first=(account.tabs||[])[0];
     if(first)await switchPage(first);
-    else if(account.features?.cards&&$('page-cards')){activePage='cards';document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-cards').classList.add('active');document.querySelector('[data-tab="cards"]')?.classList.add('active')}
     else {activePage='monitor';const p=$('page-monitor');if(p)p.classList.add('active')}
     clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(activePage==='monitor'&&account?.features?.monitor!==false)refreshMonitor(false)},RBX_REFRESH_MS);
   }
@@ -158,7 +150,7 @@
     if(!$('keygen-emails')){
       const label=$('keygen-label')?.closest('.adduser-field');
       const f=document.createElement('div');f.className='adduser-field';f.innerHTML='<label for="keygen-emails">Linked Google email(s)</label><textarea class="ask-input key-email-input" id="keygen-emails" maxlength="1600" placeholder="name@example.com\nsecond@example.com"></textarea><div class="adduser-hint">Optional · up to 5. Each email can belong to one LG key.</div>';label?.after(f);
-      const c=document.createElement('div');c.id='keygen-ck';c.className='ck-box';c.innerHTML='<div class="sec-title">CK Feature Checklist</div>'+checklistHtml('keygen',{monitor:true,leaderboard:true,history:true,adduser:true,cards:true,mc:true});form.appendChild(c);
+      const c=document.createElement('div');c.id='keygen-ck';c.className='ck-box';c.innerHTML='<div class="sec-title">CK Feature Checklist</div>'+checklistHtml('keygen',{monitor:true,leaderboard:true,history:true,adduser:true,mc:true});form.appendChild(c);
     }
     const toggle=()=>{$('keygen-ck')?.classList.toggle('show',tier.value==='CK_')};tier.onchange=toggle;toggle();
     form.onsubmit=async e=>{

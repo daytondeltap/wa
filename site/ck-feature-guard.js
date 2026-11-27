@@ -15,7 +15,7 @@
   function enabled(a, name) {
     if (!a || a.tier !== 'CK_') return true;
     if (name === 'keys') return false;
-    if (['monitor','leaderboard','history','adduser','cards','mc'].includes(name)) return a.features?.[name] === true;
+    if (['monitor','leaderboard','history','adduser','mc'].includes(name)) return a.features?.[name] === true;
     return true;
   }
   function firstAllowed(a) {
@@ -23,12 +23,11 @@
     for (const name of a.tabs || []) {
       if (enabled(a, name) && $(`page-${name}`)) return name;
     }
-    if (a.features?.cards === true && $('page-cards')) return 'cards';
     return null;
   }
   function hasAnyFeature(a) {
     if (!a || a.tier !== 'CK_') return true;
-    return ['monitor','leaderboard','history','adduser','cards','mc','join'].some(k => a.features?.[k] === true);
+    return ['monitor','leaderboard','history','adduser','mc','join'].some(k => a.features?.[k] === true);
   }
   function injectEmptyPage() {
     if ($('page-ck-empty')) return;
@@ -50,13 +49,7 @@
     if (!name || moving) return;
     moving = true;
     try {
-      if (name === 'cards') {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        $('page-cards')?.classList.add('active');
-        document.querySelectorAll('.page-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'cards'));
-        setPageName('cards');
-        if (window.LGCards?.refresh) await window.LGCards.refresh();
-      } else if (typeof switchPage === 'function') {
+      if (typeof switchPage === 'function') {
         await switchPage(name, document.querySelector(`.page-nav-btn[data-tab="${CSS.escape(name)}"]`) || undefined);
       }
     } catch (e) {

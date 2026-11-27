@@ -1,8 +1,7 @@
 # LG Presence Suite
 
-Static GitHub Pages frontend for **RBX Detect**, **MC Detector**, and **LG Cards**. Production data and authentication are backed by the `LgBackend` Supabase project. Backend source is maintained in `daytondeltap/Lg`.
+Static GitHub Pages frontend for **RBX Detect** and **MC Detector**. Production data and authentication are backed by the `LgBackend` Supabase project. Backend source is maintained in `daytondeltap/Lg`.
 
-> **TC is a closed, site-only fictional unit. It has no cash value, cannot be redeemed, and is not a real financial asset. Standard randomized card packs are free.**
 
 ## Production architecture
 
@@ -31,7 +30,7 @@ Browser / GitHub Pages
         +-- ck-feature-guard.js
         |      keeps disabled/all-off CK pages out of the active UI
         |
-        +-- RBX / Cards / MC modules
+        +-- RBX / MC modules
                -> Supabase Edge Functions
 
 Supabase Edge Functions -> Postgres + scheduled pollers
@@ -80,7 +79,6 @@ The standard tier pipeline is authoritative across frontend normalization, `lg-a
 - RBX Monitor
 - Leaderboard
 - User Adding
-- Cards
 
 Basic does **not** include History, MC Detector, Join Game, or Key Generator.
 
@@ -89,7 +87,6 @@ Basic does **not** include History, MC Detector, Join Game, or Key Generator.
 - RBX Monitor
 - Leaderboard
 - User Adding
-- Cards
 - History
 
 Upgraded does **not** include MC Detector, Join Game, or Key Generator.
@@ -99,7 +96,6 @@ Upgraded does **not** include MC Detector, Join Game, or Key Generator.
 - RBX Monitor / Roblox Detector
 - Leaderboard
 - User Adding
-- Cards
 - History
 - MC Detector
 - Join Game
@@ -117,7 +113,6 @@ DEV has the full product plus Key Generator / key administration.
 - Leaderboard
 - History
 - User Adding
-- LG Cards
 - MC Detector
 - Join Game
 
@@ -177,10 +172,6 @@ RBX session/event history uses a hot + archive design:
 
 The initial migration moved 1,011 older session rows and 2,965 older event rows into compressed archives while preserving the same logical totals: 1,926 visible sessions and 5,597 visible events.
 
-## LG Cards
-
-LG Cards is the collectible-card system. Standard randomized packs are free. Card profile verification, collections, inventory actions, trades, closed-TC auctions, gifts, and DEV tools remain server-authorized.
-
 ## MC Detector
 
 MC Detector tracks configured Java/Bedrock servers, server state/history, available player lists, per-server watchlists, and watched-player events. FULL/SAMPLE/HIDDEN confidence remains explicit so a sampled roster is not treated as a complete roster.
@@ -198,7 +189,6 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 | `site/ck-key-manager.js` | Verified DEV key generator/config editor and CK permission switches |
 | `site/key-delete-runtime.js` | Confirmed permanent non-DEV key deletion UI |
 | `site/ck-feature-guard.js` | Redirects away from disabled CK pages and renders the all-off state |
-| `site/cards.js` | Core Cards UI/API integration |
 | `site/mc-detector.js` | MC detector core UI |
 | `site/rbx-metro.js` | RBX Metro/DORFic presentation; body-class observer only reacts to real `mc-mode` transitions |
 | `site/dev-presence-simulation.js` | Owner-only Roblox presence simulation controls with detector revert and simulation labeling |\n| `site/performance-runtime.js` | Adaptive rendering/performance controls |

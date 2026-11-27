@@ -3,9 +3,7 @@
 body.lg-page-hidden #mca-bubbles i,
 body.lg-page-hidden #rbxm-decor i,
 body.lg-page-hidden.mc-mode #mcx::before,
-body.lg-page-hidden.mc-mode #mcx::after,
-body.lg-page-hidden #page-cards .cg-card[data-cte=holo]::before,
-body.lg-page-hidden #page-cards .cg-card[data-cte=pulse]{
+body.lg-page-hidden.mc-mode #mcx::after{
   animation-play-state:paused!important;
   transition:none!important;
 }
@@ -41,11 +39,7 @@ body.lg-perf-balanced.rbx-metro .panel,
 body.lg-perf-balanced.rbx-metro .presence-card,
 body.lg-perf-balanced.rbx-metro .user-tile,
 body.lg-perf-balanced.rbx-metro .insight-card,
-body.lg-perf-balanced.rbx-metro .tracked-row,
-body.lg-perf-balanced.rbx-metro .cg-panel,
-body.lg-perf-balanced.rbx-metro .cg-card,
-body.lg-perf-balanced.rbx-metro .cg-pack,
-body.lg-perf-balanced.rbx-metro .ex-panel{
+body.lg-perf-balanced.rbx-metro .tracked-row{
   backdrop-filter:blur(6px)!important;
   -webkit-backdrop-filter:blur(6px)!important;
 }
@@ -77,13 +71,7 @@ body.lg-perf-lite.rbx-metro .panel,
 body.lg-perf-lite.rbx-metro .presence-card,
 body.lg-perf-lite.rbx-metro .user-tile,
 body.lg-perf-lite.rbx-metro .insight-card,
-body.lg-perf-lite.rbx-metro .tracked-row,
-body.lg-perf-lite.rbx-metro .cg-panel,
-body.lg-perf-lite.rbx-metro .cg-card,
-body.lg-perf-lite.rbx-metro .cg-pack,
-body.lg-perf-lite.rbx-metro .cg-auction,
-body.lg-perf-lite.rbx-metro .cg-trade,
-body.lg-perf-lite.rbx-metro .ex-panel{
+body.lg-perf-lite.rbx-metro .tracked-row{
   backdrop-filter:none!important;
   -webkit-backdrop-filter:none!important;
   box-shadow:0 4px 10px rgba(0,0,0,.14)!important;
@@ -94,8 +82,7 @@ body.lg-perf-lite #rbxm-decor .rbxm-dots,
 body.lg-perf-lite #rbxm-decor .rbxm-bar{display:none!important}
 body.lg-perf-lite #rbxm-decor .rbxm-art{opacity:.15!important;filter:none!important}
 body.lg-perf-lite #rbxm-decor i{animation:none!important;transition:none!important}
-body.lg-perf-lite #page-cards .cg-card[data-cte=holo]::before,
-body.lg-perf-lite #page-cards .cg-card[data-cte=pulse]{animation:none!important}
+
 
 /* Main RBX page: eliminate non-functional animation and expensive hover/compositing on low-end phones. */
 body.lg-perf-lite #live-dot{animation:none!important;box-shadow:none!important}
@@ -111,7 +98,6 @@ body.lg-perf-lite .lg-vtable-wrap{max-height:52vh}
 
 /* Let the browser skip paint/layout work for long off-screen lists on constrained devices. */
 body.lg-perf-lite .presence-card,
-body.lg-perf-lite #page-cards .cg-card,
 body.lg-perf-lite .mcx-card,
 body.lg-perf-lite .mcpl-server,
 body.lg-perf-lite .tracked-row,

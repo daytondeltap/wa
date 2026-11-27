@@ -6,7 +6,6 @@
     ['leaderboard', 'Leaderboard'],
     ['history', 'History'],
     ['adduser', 'User Adding'],
-    ['cards', 'LG Cards'],
     ['mc', 'MC Detector'],
     ['join', 'Join Game'],
   ];
@@ -134,7 +133,7 @@
   function buildGenerator() {
     const form = $('keygen-form');
     if (!form) return;
-    const state = normalizePermissions({monitor:true,leaderboard:true,history:true,adduser:true,cards:true,mc:true});
+    const state = normalizePermissions({monitor:true,leaderboard:true,history:true,adduser:true,mc:true});
     form.innerHTML = `
       <div class="adduser-field"><label for="keygen-tier">Key Type</label><select class="ask-input" id="keygen-tier" required><option value="PK_">PK_ — Full access</option><option value="UPK_">UPK_ — Leaderboard + User Adding</option><option value="BK_">BK_ — Monitor + User Adding</option><option value="CK_">CK_ — Configurable feature access</option></select></div>
       <div class="adduser-field"><label for="keygen-label">Label (optional)</label><input class="ask-input" id="keygen-label" maxlength="60" placeholder="e.g. client-acme"></div>
@@ -249,7 +248,7 @@
       if (typeof buildNav === 'function') buildNav();
       window.LGAuth?.applyGuards?.();
       const allowed = new Set(fresh.tabs || []);
-      if (typeof activePage !== 'undefined' && !allowed.has(activePage) && !(['cards','mc'].includes(activePage) && fresh.features?.[activePage] !== false)) {
+      if (typeof activePage !== 'undefined' && !allowed.has(activePage) && !(['mc'].includes(activePage) && fresh.features?.[activePage] !== false)) {
         const next = fresh.tabs?.[0];
         if (next && typeof switchPage === 'function') await switchPage(next);
       }

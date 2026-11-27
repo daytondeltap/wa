@@ -39,28 +39,9 @@ jobs:
                   raise SystemExit(f'Expected performance patch target missing in {path}')
               p.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-          # Cards decorators only need to observe Cards. Keeping these observers on
-          # documentElement made every RBX presence DOM change wake three unrelated
-          # Cards passes, which is especially expensive on low-end phones.
-          replace_once(
-              'site/cards-polish.js',
-              "function boot(){injectStyles();new MutationObserver(patch).observe(document.documentElement,{childList:true,subtree:true});patch();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')patch()})}",
-              "function boot(){injectStyles();const lgObs=new MutationObserver(patch),lgRoot=document.getElementById('page-cards')||document.body;lgObs.observe(lgRoot,{childList:true,subtree:true});patch();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')patch()})}"
-          )
-          replace_once(
-              'site/dev-cards.js',
-              "function boot(){injectStyles();const obs=new MutationObserver(schedulePatch);obs.observe(document.documentElement,{childList:true,subtree:true});sync();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});setInterval(()=>{if(document.visibilityState==='visible'&&$('#page-cards')?.classList.contains('active'))sync()},30000)}",
-              "function boot(){injectStyles();const obs=new MutationObserver(schedulePatch),root=$('#page-cards')||document.body;obs.observe(root,{childList:true,subtree:true});sync();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});setInterval(()=>{if(document.visibilityState==='visible'&&$('#page-cards')?.classList.contains('active'))sync()},30000)}"
-          )
-          replace_once(
-              'site/custom-card-tiers.js',
-              "function boot(){css();const ob=new MutationObserver(()=>{clearTimeout(S.t);S.t=setTimeout(patch,35)});ob.observe(document.documentElement,{childList:true,subtree:true});sync();document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&sync());setInterval(()=>document.visibilityState==='visible'&&$('#page-cards')?.classList.contains('active')&&sync(),30000)}",
-              "function boot(){css();const ob=new MutationObserver(()=>{clearTimeout(S.t);S.t=setTimeout(patch,35)}),root=$('#page-cards');if(root)ob.observe(root,{childList:true,subtree:true});ob.observe(document.body,{childList:true,subtree:false});sync();document.addEventListener('visibilitychange',()=>document.visibilityState==='visible'&&sync());setInterval(()=>document.visibilityState==='visible'&&$('#page-cards')?.classList.contains('active')&&sync(),30000)}"
-          )
-
           # Keep every visible tier description aligned with the server matrix.
           old_tiers = '<option value="PK_">PK_ — Full access</option><option value="UPK_">UPK_ — Leaderboard + User Adding</option><option value="BK_">BK_ — Monitor + User Adding</option>'
-          new_tiers = '<option value="PK_">PK_ — Deluxe / all features except Key Generator</option><option value="UPK_">UPK_ — Monitor + Leaderboard + User Adding + Cards + History</option><option value="BK_">BK_ — Monitor + Leaderboard + User Adding + Cards</option>'
+          new_tiers = '<option value="PK_">PK_ — Deluxe / all features except Key Generator</option><option value="UPK_">UPK_ — Monitor + Leaderboard + User Adding + History</option><option value="BK_">BK_ — Monitor + Leaderboard + User Adding</option>'
           replace_once('site/index.html', old_tiers, new_tiers)
           replace_once('site/ck-key-manager.js', old_tiers + '<option value="CK_">CK_ — Configurable feature access</option>', new_tiers + '<option value="CK_">CK_ — Configurable feature access</option>')
           replace_once(
@@ -81,18 +62,12 @@ jobs:
           s = s.replace(old, "window.LG_LEGACY_SITE_KEY=SITE_KEY;", 1)
           tags = [
               '<script src="fetch-bootstrap.js"></script>',
-              '<script src="standard-key-login.js?v=20261127-1"></script>',
-              '<script src="auth-ck.js?v=20261127-1"></script>',
+              '<script src="standard-key-login.js?v=20261127-2"></script>',
+              '<script src="auth-ck.js?v=20261127-2"></script>',
               '<script src="login-resilience.js?v=20260916-4"></script>',
-              '<script src="ck-key-manager.js?v=20261127-1"></script>',
+              '<script src="ck-key-manager.js?v=20261127-2"></script>',
               '<script src="key-delete-runtime.js?v=20260916-4"></script>',
-              '<script src="egress-runtime.js?v=20261127-1"></script>',
-              '<script src="cards.js?v=20261127-1"></script>',
-              '<script src="profile-verify.js"></script>',
-              '<script src="profile-verify-bootstrap.js"></script>',
-              '<script src="cards-polish.js"></script>',
-              '<script src="dev-cards.js"></script>',
-              '<script src="custom-card-tiers.js"></script>',
+              '<script src="egress-runtime.js?v=20261127-2"></script>',
               '<script src="mc-detector.js?v=20261127-1"></script>',
               '<script src="mc-detector-session.js"></script>',
               '<script src="mc-player-lists.js"></script>',
@@ -102,7 +77,7 @@ jobs:
               '<script src="dev-presence-simulation.js?v=20260929-3"></script>',
               '<script src="performance-runtime.js"></script>',
               '<script src="rbx-data-performance.js?v=20261127-1"></script>',
-              '<script src="ck-feature-guard.js?v=20261127-1"></script>',
+              '<script src="ck-feature-guard.js?v=20261127-2"></script>',
           ]
           for tag in tags:
               if tag not in s:
@@ -115,25 +90,24 @@ jobs:
           set -euo pipefail
           find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
           grep -q 'fetch-bootstrap.js' site/index.html
-          grep -q 'standard-key-login.js?v=20261127-1' site/index.html
+          grep -q 'standard-key-login.js?v=20261127-2' site/index.html
           grep -q 'auth-ck.js' site/index.html
           grep -q 'login-resilience.js?v=20260916-4' site/index.html
-          grep -q 'ck-key-manager.js?v=20261127-1' site/index.html
+          grep -q 'ck-key-manager.js?v=20261127-2' site/index.html
           grep -q 'key-delete-runtime.js?v=20260916-4' site/index.html
-          grep -q 'egress-runtime.js?v=20261127-1' site/index.html
+          grep -q 'egress-runtime.js?v=20261127-2' site/index.html
           grep -q 'rbx-metro.js?v=20260916-1' site/index.html
           grep -q 'dev-presence-simulation.js?v=20260929-3' site/index.html
           python - <<'PY'
           from pathlib import Path
           s = Path('site/index.html').read_text(encoding='utf-8')
-          standard = s.index('standard-key-login.js?v=20261127-1')
+          standard = s.index('standard-key-login.js?v=20261127-2')
           auth_ck = s.index('auth-ck.js')
           if standard >= auth_ck:
               raise SystemExit('standard-key-login.js must load before auth-ck.js')
           PY
           grep -q 'legacyTierFromRaw' site/egress-runtime.js
           grep -q "UPK_: \['monitor','leaderboard','history','adduser'\]" site/egress-runtime.js
-          grep -q 'UPK_.*cards:true' site/egress-runtime.js
           grep -q "UPK_: {tabs:\['monitor','leaderboard','history','adduser'\]" site/standard-key-login.js
           grep -q '6500' site/standard-key-login.js
           grep -q 'stopImmediatePropagation' site/standard-key-login.js
@@ -142,7 +116,7 @@ jobs:
           grep -q 'Do not block the login promise on secondary data' site/standard-key-login.js
           grep -q 'must never enter completeLogin' site/auth-ck.js
           grep -q 'LGStandardKeyLogin.standardLogin' site/auth-ck.js
-          grep -q 'Monitor + Leaderboard + User Adding + Cards + History' site/index.html
+          grep -q 'Monitor + Leaderboard + User Adding + History' site/index.html
           grep -q 'static RBX poll cycle (about 2 minutes)' site/index.html
           grep -q 'rbx-data-performance.js' site/index.html
           grep -q 'ck-feature-guard.js' site/index.html
