@@ -1,24 +1,22 @@
 (() => {
   const SB = 'https://jwjxhxvahgrpkvaoyrzw.supabase.co';
-  const FAST_EXCHANGE = `${SB}/functions/v1/lg-exchange-summary`;
   const LEGACY_API = `${SB}/functions/v1/lg-api`;
   const nativeFetch = window.LG_NATIVE_FETCH || window.fetch.bind(window);
   const routedFetch = window.fetch.bind(window); // auth-ck gateway-aware fetch
   const inflight = new Map();
   const apiCache = new Map();
-  const exchangeCache = new Map();
 
   const LEGACY_TABS = {
-    DEV:  ['monitor','leaderboard','exchange','history','adduser','keys'],
-    PK_:  ['monitor','leaderboard','exchange','history','adduser'],
+    DEV:  ['monitor','leaderboard','history','adduser','keys'],
+    PK_:  ['monitor','leaderboard','history','adduser'],
     UPK_: ['monitor','leaderboard','history','adduser'],
     BK_:  ['monitor','leaderboard','adduser'],
   };
   const LEGACY_FEATURES = {
-    DEV:  {monitor:true, leaderboard:true, exchange:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:true},
-    PK_:  {monitor:true, leaderboard:true, exchange:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:false},
-    UPK_: {monitor:true, leaderboard:true, exchange:false, history:true, adduser:true, cards:true, mc:false, join:false, keys:false},
-    BK_:  {monitor:true, leaderboard:true, exchange:false, history:false, adduser:true, cards:true, mc:false, join:false, keys:false},
+    DEV:  {monitor:true, leaderboard:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:true},
+    PK_:  {monitor:true, leaderboard:true, history:true, adduser:true, cards:true, mc:true, join:true, keys:false},
+    UPK_: {monitor:true, leaderboard:true, history:true, adduser:true, cards:true, mc:false, join:false, keys:false},
+    BK_:  {monitor:true, leaderboard:true, history:false, adduser:true, cards:true, mc:false, join:false, keys:false},
   };
 
   function currentAccount() {
@@ -78,7 +76,8 @@
     if (!p) {
       p = Promise.resolve(fn(input, init));
       inflight.set(key, p);
-      p.finally(() => setTimeout(() => { if (inflight.get(key) === p) inflight.delete(key); }, 150));
+      const release = () => { if (inflight.get(key) === p) inflight.delete(key); };
+      p.then(release, release);
     }
     const response = await p;
     return response.clone();
@@ -91,7 +90,7 @@
   window.fetch = function(input, init = {}) {
     const raw = rawUrl(input);
     if (useDirectLegacy(raw)) return deduped('direct', nativeFetch, input, init);
-    return deduped('routed', routedFetch, input, init);
+    return originalFunction(raw) ? deduped('routed', routedFetch, input, init) : routedFetch(input, init);
   };
 
   async function directLegacyAccount(path, opts = {}) {
@@ -115,48 +114,12 @@
     } finally { clearTimeout(timer); }
   }
 
-  function authHeaders() {
-    const h = new Headers(), a = currentAccount();
-    if (a?.auth_method === 'google') {
-      try {
-        const s = JSON.parse(sessionStorage.getItem('lg_google_session') || 'null');
-        if (s?.access_token) h.set('authorization', `Bearer ${s.access_token}`);
-      } catch {}
-    } else {
-      const raw = currentSiteKey().trim();
-      if (raw) h.set('x-site-key', raw);
-    }
-    return h;
-  }
-  async function fastExchange(path) {
-    const now = Date.now(), a = currentAccount();
-    const ttl = path.startsWith('/history') ? 30000 : 18000;
-    const cacheKey = `${a?.key_id || ''}|${path}`;
-    const hit = exchangeCache.get(cacheKey);
-    if (hit?.data && hit.until > now) return hit.data;
-    if (hit?.promise) return hit.promise;
-    const p = (async () => {
-      const r = await nativeFetch(FAST_EXCHANGE + path, { headers: authHeaders() });
-      let j = null; try { j = await r.json(); } catch {}
-      if (!r.ok) throw new Error(j?.error || j?.detail || `Exchange request failed (${r.status})`);
-      exchangeCache.set(cacheKey, { data:j, until:Date.now()+ttl });
-      return j;
-    })();
-    exchangeCache.set(cacheKey, { promise:p, until:0 });
-    try { return await p; }
-    finally {
-      const x = exchangeCache.get(cacheKey);
-      if (x?.promise === p && !x.data) exchangeCache.delete(cacheKey);
-    }
-  }
-
   const baseApi = window.api;
   if (typeof baseApi === 'function') {
     const ttlFor = path => {
-      if (path === '/monitor/totals' || path.startsWith('/monitor/charts') || path.startsWith('/monitor/top_games')) return 30000;
+      if (path.split('?')[0] === '/monitor/totals' || path.startsWith('/monitor/charts') || path.startsWith('/monitor/top_games')) return 30000;
       if (path.startsWith('/monitor/sessions') || path.startsWith('/monitor/events')) return 20000;
       if (path === '/leaderboard') return 15000;
-      if (path.startsWith('/exchange/orderbook') || path === '/exchange/tape') return 12000;
       return 0;
     };
     const optimizedApi = async function(path, opts = {}) {
@@ -165,17 +128,9 @@
         const direct = await directLegacyAccount(path, opts);
         if (direct) return direct;
       }
-      if (method === 'GET' && path === '/exchange/markets') {
-        try { return await fastExchange('/markets'); }
-        catch (e) { console.warn('LG fast market summary fallback', e); return baseApi(path, opts); }
-      }
-      if (method === 'GET' && path.startsWith('/exchange/history?')) {
-        try { return await fastExchange('/history?' + path.split('?')[1]); }
-        catch (e) { console.warn('LG sampled history fallback', e); return baseApi(path, opts); }
-      }
       const ttl = method === 'GET' ? ttlFor(path) : 0;
       if (!ttl) {
-        if (method !== 'GET') { apiCache.clear(); exchangeCache.clear(); }
+        if (method !== 'GET') apiCache.clear();
         return baseApi(path, opts);
       }
       const a = currentAccount(), key = `${a?.key_id || ''}|${path}`;
@@ -183,9 +138,12 @@
       if (hit?.data !== undefined && hit.until > now) return hit.data;
       if (hit?.promise) return hit.promise;
       const p = Promise.resolve(baseApi(path, opts)).then(data => {
-        apiCache.set(key, { data, until:Date.now()+ttl });
+        if (apiCache.get(key)?.promise === p) apiCache.set(key, { data, until:Date.now()+ttl });
         return data;
       });
+      for (const [cacheKey, entry] of apiCache) {
+        if (!entry.promise && entry.until <= now) apiCache.delete(cacheKey);
+      }
       apiCache.set(key, { promise:p, until:0 });
       try { return await p; }
       finally {
@@ -196,6 +154,6 @@
     window.api = optimizedApi;
   }
 
-  window.addEventListener('pageshow', () => { apiCache.clear(); exchangeCache.clear(); }, {passive:true});
+  window.addEventListener('pageshow', () => apiCache.clear(), {passive:true});
   window.LGEgressRuntime = {legacyTierFromRaw, normalizeLegacyAccount};
 })();

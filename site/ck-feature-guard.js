@@ -15,7 +15,7 @@
   function enabled(a, name) {
     if (!a || a.tier !== 'CK_') return true;
     if (name === 'keys') return false;
-    if (['monitor','leaderboard','exchange','history','adduser','cards','mc'].includes(name)) return a.features?.[name] === true;
+    if (['monitor','leaderboard','history','adduser','cards','mc'].includes(name)) return a.features?.[name] === true;
     return true;
   }
   function firstAllowed(a) {
@@ -28,7 +28,7 @@
   }
   function hasAnyFeature(a) {
     if (!a || a.tier !== 'CK_') return true;
-    return ['monitor','leaderboard','exchange','history','adduser','cards','mc','join'].some(k => a.features?.[k] === true);
+    return ['monitor','leaderboard','history','adduser','cards','mc','join'].some(k => a.features?.[k] === true);
   }
   function injectEmptyPage() {
     if ($('page-ck-empty')) return;

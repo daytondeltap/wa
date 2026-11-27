@@ -6,7 +6,6 @@
 <title>Roblox Presence Monitor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --bg:#0a0a0f; --surface:#111118; --border:#1e1e2e; --accent:#ff3c5f;
@@ -147,14 +146,26 @@
 </div>
 
 <div id="join-overlay" class="join-overlay hidden">
-  <div class="join-modal"><img id="join-avatar" class="join-modal-avatar" src="" alt=""><div class="join-modal-name" id="join-name"></div><div class="join-modal-game" id="join-game"></div><div class="join-modal-q">Join their game?</div><div class="join-modal-btns"><button class="join-yes" id="join-yes">✓ YES</button><button class="join-no" id="join-no">✕ NO</button></div><div class="join-hint">Roblox may ask permission to open the app.</div></div>
+  <div class="join-modal"><img id="join-avatar" class="join-modal-avatar" src="" alt=""><div class="join-modal-name" id="join-name"></div><div class="join-modal-game" id="join-game"></div><div class="join-modal-q" id="join-question">Join their game?</div><div class="join-modal-btns"><button class="join-yes" id="join-yes">✓ YES</button><button class="join-no" id="join-no">✕ NO</button></div><div class="join-hint">Roblox may ask permission to open the app.</div></div>
 </div>
 <div id="toast" class="toast hidden"></div>
 
 <script>
 const API='https://jwjxhxvahgrpkvaoyrzw.supabase.co/functions/v1/lg-api';
 let SITE_KEY=sessionStorage.getItem('lg_site_key')||'', account=null, activePage='monitor', refreshTimer=null;
-let dailyChart=null,hourlyChart=null,joinTarget=null;
+let dailyChart=null,hourlyChart=null,joinTarget=null,chartLoading;
+const RBX_REFRESH_MS = 20000;
+function loadChart() {
+  if (window.Chart) return Promise.resolve(window.Chart);
+  if (!chartLoading) chartLoading = new Promise(resolve => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+    script.onload = () => resolve(window.Chart);
+    script.onerror = () => { script.remove(); chartLoading = null; resolve(null); };
+    document.head.appendChild(script);
+  });
+  return chartLoading;
+}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function fmtSeconds(s){s=Number(s||0);const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;if(h)return `${h}h ${m}m`;if(m)return `${m}m ${sec}s`;return `${sec}s`}
@@ -164,7 +175,7 @@ function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidd
 async function api(path,opts={}){const headers=new Headers(opts.headers||{});headers.set('x-site-key',SITE_KEY);if(opts.body&&!headers.has('content-type'))headers.set('content-type','application/json');const r=await fetch(API+path,{...opts,headers});let j=null;try{j=await r.json()}catch{}if(r.status===401){logout();throw new Error('Access key rejected')}if(!r.ok)throw new Error(j?.error||j?.detail||`Request failed (${r.status})`);return j}
 function apiGet(path,params={}){const q=new URLSearchParams(Object.entries(params).filter(([,v])=>v!==null&&v!==undefined&&v!==''));return api(path+(q.toString()?`?${q}`:''))}
 
-async function login(key){SITE_KEY=key.trim();if(!SITE_KEY)throw new Error('Enter an access key');account=await api('/auth',{method:'POST'});sessionStorage.setItem('lg_site_key',SITE_KEY);$('auth').classList.add('hidden');$('app').classList.remove('hidden');applyTier();buildNav();await refreshTracked();await switchPage((account.tabs||[])[0]||'monitor');clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(activePage==='monitor')refreshMonitor(false)},10000)}
+async function login(key){SITE_KEY=key.trim();if(!SITE_KEY)throw new Error('Enter an access key');account=await api('/auth',{method:'POST'});sessionStorage.setItem('lg_site_key',SITE_KEY);$('auth').classList.add('hidden');$('app').classList.remove('hidden');applyTier();buildNav();await refreshTracked();await switchPage((account.tabs||[])[0]||'monitor');clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(activePage==='monitor')refreshMonitor(false)},RBX_REFRESH_MS)}
 function logout(){clearInterval(refreshTimer);sessionStorage.removeItem('lg_site_key');SITE_KEY='';account=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden');$('login-key').value=''}
 function applyTier(){const map={DEV:['DEV','tb-dev'],'PK_':['DELUXE','tb-pk'],'UPK_':['UPGRADED','tb-upk'],'BK_':['BASIC','tb-bk']};const [label,cls]=map[account.tier]||[account.tier,''];$('tier-badge').textContent=label;$('tier-badge').className='tier-badge '+cls}
 function buildNav(){const labels={monitor:'Monitor',leaderboard:'Leaderboard',history:'History',adduser:'User Adding',keys:'Key Generator'};$('page-nav').innerHTML='';for(const tab of account.tabs||[]){if(!labels[tab])continue;const b=document.createElement('button');b.className='page-nav-btn';b.dataset.tab=tab;b.textContent=labels[tab];b.onclick=()=>switchPage(tab,b);$('page-nav').appendChild(b)}}
@@ -173,9 +184,43 @@ async function switchPage(name,btn){activePage=name;document.querySelectorAll('.
 async function refreshTracked(){if(!account||!(account.tabs||[]).some(x=>['monitor','history','adduser'].includes(x)))return;const rows=await api('/tracked_users');const options=['<option value="">All Users</option>',...rows.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.id})</option>`)].join('');if($('user-filter'))$('user-filter').innerHTML=options;if($('hist-user-filter'))$('hist-user-filter').innerHTML=options;if($('tracked-list')){$('tracked-list').innerHTML=rows.length?rows.map(x=>`<div class="tracked-row"><div class="grow"><div>${esc(x.name)}</div><div class="tracked-id">${x.id}</div></div><button class="btn danger" data-remove="${x.id}">Remove</button></div>`).join(''):'<div class="empty">No tracked users</div>';document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Stop tracking this player?'))return;await api('/tracked_users/'+b.dataset.remove,{method:'DELETE'});await refreshTracked();toast('Player removed')})}}
 
 async function refreshMonitor(mark=true){try{const uid=$('user-filter').value||'',days=$('days-filter').value||'';const [presence,totals,charts,games,sessions,events]=await Promise.all([apiGet('/monitor/presence',{user_id:uid}),apiGet('/monitor/totals',{user_id:uid}),apiGet('/monitor/charts',{user_id:uid,days:days||30}),apiGet('/monitor/top_games',{user_id:uid,days}),apiGet('/monitor/sessions',{user_id:uid,days}),apiGet('/monitor/events',{user_id:uid})]);renderPresence(presence);renderTotals(totals,presence.avatars||{});renderCharts(charts);renderGames(games);renderSessions(sessions);renderEvents(events);if(mark)$('last-update').textContent=new Date().toLocaleTimeString()}catch(e){toast(e.message)}}
-function renderPresence(data){const users=data.users||[],states=data.states||{},avatars=data.avatars||{};if(!users.length){$('presence-grid').innerHTML='<div class="empty">No tracked users</div>';return}const label={0:['offline','OFFLINE','status-offline'],1:['website','ON WEBSITE','status-website'],2:['ingame','IN GAME','status-ingame'],3:['studio','IN STUDIO','status-studio'],4:['invisible','INVISIBLE','status-invisible']};$('presence-grid').innerHTML=users.map(u=>{const s=states[String(u.id)]||{presence_type:0},info=label[Number(s.presence_type)]||label[0],img=avatars[String(u.id)]||'';const join=Number(s.presence_type)===2&&account.can_join&&s.place_id;return `<div class="presence-card ${info[0]}" ${join?`data-join='${esc(JSON.stringify({id:u.id,name:u.name,game:s.last_location||'',place:s.place_id,instance:s.game_id||'',avatar:img}))}'`:''}><div class="card-head">${img?`<img class="avatar avatar-md" src="${esc(img)}" alt="${esc(u.name)}">`:'<div class="avatar avatar-md"></div>'}<div><div class="card-username">${esc(u.name)}</div><div class="tracked-id">${u.id}</div></div></div><span class="card-status ${info[2]}">${info[1]}</span>${s.last_location?`<div class="card-game">🎮 ${esc(s.last_location)}</div>`:''}<div class="card-time">${s.updated_at?'Updated '+fmtTs(s.updated_at):'Waiting for first poll'}</div></div>`}).join('');document.querySelectorAll('[data-join]').forEach(c=>c.onclick=()=>openJoin(JSON.parse(c.dataset.join)))}
+const presenceLabels = {
+  0: ['offline','REPORTED OFFLINE','status-offline'],
+  1: ['website','ON WEBSITE','status-website'],
+  2: ['ingame','IN GAME','status-ingame'],
+  3: ['studio','IN STUDIO','status-studio'],
+  4: ['invisible','INVISIBLE','status-invisible'],
+};
+function describePresence(state, now = Date.now()) {
+  const observedAt = Date.parse(state?.updated_at);
+  if (!Number.isFinite(observedAt)) return {label:['','WAITING FOR FIRST POLL','status-studio'], detail:'', actionable:false};
+  if (now - observedAt > 300000) return {label:['','PRESENCE STALE','status-studio'], detail:'', actionable:false};
+  const type = state.presence_type;
+  const label = presenceLabels[type] || ['','PRESENCE UNAVAILABLE','status-studio'];
+  if (type === 0 && state.visibility_observation === 'pending_offline') {
+    return {label:['','STATUS UNCONFIRMED','status-studio'], detail:'Waiting for a second offline report', actionable:false};
+  }
+  const location = type !== 0 && state.last_location ? '🎮 ' + state.last_location : '';
+  let detail = location;
+  if (type === 2 && !state.place_id) detail = 'Experience unavailable';
+  else if (type === 2 && state.instance_unavailable) detail = [detail,'Server unavailable'].filter(Boolean).join(' · ');
+  if (type === 2 && state.visibility_observation === 'visibility_gap') detail = [detail,'Brief visibility gap'].filter(Boolean).join(' · ');
+  return {label, detail, actionable:type === 2 && Boolean(state.place_id)};
+}
+function renderPresence(data) {
+  const users = data.users || [], states = data.states || {}, avatars = data.avatars || {};
+  const grid = $('presence-grid');
+  grid.innerHTML = users.map(u => {
+    const s = states[String(u.id)];
+    const {label, detail, actionable} = describePresence(s);
+    const img = avatars[String(u.id)] || '';
+    const join = actionable && account?.can_join ? JSON.stringify({id:u.id,name:u.name,game:s.last_location,place:s.place_id,instance:s.game_id,avatar:img}) : '';
+    return `<div class="presence-card ${label[0]}" ${join ? `data-join='${esc(join)}'` : ''}><div class="card-head">${img ? `<img class="avatar avatar-md" src="${esc(img)}" alt="">` : '<div class="avatar avatar-md"></div>'}<div><div class="card-username">${esc(u.name)}</div><div class="tracked-id">${u.id}</div></div></div><span class="card-status ${label[2]}">${label[1]}</span>${detail ? `<div class="card-game">${esc(detail)}</div>` : ''}<div class="card-time">${s?.updated_at ? 'Updated '+fmtTs(s.updated_at) : ''}</div></div>`;
+  }).join('') || '<div class="empty">No tracked users</div>';
+  grid.querySelectorAll('[data-join]').forEach(card => card.onclick = () => openJoin(JSON.parse(card.dataset.join)));
+}
 function renderTotals(rows,avatars){$('user-totals').innerHTML=rows.length?rows.map(x=>`<div class="user-tile"><div class="tile-head">${avatars[String(x.user_id)]?`<img class="avatar avatar-sm" src="${esc(avatars[String(x.user_id)])}">`:''}<div class="tile-name">${esc(x.username)}</div></div><div class="tile-stat">Total <span>${fmtSeconds(x.total_seconds)}</span></div><div class="tile-stat">Sessions <span>${x.sessions}</span></div></div>`).join(''):'<div class="empty">No completed sessions yet</div>'}
-function renderCharts(data){const d=data.daily||[],h=data.hourly||[];const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8888aa'},grid:{color:'#1e1e2e'}},y:{ticks:{color:'#8888aa',callback:v=>fmtSeconds(v)},grid:{color:'#1e1e2e'}}}};if(dailyChart)dailyChart.destroy();if(hourlyChart)hourlyChart.destroy();dailyChart=new Chart($('daily-chart'),{type:'line',data:{labels:d.map(x=>x.day),datasets:[{data:d.map(x=>x.total_seconds),borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.08)',fill:true,tension:.25,pointRadius:2}]},options:opts});hourlyChart=new Chart($('hourly-chart'),{type:'bar',data:{labels:h.map(x=>String(x.hour).padStart(2,'0')),datasets:[{data:h.map(x=>x.total_seconds),backgroundColor:'rgba(255,60,95,.55)',borderColor:'#ff3c5f',borderWidth:1}]},options:opts})}
+async function renderCharts(data){const Chart=await loadChart();if(!Chart)return;const d=data.daily||[],h=data.hourly||[];const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8888aa'},grid:{color:'#1e1e2e'}},y:{ticks:{color:'#8888aa',callback:v=>fmtSeconds(v)},grid:{color:'#1e1e2e'}}}};if(dailyChart)dailyChart.destroy();if(hourlyChart)hourlyChart.destroy();dailyChart=new Chart($('daily-chart'),{type:'line',data:{labels:d.map(x=>x.day),datasets:[{data:d.map(x=>x.total_seconds),borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.08)',fill:true,tension:.25,pointRadius:2}]},options:opts});hourlyChart=new Chart($('hourly-chart'),{type:'bar',data:{labels:h.map(x=>String(x.hour).padStart(2,'0')),datasets:[{data:h.map(x=>x.total_seconds),backgroundColor:'rgba(255,60,95,.55)',borderColor:'#ff3c5f',borderWidth:1}]},options:opts})}
 function renderGames(rows){$('games-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.location_name)}</td><td>${x.sessions}</td><td>${fmtSeconds(x.total_seconds)}</td><td>${fmtSeconds(x.avg_seconds)}</td><td>${fmtSeconds(x.max_seconds)}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No game data yet</td></tr>'}
 function renderSessions(rows){$('sessions-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.location_name||'—')}</td><td>${fmtTs(x.start_time)}</td><td>${x.end_time?fmtTs(x.end_time):'LIVE'}</td><td>${x.end_time?fmtSeconds(x.duration_seconds):'LIVE'}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No sessions yet</td></tr>'}
 function renderEvents(rows){const cls=x=>x==='ENTERED_GAME'?'tag-entered':x==='LEFT_GAME'?'tag-left':x==='SWITCHED_GAME'?'tag-switched':'tag-started';$('events-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${fmtTs(x.timestamp)}</td><td>${esc(x.username)}</td><td><span class="tag ${cls(x.event_type)}">${esc(x.event_type)}</span></td><td>${esc(x.old_location||x.old_status||'—')}</td><td>${esc(x.new_location||x.new_status||'—')}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No events yet</td></tr>'}
@@ -186,7 +231,7 @@ async function refreshHistory(){try{const uid=$('hist-user-filter').value||'',da
 async function toggleHistoryRow(row,uid,days){const next=row.nextElementSibling;if(next&&next.classList.contains('hist-detail')){next.remove();return}const game=decodeURIComponent(row.dataset.game);const rows=await apiGet('/history/sessions',{game,user_id:uid,days});const tr=document.createElement('tr');tr.className='hist-detail';tr.innerHTML=`<td colspan="8"><div style="padding:.55rem 0"><table><thead><tr><th>Player</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody>${rows.length?rows.map(x=>`<tr><td>${esc(x.username)}</td><td>${fmtHistTs(x.start_time)}</td><td>${fmtHistTs(x.end_time)}</td><td>${fmtSeconds(x.duration_seconds)}</td></tr>`).join(''):'<tr><td colspan="4" class="empty">No sessions</td></tr>'}</tbody></table></div></td>`;row.after(tr)}
 
 async function refreshKeys(){if(account.tier!=='DEV')return;try{const rows=await api('/keys');$('keys-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.tier)}</td><td>${esc(x.key_label||'—')}</td><td><code>${esc(x.key_id)}</code></td><td>${x.active?'Active':'Revoked'}</td><td>${fmtHistTs(x.created_at)}</td><td><button class="btn ${x.active?'danger':''}" data-key="${x.key_id}" data-action="${x.active?'revoke':'reactivate'}">${x.active?'Revoke':'Reactivate'}</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">No generated keys</td></tr>';document.querySelectorAll('[data-key]').forEach(b=>b.onclick=async()=>{await api(`/keys/${b.dataset.key}/${b.dataset.action}`,{method:'POST'});await refreshKeys()})}catch(e){toast(e.message)}}
-function openJoin(x){joinTarget=x;$('join-avatar').src=x.avatar||'';$('join-name').textContent=x.name;$('join-game').textContent=x.game||'Roblox game';$('join-overlay').classList.remove('hidden')}
+function openJoin(x){joinTarget=x;$('join-avatar').src=x.avatar||'';$('join-name').textContent=x.name;$('join-game').textContent=x.game||'Roblox game';$('join-question').textContent=x.instance?'Join their game?':'Open the experience page?';$('join-overlay').classList.remove('hidden')}
 function closeJoin(){$('join-overlay').classList.add('hidden');joinTarget=null}
 
 $('login-form').onsubmit=async e=>{e.preventDefault();$('login-error').classList.add('hidden');try{await login($('login-key').value)}catch(ex){$('login-error').textContent=ex.message;$('login-error').classList.remove('hidden');SITE_KEY=''}};

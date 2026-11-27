@@ -74,6 +74,12 @@ jobs:
           test -s site/ck-feature-guard.js
           grep -q "No Features Enabled" site/ck-feature-guard.js
           grep -q "page-ck-empty" site/ck-feature-guard.js
+      - name: Check retired feature is absent from Pages
+        run: |
+          test ! -e site/exchange.js
+          if git grep -in 'exchange' -- site .github/workflows/pages.yml; then
+            exit 1
+          fi
       - name: Check adaptive performance assets
         shell: bash
         run: |

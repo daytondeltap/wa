@@ -3,10 +3,10 @@
   const API = `${SB}/functions/v1/lg-api`;
   const nativeFetch = window.LG_NATIVE_FETCH || window.fetch.bind(window);
   const STANDARD = {
-    DEV:  {tabs:['monitor','leaderboard','exchange','history','adduser','keys'], features:{monitor:true,leaderboard:true,exchange:true,history:true,adduser:true,cards:true,mc:true,join:true,keys:true}},
-    PK_:  {tabs:['monitor','leaderboard','exchange','history','adduser'], features:{monitor:true,leaderboard:true,exchange:true,history:true,adduser:true,cards:true,mc:true,join:true,keys:false}},
-    UPK_: {tabs:['monitor','leaderboard','history','adduser'], features:{monitor:true,leaderboard:true,exchange:false,history:true,adduser:true,cards:true,mc:false,join:false,keys:false}},
-    BK_:  {tabs:['monitor','leaderboard','adduser'], features:{monitor:true,leaderboard:true,exchange:false,history:false,adduser:true,cards:true,mc:false,join:false,keys:false}},
+    DEV:  {tabs:['monitor','leaderboard','history','adduser','keys'], features:{monitor:true,leaderboard:true,history:true,adduser:true,cards:true,mc:true,join:true,keys:true}},
+    PK_:  {tabs:['monitor','leaderboard','history','adduser'], features:{monitor:true,leaderboard:true,history:true,adduser:true,cards:true,mc:true,join:true,keys:false}},
+    UPK_: {tabs:['monitor','leaderboard','history','adduser'], features:{monitor:true,leaderboard:true,history:true,adduser:true,cards:true,mc:false,join:false,keys:false}},
+    BK_:  {tabs:['monitor','leaderboard','adduser'], features:{monitor:true,leaderboard:true,history:false,adduser:true,cards:true,mc:false,join:false,keys:false}},
   };
 
   const $ = id => document.getElementById(id);
@@ -160,7 +160,7 @@
         try {
           if (activePage === 'monitor' && account?.features?.monitor !== false && typeof refreshMonitor === 'function') refreshMonitor(false);
         } catch {}
-      }, 10000);
+      }, RBX_REFRESH_MS);
     } catch (e) {
       console.warn('[LG login] refresh timer setup failed', e);
     }

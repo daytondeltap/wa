@@ -16,7 +16,6 @@
   const featureDefs=[
     ['monitor','Monitor'],
     ['leaderboard','Leaderboard'],
-    ['exchange','LG Exchange'],
     ['history','History'],
     ['adduser','User Adding'],
     ['cards','LG Cards'],
@@ -121,7 +120,7 @@
     if(first)await switchPage(first);
     else if(account.features?.cards&&$('page-cards')){activePage='cards';document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$('page-cards').classList.add('active');document.querySelector('[data-tab="cards"]')?.classList.add('active')}
     else {activePage='monitor';const p=$('page-monitor');if(p)p.classList.add('active')}
-    clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(activePage==='monitor'&&account?.features?.monitor!==false)refreshMonitor(false)},10000);
+    clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(activePage==='monitor'&&account?.features?.monitor!==false)refreshMonitor(false)},RBX_REFRESH_MS);
   }
   async function googleLogin(){
     const gs=await ensureGoogle();if(!gs)throw Error('Google sign-in session is missing or expired');

@@ -1,6 +1,6 @@
 # LG Presence Suite
 
-Static GitHub Pages frontend for **RBX Detect**, **MC Detector**, **LG Cards**, and the **LG Exchange**. Production data and authentication are backed by the `LgBackend` Supabase project. Backend source is maintained in `daytondeltap/Lg`.
+Static GitHub Pages frontend for **RBX Detect**, **MC Detector**, and **LG Cards**. Production data and authentication are backed by the `LgBackend` Supabase project. Backend source is maintained in `daytondeltap/Lg`.
 
 > **TC is a closed, site-only fictional unit. It has no cash value, cannot be redeemed, and is not a real financial asset. Standard randomized card packs are free.**
 
@@ -31,7 +31,7 @@ Browser / GitHub Pages
         +-- ck-feature-guard.js
         |      keeps disabled/all-off CK pages out of the active UI
         |
-        +-- RBX / Cards / MC / Exchange modules
+        +-- RBX / Cards / MC modules
                -> Supabase Edge Functions
 
 Supabase Edge Functions -> Postgres + scheduled pollers
@@ -82,7 +82,7 @@ The standard tier pipeline is authoritative across frontend normalization, `lg-a
 - User Adding
 - Cards
 
-Basic does **not** include History, LG Exchange, MC Detector, Join Game, or Key Generator.
+Basic does **not** include History, MC Detector, Join Game, or Key Generator.
 
 ### Upgraded — `UPK_`
 
@@ -92,7 +92,7 @@ Basic does **not** include History, LG Exchange, MC Detector, Join Game, or Key 
 - Cards
 - History
 
-Upgraded does **not** include LG Exchange, MC Detector, Join Game, or Key Generator.
+Upgraded does **not** include MC Detector, Join Game, or Key Generator.
 
 ### Deluxe — `PK_`
 
@@ -101,7 +101,6 @@ Upgraded does **not** include LG Exchange, MC Detector, Join Game, or Key Genera
 - User Adding
 - Cards
 - History
-- LG Exchange
 - MC Detector
 - Join Game
 - All normal product features except Key Generator
@@ -116,7 +115,6 @@ DEV has the full product plus Key Generator / key administration.
 
 - Monitor
 - Leaderboard
-- LG Exchange
 - History
 - User Adding
 - LG Cards
@@ -157,6 +155,8 @@ A logged-in CK session periodically refreshes its account permissions. `site/ck-
 
 RBX Detect includes presence, totals, charts, recent sessions/events, leaderboard, retained game history, and key-scoped tracked-user management. Presence states include `OFFLINE`, `WEBSITE`, `IN GAME`, `STUDIO`, and `INVISIBLE`.
 
+Monitor distinguishes fresh Roblox reports from missing or stale observations. When Roblox reports a player in game but omits experience details, Monitor reports that the experience is unavailable. The visibility-gap rule is evaluated separately from session totals.
+
 ### Static two-minute RBX polling
 
 RBX presence is scheduled independently at a static **every-2-minute** cadence (`*/2 * * * *`). The core scheduler may continue running other workloads more frequently; it no longer launches RBX presence polls.
@@ -176,10 +176,6 @@ RBX session/event history uses a hot + archive design:
 - archives retain the existing two-month history window.
 
 The initial migration moved 1,011 older session rows and 2,965 older event rows into compressed archives while preserving the same logical totals: 1,926 visible sessions and 5,597 visible events.
-
-## LG Exchange
-
-The Exchange is a closed paper-market simulation around Roblox player markets. It has no cash value or payout. Compact summary/history reads and frontend GET de-duplication are used to reduce egress.
 
 ## LG Cards
 
@@ -202,7 +198,6 @@ MC Detector tracks configured Java/Bedrock servers, server state/history, availa
 | `site/ck-key-manager.js` | Verified DEV key generator/config editor and CK permission switches |
 | `site/key-delete-runtime.js` | Confirmed permanent non-DEV key deletion UI |
 | `site/ck-feature-guard.js` | Redirects away from disabled CK pages and renders the all-off state |
-| `site/exchange.js` | LG Exchange UI |
 | `site/cards.js` | Core Cards UI/API integration |
 | `site/mc-detector.js` | MC detector core UI |
 | `site/rbx-metro.js` | RBX Metro/DORFic presentation; body-class observer only reacts to real `mc-mode` transitions |

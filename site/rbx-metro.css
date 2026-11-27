@@ -91,15 +91,6 @@ body.rbx-metro .lb-table tbody tr:nth-child(1) td{background:rgba(255,60,95,.035
 body.rbx-metro .lb-bar-track{height:5px;border-radius:0;background:#222231}.rbx-metro .lb-bar-fill{border-radius:0;background:linear-gradient(90deg,var(--accent2),var(--accent))}
 body.rbx-metro .lb-time{color:#65efff}
 
-/* Exchange */
-body.rbx-metro .ex-banner{border-left:4px solid var(--accent);font-family:var(--font-ui);font-size:.64rem;letter-spacing:.025em;color:#a4a6b8}
-body.rbx-metro .ex-row{border-bottom-color:#242437;transition:.13s ease}.rbx-metro .ex-row:hover{background:rgba(0,229,255,.035);padding-left:.75rem}.rbx-metro .ex-row.active{background:rgba(0,229,255,.055);box-shadow:inset 4px 0 0 var(--accent2)}
-body.rbx-metro .ex-symbol{font-family:var(--font-ui);font-size:.86rem}.rbx-metro .ex-name{font-size:.72rem}
-body.rbx-metro .ex-chart-shell{border-radius:0;background:#08080d;border-color:#27273a}
-body.rbx-metro .ex-stat,body.rbx-metro .ex-pressure>div{border-radius:0;background:#101019;border-color:#29293d}
-body.rbx-metro .ex-range{background:transparent;border-color:#333347}.rbx-metro .ex-range.active{background:var(--accent2);border-color:var(--accent2);color:#061014}
-body.rbx-metro .ex-buy{background:var(--green);border-color:var(--green);color:#051006}.rbx-metro .ex-sell{background:var(--accent);border-color:var(--accent);color:white}
-
 /* Cards shell; collectible artwork remains intact */
 body.rbx-metro .cg-title{font-size:1.45rem;font-weight:300;letter-spacing:-.035em;text-transform:lowercase}.rbx-metro .cg-sub{font-family:var(--font-ui);font-size:.68rem;line-height:1.55}.rbx-metro .cg-wallet{border-radius:0;background:#0d0d14;border-color:#303046;font-family:var(--font-ui)}
 body.rbx-metro .cg-tabs{gap:.25rem}.rbx-metro .cg-tab{border:0;border-bottom:3px solid transparent;padding:.55rem .7rem;background:transparent;color:#777a91}.rbx-metro .cg-tab:hover{color:#fff}.rbx-metro .cg-tab.active{color:white;border-bottom-color:var(--accent2)}

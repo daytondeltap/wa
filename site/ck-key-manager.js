@@ -4,7 +4,6 @@
   const FEATURES = [
     ['monitor', 'Monitor'],
     ['leaderboard', 'Leaderboard'],
-    ['exchange', 'LG Exchange'],
     ['history', 'History'],
     ['adduser', 'User Adding'],
     ['cards', 'LG Cards'],

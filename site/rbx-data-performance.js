@@ -5,7 +5,7 @@
   const imgAttrs='loading="lazy" decoding="async" fetchpriority="low"';
   const cache={presence:'',totals:'',charts:'',games:'',sessions:'',events:'',leaderboard:''};
   const virtual=new WeakMap();
-  let monitorBusy=false,pendingFull=false,lastHeavy=0,lastFilter='';
+  let monitorBusy=false,pendingFull=false,lastHeavy=0,lastFilter='',lastPresence=null;
 
   function fastSig(rows,fields){
     if(!Array.isArray(rows))return String(rows??'');
@@ -20,9 +20,13 @@
     }
     return `${rows.length}:${h.toString(36)}`;
   }
-  function presenceSig(data){
+  function presenceSig(data, now){
     const users=data?.users||[],states=data?.states||{};
-    return fastSig(users.map(u=>{const s=states[String(u.id)]||{};return{id:u.id,name:u.name,p:s.presence_type,l:s.last_location,pl:s.place_id,g:s.game_id,t:s.updated_at,a:data?.avatars?.[String(u.id)]||''}}),['id','name','p','l','pl','g','t','a']);
+    return fastSig(users.map(u=>{
+      const s=states[String(u.id)]||{};
+      return {id:u.id,name:u.name,p:s.presence_type,l:s.last_location,pl:s.place_id,g:s.game_id,t:s.updated_at,
+        observation:s.visibility_observation,instanceUnavailable:s.instance_unavailable,stale:now-Date.parse(s.updated_at)>300000,a:data?.avatars?.[String(u.id)]||''};
+    }),['id','name','p','l','pl','g','t','observation','instanceUnavailable','stale','a']);
   }
 
   function ensurePresenceDelegation(){
@@ -34,14 +38,15 @@
   if(typeof renderPresence==='function')renderPresence=function(data){
     const users=data?.users||[],states=data?.states||{},avatars=data?.avatars||{},grid=q('#presence-grid');
     if(!grid)return;
-    const sig=presenceSig(data);if(sig===cache.presence)return;cache.presence=sig;
+    const now=Date.now(),sig=presenceSig(data,now)+Boolean(account?.can_join);if(sig===cache.presence)return;cache.presence=sig;
     ensurePresenceDelegation();
     if(!users.length){grid.innerHTML='<div class="empty">No tracked users</div>';return}
     q('.empty',grid)?.remove();
-    const label={0:['offline','OFFLINE','status-offline'],1:['website','ON WEBSITE','status-website'],2:['ingame','IN GAME','status-ingame'],3:['studio','IN STUDIO','status-studio'],4:['invisible','INVISIBLE','status-invisible']};
     const keep=new Set();
     for(const u of users){
-      const id=String(u.id),s=states[id]||{presence_type:0},info=label[Number(s.presence_type)]||label[0],img=avatars[id]||'',join=Number(s.presence_type)===2&&account?.can_join&&s.place_id;
+      const id=String(u.id),s=states[id]||{},img=avatars[id]||'';
+      const {label:info,detail,actionable}=describePresence(s,now);
+      const join=actionable&&account?.can_join;
       keep.add(id);
       let card=q(`.presence-card[data-rbx-user="${id}"]`,grid);
       if(!card){
@@ -63,8 +68,8 @@
       if(name&&name.textContent!==String(u.name||''))name.textContent=u.name||'';
       if(tid&&tid.textContent!==id)tid.textContent=id;
       if(status){status.className=`card-status ${info[2]}`;if(status.textContent!==info[1])status.textContent=info[1]}
-      if(game){const text=s.last_location?`🎮 ${s.last_location}`:'';game.hidden=!text;if(game.textContent!==text)game.textContent=text}
-      if(time){const text=s.updated_at?'Updated '+fmtTs(s.updated_at):'Waiting for first poll';if(time.textContent!==text)time.textContent=text}
+      if(game){game.hidden=!detail;if(game.textContent!==detail)game.textContent=detail}
+      if(time){const text=s.updated_at?'Updated '+fmtTs(s.updated_at):'';if(time.textContent!==text)time.textContent=text}
     }
     qa('.presence-card[data-rbx-user]',grid).forEach(card=>{if(!keep.has(card.dataset.rbxUser))card.remove()});
   };
@@ -79,8 +84,9 @@
     const lite=perf()==='lite';
     return {responsive:true,maintainAspectRatio:false,animation:false,devicePixelRatio:Math.min(window.devicePixelRatio||1,lite?1:1.5),interaction:{mode:'nearest',intersect:false},plugins:{legend:{display:false}},elements:{point:{radius:lite?0:2,hoverRadius:3}},scales:{x:{ticks:{color:'#8888aa',maxTicksLimit:lite?7:12},grid:{display:!lite,color:'#1e1e2e'}},y:{ticks:{color:'#8888aa',maxTicksLimit:lite?5:8,callback:v=>fmtSeconds(v)},grid:{display:!lite,color:'#1e1e2e'}}}};
   }
-  if(typeof renderCharts==='function')renderCharts=function(data){
-    if(typeof Chart==='undefined')return;
+  if(typeof renderCharts==='function')renderCharts=async function(data){
+    const Chart=await loadChart();
+    if(!Chart)return;
     const d=data?.daily||[],h=data?.hourly||[],sig=fastSig(d,['day','total_seconds'])+'|'+fastSig(h,['hour','total_seconds']);if(sig===cache.charts)return;cache.charts=sig;
     const opts=chartOptions();
     if(!dailyChart)dailyChart=new Chart(q('#daily-chart'),{type:'line',data:{labels:[],datasets:[{data:[],borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.08)',fill:true,tension:.2,pointRadius:opts.elements.point.radius}]},options:opts});
@@ -140,13 +146,36 @@
     if(monitorBusy){if(mark)pendingFull=true;return}
     monitorBusy=true;
     try{
-      const uid=q('#user-filter')?.value||'',days=q('#days-filter')?.value||'',filter=`${uid}|${days}`,changed=filter!==lastFilter,mode=perf(),heavyEvery=mode==='lite'?30000:mode==='balanced'?20000:10000,full=Boolean(mark||changed||Date.now()-lastHeavy>=heavyEvery);
+      const uid=q('#user-filter')?.value||'',days=q('#days-filter')?.value||'',filter=JSON.stringify([SITE_KEY,account.key_id,uid,days]),changed=filter!==lastFilter,full=Boolean(mark||changed||Date.now()-lastHeavy>=60000);
       if(changed)qa('#sessions-table,#events-table').forEach(t=>{const w=t.closest('.table-wrap');if(w)w.scrollTop=0});
-      const requests=[apiGet('/monitor/presence',{user_id:uid}),apiGet('/monitor/totals',{user_id:uid})];
-      if(full)requests.push(apiGet('/monitor/charts',{user_id:uid,days:days||30}),apiGet('/monitor/top_games',{user_id:uid,days}),apiGet('/monitor/sessions',{user_id:uid,days}),apiGet('/monitor/events',{user_id:uid}));
-      const out=await Promise.all(requests),presence=out[0],totals=out[1];
-      renderPresence(presence);renderTotals(totals,presence?.avatars||{});
-      if(full){renderCharts(out[2]);renderGames(out[3]);renderSessions(out[4]);renderEvents(out[5]);lastHeavy=Date.now();lastFilter=filter}
+      const isCurrentFilter = () => filter === JSON.stringify([SITE_KEY,account?.key_id,q('#user-filter')?.value||'',q('#days-filter')?.value||'']);
+      const presence = apiGet('/monitor/presence',{user_id:uid}).then(data => {
+        if (isCurrentFilter()) { lastPresence={filter,data}; renderPresence(data); }
+        return data;
+      });
+      const requests=full?[
+        apiGet('/monitor/totals',{user_id:uid}),
+        apiGet('/monitor/charts',{user_id:uid,days:days||30}),
+        apiGet('/monitor/top_games',{user_id:uid,days}),
+        apiGet('/monitor/sessions',{user_id:uid,days}),
+        apiGet('/monitor/events',{user_id:uid})
+      ]:[];
+      const [latest,...out]=await Promise.allSettled([presence,...requests]);
+      if(!isCurrentFilter())return;
+      if(full){
+        const [totals,charts,games,sessions,events]=out;
+        if(totals.status==='fulfilled')renderTotals(totals.value,latest.value?.avatars||{});
+        if(charts.status==='fulfilled')void renderCharts(charts.value);
+        if(games.status==='fulfilled')renderGames(games.value);
+        if(sessions.status==='fulfilled')renderSessions(sessions.value);
+        if(events.status==='fulfilled')renderEvents(events.value);
+        lastHeavy=Date.now();
+        lastFilter=filter;
+      }
+      if(latest.status==='rejected'){
+        if(lastPresence?.filter===filter)renderPresence(lastPresence.data);
+        throw latest.reason;
+      }
       if(mark&&q('#last-update'))q('#last-update').textContent=new Date().toLocaleTimeString();
     }catch(e){if(mark||!document.hidden)toast(e.message)}finally{
       monitorBusy=false;

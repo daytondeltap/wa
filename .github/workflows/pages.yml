@@ -81,20 +81,19 @@ jobs:
           s = s.replace(old, "window.LG_LEGACY_SITE_KEY=SITE_KEY;", 1)
           tags = [
               '<script src="fetch-bootstrap.js"></script>',
-              '<script src="standard-key-login.js?v=20260916-3"></script>',
-              '<script src="auth-ck.js"></script>',
+              '<script src="standard-key-login.js?v=20261127-1"></script>',
+              '<script src="auth-ck.js?v=20261127-1"></script>',
               '<script src="login-resilience.js?v=20260916-4"></script>',
-              '<script src="ck-key-manager.js?v=20260916-3"></script>',
+              '<script src="ck-key-manager.js?v=20261127-1"></script>',
               '<script src="key-delete-runtime.js?v=20260916-4"></script>',
-              '<script src="egress-runtime.js?v=20260916-4"></script>',
-              '<script src="exchange.js"></script>',
-              '<script src="cards.js"></script>',
+              '<script src="egress-runtime.js?v=20261127-1"></script>',
+              '<script src="cards.js?v=20261127-1"></script>',
               '<script src="profile-verify.js"></script>',
               '<script src="profile-verify-bootstrap.js"></script>',
               '<script src="cards-polish.js"></script>',
               '<script src="dev-cards.js"></script>',
               '<script src="custom-card-tiers.js"></script>',
-              '<script src="mc-detector.js"></script>',
+              '<script src="mc-detector.js?v=20261127-1"></script>',
               '<script src="mc-detector-session.js"></script>',
               '<script src="mc-player-lists.js"></script>',
               '<script src="mc-aero-final.js"></script>',
@@ -102,8 +101,8 @@ jobs:
               '<script src="rbx-metro.js?v=20260916-1"></script>',
               '<script src="dev-presence-simulation.js?v=20260929-3"></script>',
               '<script src="performance-runtime.js"></script>',
-              '<script src="rbx-data-performance.js"></script>',
-              '<script src="ck-feature-guard.js?v=20260904-1"></script>',
+              '<script src="rbx-data-performance.js?v=20261127-1"></script>',
+              '<script src="ck-feature-guard.js?v=20261127-1"></script>',
           ]
           for tag in tags:
               if tag not in s:
@@ -116,18 +115,18 @@ jobs:
           set -euo pipefail
           find site -maxdepth 1 -name '*.js' -print0 | sort -z | xargs -0 -n1 node --check
           grep -q 'fetch-bootstrap.js' site/index.html
-          grep -q 'standard-key-login.js?v=20260916-3' site/index.html
+          grep -q 'standard-key-login.js?v=20261127-1' site/index.html
           grep -q 'auth-ck.js' site/index.html
           grep -q 'login-resilience.js?v=20260916-4' site/index.html
-          grep -q 'ck-key-manager.js?v=20260916-3' site/index.html
+          grep -q 'ck-key-manager.js?v=20261127-1' site/index.html
           grep -q 'key-delete-runtime.js?v=20260916-4' site/index.html
-          grep -q 'egress-runtime.js?v=20260916-4' site/index.html
+          grep -q 'egress-runtime.js?v=20261127-1' site/index.html
           grep -q 'rbx-metro.js?v=20260916-1' site/index.html
           grep -q 'dev-presence-simulation.js?v=20260929-3' site/index.html
           python - <<'PY'
           from pathlib import Path
           s = Path('site/index.html').read_text(encoding='utf-8')
-          standard = s.index('standard-key-login.js?v=20260916-3')
+          standard = s.index('standard-key-login.js?v=20261127-1')
           auth_ck = s.index('auth-ck.js')
           if standard >= auth_ck:
               raise SystemExit('standard-key-login.js must load before auth-ck.js')
