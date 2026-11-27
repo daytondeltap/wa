@@ -67,16 +67,16 @@ jobs:
               '<script src="login-resilience.js?v=20260916-4"></script>',
               '<script src="ck-key-manager.js?v=20261127-2"></script>',
               '<script src="key-delete-runtime.js?v=20260916-4"></script>',
-              '<script src="egress-runtime.js?v=20261127-2"></script>',
+              '<script src="egress-runtime.js?v=20261127-3"></script>',
               '<script src="mc-detector.js?v=20261127-2"></script>',
               '<script src="mc-detector-session.js"></script>',
               '<script src="mc-player-lists.js"></script>',
               '<script src="mc-aero-final.js"></script>',
               '<script src="mc-frutiger-aero-overhaul.js"></script>',
               '<script src="rbx-metro.js?v=20260916-1"></script>',
-              '<script src="dev-presence-simulation.js?v=20260929-3"></script>',
+              '<script src="dev-presence-simulation.js?v=20261127-1"></script>',
               '<script src="performance-runtime.js"></script>',
-              '<script src="rbx-data-performance.js?v=20261127-2"></script>',
+              '<script src="rbx-data-performance.js?v=20261127-3"></script>',
               '<script src="ck-feature-guard.js?v=20261127-2"></script>',
           ]
           for tag in tags:
@@ -95,9 +95,9 @@ jobs:
           grep -q 'login-resilience.js?v=20260916-4' site/index.html
           grep -q 'ck-key-manager.js?v=20261127-2' site/index.html
           grep -q 'key-delete-runtime.js?v=20260916-4' site/index.html
-          grep -q 'egress-runtime.js?v=20261127-2' site/index.html
+          grep -q 'egress-runtime.js?v=20261127-3' site/index.html
           grep -q 'rbx-metro.js?v=20260916-1' site/index.html
-          grep -q 'dev-presence-simulation.js?v=20260929-3' site/index.html
+          grep -q 'dev-presence-simulation.js?v=20261127-1' site/index.html
           python - <<'PY'
           from pathlib import Path
           s = Path('site/index.html').read_text(encoding='utf-8')

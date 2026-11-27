@@ -1,0 +1,49 @@
+#page-monitor {--monitor-line:color-mix(in srgb,var(--text) 15%,var(--surface))}
+#page-monitor [hidden],body:not(.mc-mode) #app:has(#page-monitor.active) #last-update {display:none!important}
+.monitor-heading,#page-monitor .monitor-filters,#page-monitor .monitor-workspace {max-width:1460px;margin:0 auto}
+.monitor-heading {display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:.45rem;padding:1.5rem clamp(1rem,3vw,2.25rem) .5rem}
+.monitor-heading h1 {font:800 clamp(1.75rem,4vw,2.6rem)/1.05 var(--font-ui);letter-spacing:-.045em}
+.monitor-update,.monitor-message {color:var(--subtext);font-size:.8rem}
+.monitor-message {padding:.65rem 0;grid-column:1/-1}
+#page-monitor .monitor-filters {align-items:end;gap:.65rem;padding:.55rem clamp(1rem,3vw,2.25rem) .9rem;background:none;border:0}
+.monitor-filters label,.monitor-section-head label {display:grid;gap:.3rem;color:var(--subtext);font:600 .75rem var(--font-ui);text-transform:none;letter-spacing:0;min-width:0}
+#page-monitor :is(select,input[type="search"],.monitor-filters .btn) {min-height:2.5rem;max-width:100%}
+#page-monitor .monitor-workspace {padding-top:.2rem;gap:.8rem}
+.monitor-views,.monitor-status-filters {display:flex;align-items:center;flex-wrap:wrap;gap:.45rem}
+.monitor-views {border-bottom:1px solid var(--monitor-line);padding-bottom:.55rem}
+.monitor-views button,.monitor-status-filters button {
+  min-height:2.3rem;padding:.42rem .7rem;border-radius:7px;border:1px solid var(--monitor-line);
+  font:700 .82rem var(--font-ui);color:var(--subtext);background:var(--surface);cursor:pointer
+}
+.monitor-views button[aria-selected="true"],.monitor-status-filters button[aria-pressed="true"] {
+  border-color:var(--accent2);color:var(--text);background:color-mix(in srgb,var(--accent2) 8%,var(--surface))
+}
+.monitor-status-filters {margin:.2rem 0 .85rem}
+.monitor-status-filters span {padding-left:.2rem;font-variant-numeric:tabular-nums}
+.monitor-section-head {display:flex;align-items:end;flex-wrap:wrap;justify-content:space-between;gap:.55rem;margin:.4rem 0 .8rem}
+.monitor-section-head h2 {font:800 clamp(1.22rem,3vw,1.5rem) var(--font-ui)}
+.monitor-section-head input {background:var(--bg);border:1px solid var(--monitor-line);border-radius:7px;color:var(--text);font:400 .85rem var(--font-ui);padding:.45rem .65rem;width:min(230px,100%)}
+#page-monitor :focus-visible {outline:2px solid var(--accent2);outline-offset:2px}
+#page-monitor .presence-card {min-width:0;transition:none;box-shadow:none;backdrop-filter:none;cursor:default;contain:none}
+#page-monitor .presence-card:hover {transform:none;box-shadow:none}
+#page-monitor .card-username,#page-monitor .card-game {white-space:normal;overflow-wrap:anywhere}
+#page-monitor .status-offline {color:var(--subtext)}
+.monitor-card-actions {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.55rem;margin-top:.6rem}
+.monitor-card-actions .btn {margin-left:auto;min-height:2.25rem;white-space:normal;position:relative;z-index:1}
+.monitor-pager {display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:.65rem;margin-top:.85rem;color:var(--subtext);font-size:.75rem}
+.monitor-pager .btn:disabled {opacity:.48;cursor:default}
+.monitor-playtime-grid {display:grid;gap:.85rem}
+.monitor-playtime-grid h3 {margin:0 0 .6rem;font-size:1rem}
+#page-monitor .monitor-playtime-grid .panel {min-width:0}
+.monitor-chart {height:clamp(180px,27vw,240px);position:relative}
+#page-monitor .monitor-chart canvas {max-height:none}
+#page-monitor .user-totals {display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.55rem}
+#page-monitor .user-tile {min-width:0;padding:.65rem .75rem;overflow-wrap:anywhere}
+#page-monitor .table-wrap td {overflow-wrap:anywhere}
+@media (max-width:700px) {
+  .monitor-section-head label {flex:1 0 100%}
+  .monitor-section-head input {width:100%}
+  .monitor-heading {padding-top:1rem}
+  #page-monitor .card-grid {grid-template-columns:repeat(auto-fill,minmax(min(100%,205px),1fr));gap:.6rem}
+  #page-monitor .monitor-workspace>.panel {padding:.8rem}
+}

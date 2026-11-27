@@ -74,6 +74,7 @@
   #activity-code-dialog .activity-code-actions {display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.65rem}
 </style>
 <link rel="stylesheet" href="history.css?v=20261127-1">
+<link rel="stylesheet" href="monitor.css?v=1">
 <script defer src="history.js?v=20261127-1"></script>
 <script defer src="activity-checkin.js?v=1"></script>
 </head>
@@ -109,10 +110,14 @@
 <nav class="page-nav" id="page-nav"></nav>
 
 <div class="page active" id="page-monitor">
-  <div class="filter-bar">
-    <label>User</label><select id="user-filter"><option value="">All Users</option></select>
-    <label>Period</label><select id="days-filter"><option value="">All time</option><option value="7">7 days</option><option value="30" selected>30 days</option><option value="60">60 days</option></select>
-    <button class="btn btn-accent" id="manual-refresh">↺ Refresh</button>
+  <div class="monitor-heading">
+    <h1>Roblox Monitor</h1>
+    <span id="monitor-update" class="monitor-update" role="status"></span>
+  </div>
+  <div class="filter-bar monitor-filters">
+    <label>Player<select id="user-filter"><option value="">All players</option></select></label>
+    <label id="monitor-period" hidden>Period<select id="days-filter"><option value="">All retained history</option><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="60">Last 60 days</option></select></label>
+    <button type="button" class="btn" id="manual-refresh">Refresh</button>
     <button type="button" class="btn" id="activity-code-open" hidden>Request check-in</button>
   </div>
   <dialog id="activity-code-dialog" aria-labelledby="activity-code-title">
@@ -131,15 +136,58 @@
     </div>
     <p id="activity-code-status" role="status"></p>
   </dialog>
-  <div class="main">
-    <section><div class="sec-title">Live Presence</div><div class="card-grid" id="presence-grid"><div class="empty">Loading…</div></div></section>
-    <section><div class="sec-title">All-Time Totals</div><div class="user-totals" id="user-totals"><div class="empty">Loading…</div></div></section>
-    <div class="chart-row"><div class="panel"><div class="sec-title">Daily Playtime</div><canvas id="daily-chart"></canvas></div><div class="panel"><div class="sec-title">Activity by Hour (UTC)</div><canvas id="hourly-chart"></canvas></div></div>
-    <section class="panel"><div class="sec-title">Top Games</div><div class="table-wrap"><table id="games-table"><thead><tr><th>Game</th><th>Sessions</th><th>Total Time</th><th>Avg Session</th><th>Longest</th></tr></thead><tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></section>
-    <section class="panel">
-      <div class="tab-row"><button class="tab active" data-inner-tab="sessions">Recent Sessions</button><button class="tab" data-inner-tab="events">Event Log</button></div>
-      <div id="tab-sessions"><div class="table-wrap"><table id="sessions-table"><thead><tr><th>User</th><th>Game</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div>
-      <div id="tab-events" style="display:none"><div class="table-wrap"><table id="events-table"><thead><tr><th>Time</th><th>User</th><th>Event</th><th>From</th><th>To</th></tr></thead><tbody><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div></div>
+  <div class="main monitor-workspace">
+    <div class="monitor-views" role="tablist" aria-label="Monitor views">
+      <button type="button" id="monitor-tab-live" role="tab" aria-selected="true" aria-controls="monitor-live" data-monitor-view="live">Live</button>
+      <button type="button" id="monitor-tab-playtime" role="tab" aria-selected="false" aria-controls="monitor-playtime" tabindex="-1" data-monitor-view="playtime">Playtime</button>
+      <button type="button" id="monitor-tab-sessions" role="tab" aria-selected="false" aria-controls="monitor-sessions" tabindex="-1" data-monitor-view="sessions">Sessions</button>
+      <button type="button" id="monitor-tab-events" role="tab" aria-selected="false" aria-controls="monitor-events" tabindex="-1" data-monitor-view="events">Event log</button>
+    </div>
+    <p id="monitor-message" class="monitor-message" role="status" hidden></p>
+    <section id="monitor-live" role="tabpanel" aria-labelledby="monitor-tab-live">
+      <div class="monitor-section-head">
+        <h2>Live presence</h2>
+        <label>Find a player<input id="monitor-search" type="search" placeholder="Name or user ID" autocomplete="off"></label>
+      </div>
+      <div class="monitor-status-filters" aria-label="Filter by status" role="group">
+        <button type="button" data-monitor-status="all" aria-pressed="true">All <span>0</span></button>
+        <button type="button" data-monitor-status="game" aria-pressed="false">In game <span>0</span></button>
+        <button type="button" data-monitor-status="online" aria-pressed="false">Online <span>0</span></button>
+        <button type="button" data-monitor-status="offline" aria-pressed="false">Reported offline <span>0</span></button>
+        <button type="button" data-monitor-status="other" aria-pressed="false">Other <span>0</span></button>
+      </div>
+      <div class="card-grid" id="presence-grid"><p class="monitor-message">Loading live presence…</p></div>
+      <div class="monitor-pager" id="monitor-live-pager" aria-label="Player pages" role="group" hidden>
+        <button type="button" class="btn" data-page-step="-1">Previous</button><span aria-live="polite"></span><button type="button" class="btn" data-page-step="1">Next</button>
+      </div>
+    </section>
+    <section id="monitor-playtime" role="tabpanel" aria-labelledby="monitor-tab-playtime" hidden>
+      <div class="monitor-section-head"><h2>Playtime</h2></div>
+      <div class="monitor-playtime-grid">
+        <section class="panel monitor-totals">
+          <h3>All-time totals</h3>
+          <div id="user-totals" class="user-totals"></div>
+          <div class="monitor-pager" id="monitor-totals-pager" aria-label="Total pages" role="group" hidden>
+            <button type="button" class="btn" data-page-step="-1">Previous</button><span aria-live="polite"></span><button type="button" class="btn" data-page-step="1">Next</button>
+          </div>
+        </section>
+        <p id="monitor-chart-scope" class="monitor-update" hidden>Charts cover the last 30 days.</p>
+        <div class="chart-row" id="monitor-chart-row" hidden>
+          <section class="panel"><h3>Daily playtime</h3><div class="monitor-chart"><canvas id="daily-chart" role="img" aria-label="Daily playtime"></canvas></div></section>
+          <section class="panel"><h3>Activity by hour (UTC)</h3><div class="monitor-chart"><canvas id="hourly-chart" role="img" aria-label="Playtime by hour, UTC"></canvas></div></section>
+        </div>
+        <section class="panel"><h3>Top games</h3><div class="table-wrap" tabindex="0" aria-label="Top games table"><table id="games-table"><thead><tr><th>Game</th><th>Sessions</th><th>Total Time</th><th>Avg Session</th><th>Longest</th></tr></thead><tbody></tbody></table></div></section>
+      </div>
+    </section>
+    <section class="panel" id="monitor-sessions" role="tabpanel" aria-labelledby="monitor-tab-sessions" hidden>
+      <div class="monitor-section-head"><h2>Recent sessions</h2><label>Find a session<input id="monitor-sessions-search" type="search" placeholder="Player or game" autocomplete="off"></label></div>
+      <div class="table-wrap" tabindex="0" aria-label="Sessions table"><table id="sessions-table"><thead><tr><th>User</th><th>Game</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody></tbody></table></div>
+      <div class="monitor-pager" id="monitor-sessions-pager" aria-label="Session pages" role="group" hidden><button type="button" class="btn" data-page-step="-1">Previous</button><span aria-live="polite"></span><button type="button" class="btn" data-page-step="1">Next</button></div>
+    </section>
+    <section class="panel" id="monitor-events" role="tabpanel" aria-labelledby="monitor-tab-events" hidden>
+      <div class="monitor-section-head"><h2>Event log</h2><label>Find an event<input id="monitor-events-search" type="search" placeholder="Player, event, or game" autocomplete="off"></label></div>
+      <div class="table-wrap" tabindex="0" aria-label="Events table"><table id="events-table"><thead><tr><th>Time</th><th>User</th><th>Event</th><th>From</th><th>To</th></tr></thead><tbody></tbody></table></div>
+      <div class="monitor-pager" id="monitor-events-pager" aria-label="Event pages" role="group" hidden><button type="button" class="btn" data-page-step="-1">Previous</button><span aria-live="polite"></span><button type="button" class="btn" data-page-step="1">Next</button></div>
     </section>
   </div>
 </div>
@@ -208,7 +256,7 @@
 <script>
 const API='https://jwjxhxvahgrpkvaoyrzw.supabase.co/functions/v1/lg-api';
 let SITE_KEY=sessionStorage.getItem('lg_site_key')||'', account=null, activePage='monitor', refreshTimer=null;
-let dailyChart=null,hourlyChart=null,joinTarget=null,chartLoading;
+let joinTarget=null,chartLoading;
 const RBX_REFRESH_MS = 20000;
 function loadChart() {
   if (window.Chart) return Promise.resolve(window.Chart);
@@ -228,7 +276,7 @@ function fmtTs(ts){if(!ts)return '—';return new Date(ts).toLocaleString(undefi
 function fmtHistTs(ts){if(!ts)return '—';return new Date(ts).toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
 function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2600)}
 async function api(path,opts={}){const headers=new Headers(opts.headers||{});headers.set('x-site-key',SITE_KEY);if(opts.body&&!headers.has('content-type'))headers.set('content-type','application/json');const r=await fetch(API+path,{...opts,headers});let j=null;try{j=await r.json()}catch{}if(r.status===401){logout();throw new Error('Access key rejected')}if(!r.ok)throw new Error(j?.error||j?.detail||`Request failed (${r.status})`);return j}
-function apiGet(path,params={}){const q=new URLSearchParams(Object.entries(params).filter(([,v])=>v!==null&&v!==undefined&&v!==''));return api(path+(q.toString()?`?${q}`:''))}
+function apiGet(path,params={},opts){const q=new URLSearchParams(Object.entries(params).filter(([,v])=>v!==null&&v!==undefined&&v!==''));return api(path+(q.toString()?`?${q}`:''),opts)}
 
 async function login(key){SITE_KEY=key.trim();if(!SITE_KEY)throw new Error('Enter an access key');account=await api('/auth',{method:'POST'});sessionStorage.setItem('lg_site_key',SITE_KEY);$('auth').classList.add('hidden');$('app').classList.remove('hidden');applyTier();buildNav();await refreshTracked();await switchPage((account.tabs||[])[0]||'monitor');clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(activePage==='monitor')refreshMonitor(false)},RBX_REFRESH_MS)}
 function logout(){clearInterval(refreshTimer);sessionStorage.removeItem('lg_site_key');SITE_KEY='';account=null;$('app').classList.add('hidden');$('auth').classList.remove('hidden');$('login-key').value=''}
@@ -236,9 +284,9 @@ function applyTier(){const map={DEV:['DEV','tb-dev'],'PK_':['DELUXE','tb-pk'],'U
 function buildNav(){const labels={monitor:'Monitor',leaderboard:'Leaderboard',history:'History',adduser:'User Adding',keys:'Key Generator'};$('page-nav').innerHTML='';for(const tab of account.tabs||[]){if(!labels[tab])continue;const b=document.createElement('button');b.className='page-nav-btn';b.dataset.tab=tab;b.textContent=labels[tab];b.onclick=()=>switchPage(tab,b);$('page-nav').appendChild(b)}}
 async function switchPage(name,btn){activePage=name;document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));const page=$('page-'+name);if(page)page.classList.add('active');document.querySelectorAll('.page-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));if(btn)btn.classList.add('active');if(name==='monitor')await refreshMonitor();if(name==='leaderboard')await refreshLeaderboard();if(name==='history')await refreshHistory();if(name==='adduser')await refreshTracked();if(name==='keys')await refreshKeys()}
 
-async function refreshTracked(){if(!account||!(account.tabs||[]).some(x=>['monitor','history','adduser'].includes(x)))return;const rows=await api('/tracked_users');const options=['<option value="">All Users</option>',...rows.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.id})</option>`)].join('');if($('user-filter'))$('user-filter').innerHTML=options;const historyFilter=$('hist-user-filter');if(historyFilter){const selected=historyFilter.value;historyFilter.innerHTML=options;historyFilter.value=[...historyFilter.options].some(option=>option.value===selected)?selected:'';}if($('tracked-list')){$('tracked-list').innerHTML=rows.length?rows.map(x=>`<div class="tracked-row"><div class="grow"><div>${esc(x.name)}</div><div class="tracked-id">${x.id}</div></div><button class="btn danger" data-remove="${x.id}">Remove</button></div>`).join(''):'<div class="empty">No tracked users</div>';document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Stop tracking this player?'))return;await api('/tracked_users/'+b.dataset.remove,{method:'DELETE'});await refreshTracked();toast('Player removed')})}}
+async function refreshTracked(){if(!account||!(account.tabs||[]).some(x=>['monitor','history','adduser'].includes(x)))return;const rows=await api('/tracked_users');const options=['<option value="">All Users</option>',...rows.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.id})</option>`)].join('');for(const id of ['user-filter','hist-user-filter']){const picker=$(id);if(!picker)continue;const selected=picker.value;picker.innerHTML=options;picker.value=[...picker.options].some(option=>option.value===selected)?selected:'';}if($('tracked-list')){$('tracked-list').innerHTML=rows.length?rows.map(x=>`<div class="tracked-row"><div class="grow"><div>${esc(x.name)}</div><div class="tracked-id">${x.id}</div></div><button class="btn danger" data-remove="${x.id}">Remove</button></div>`).join(''):'<div class="empty">No tracked users</div>';document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Stop tracking this player?'))return;await api('/tracked_users/'+b.dataset.remove,{method:'DELETE'});await refreshTracked();toast('Player removed')})}}
 
-async function refreshMonitor(mark=true){try{const uid=$('user-filter').value||'',days=$('days-filter').value||'';const [presence,totals,charts,games,sessions,events]=await Promise.all([apiGet('/monitor/presence',{user_id:uid}),apiGet('/monitor/totals',{user_id:uid}),apiGet('/monitor/charts',{user_id:uid,days:days||30}),apiGet('/monitor/top_games',{user_id:uid,days}),apiGet('/monitor/sessions',{user_id:uid,days}),apiGet('/monitor/events',{user_id:uid})]);renderPresence(presence);renderTotals(totals,presence.avatars||{});renderCharts(charts);renderGames(games);renderSessions(sessions);renderEvents(events);if(mark)$('last-update').textContent=new Date().toLocaleTimeString()}catch(e){toast(e.message)}}
+async function refreshMonitor(mark=true){return window.LGMonitor?.refresh(mark)}
 const presenceLabels = {
   0: ['offline','REPORTED OFFLINE','status-offline'],
   1: ['website','ON WEBSITE','status-website'],
@@ -267,26 +315,6 @@ function activityCheckinLabel(timestamp, now=Date.now()) {
   if (!Number.isFinite(verified) || now - verified >= 86_400_000) return '';
   return 'Activity verified at ' + fmtTs(timestamp);
 }
-function renderPresence(data) {
-  window.LGActivityCheckin?.update(data);
-  const users = data.users || [], states = data.states || {}, avatars = data.avatars || {};
-  const grid = $('presence-grid');
-  grid.innerHTML = users.map(u => {
-    const s = states[String(u.id)];
-    const {label, detail, actionable} = describePresence(s);
-    const img = avatars[String(u.id)] || '';
-    const checkin = activityCheckinLabel(data.activity_checkins?.[String(u.id)]);
-    const join = actionable && account?.can_join ? JSON.stringify({id:u.id,name:u.name,game:s.last_location,place:s.place_id,instance:s.game_id,avatar:img}) : '';
-    return `<div class="presence-card ${label[0]}" ${join ? `data-join='${esc(join)}'` : ''}><div class="card-head">${img ? `<img class="avatar avatar-md" src="${esc(img)}" alt="">` : '<div class="avatar avatar-md"></div>'}<div><div class="card-username">${esc(u.name)}</div><div class="tracked-id">${u.id}</div></div></div><span class="card-status ${label[2]}">${label[1]}</span>${detail ? `<div class="card-game">${esc(detail)}</div>` : ''}${checkin ? `<div class="activity-checkin-note">${esc(checkin)}</div>` : ''}<div class="card-time">${s?.updated_at ? 'Updated '+fmtTs(s.updated_at) : ''}</div></div>`;
-  }).join('') || '<div class="empty">No tracked users</div>';
-  grid.querySelectorAll('[data-join]').forEach(card => card.onclick = () => openJoin(JSON.parse(card.dataset.join)));
-}
-function renderTotals(rows,avatars){$('user-totals').innerHTML=rows.length?rows.map(x=>`<div class="user-tile"><div class="tile-head">${avatars[String(x.user_id)]?`<img class="avatar avatar-sm" src="${esc(avatars[String(x.user_id)])}">`:''}<div class="tile-name">${esc(x.username)}</div></div><div class="tile-stat">Total <span>${fmtSeconds(x.total_seconds)}</span></div><div class="tile-stat">Sessions <span>${x.sessions}</span></div></div>`).join(''):'<div class="empty">No completed sessions yet</div>'}
-async function renderCharts(data){const Chart=await loadChart();if(!Chart)return;const d=data.daily||[],h=data.hourly||[];const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8888aa'},grid:{color:'#1e1e2e'}},y:{ticks:{color:'#8888aa',callback:v=>fmtSeconds(v)},grid:{color:'#1e1e2e'}}}};if(dailyChart)dailyChart.destroy();if(hourlyChart)hourlyChart.destroy();dailyChart=new Chart($('daily-chart'),{type:'line',data:{labels:d.map(x=>x.day),datasets:[{data:d.map(x=>x.total_seconds),borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.08)',fill:true,tension:.25,pointRadius:2}]},options:opts});hourlyChart=new Chart($('hourly-chart'),{type:'bar',data:{labels:h.map(x=>String(x.hour).padStart(2,'0')),datasets:[{data:h.map(x=>x.total_seconds),backgroundColor:'rgba(255,60,95,.55)',borderColor:'#ff3c5f',borderWidth:1}]},options:opts})}
-function renderGames(rows){$('games-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.location_name)}</td><td>${x.sessions}</td><td>${fmtSeconds(x.total_seconds)}</td><td>${fmtSeconds(x.avg_seconds)}</td><td>${fmtSeconds(x.max_seconds)}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No game data yet</td></tr>'}
-function renderSessions(rows){$('sessions-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.location_name||'—')}</td><td>${fmtTs(x.start_time)}</td><td>${x.end_time?fmtTs(x.end_time):'LIVE'}</td><td>${x.end_time?fmtSeconds(x.duration_seconds):'LIVE'}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No sessions yet</td></tr>'}
-function renderEvents(rows){const cls=x=>x==='ENTERED_GAME'?'tag-entered':x==='LEFT_GAME'?'tag-left':x==='SWITCHED_GAME'?'tag-switched':'tag-started';$('events-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${fmtTs(x.timestamp)}</td><td>${esc(x.username)}</td><td><span class="tag ${cls(x.event_type)}">${esc(x.event_type)}</span></td><td>${esc(x.old_location||x.old_status||'—')}</td><td>${esc(x.new_location||x.new_status||'—')}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No events yet</td></tr>'}
-
 async function refreshLeaderboard(){try{const rows=await api('/leaderboard');const max=Math.max(1,...rows.map(x=>Number(x.total_seconds||0)));$('lb-table').querySelector('tbody').innerHTML=rows.length?rows.map((x,i)=>`<tr><td class="lb-rank lb-rank-${i+1}">${x.rank}</td><td><div class="lb-user-cell">${x.avatar_url?`<img class="avatar avatar-md" src="${esc(x.avatar_url)}">`:''}<div><div class="lb-username">${esc(x.username)}</div>${x.title?`<div class="lb-title">${esc(x.title)}</div>`:''}<div class="lb-userid">${x.user_id}</div></div></div></td><td class="lb-bar-cell"><div class="lb-bar-track"><div class="lb-bar-fill" style="width:${Math.max(2,Math.round(Number(x.total_seconds||0)/max*100))}%"></div></div></td><td class="lb-time">${fmtSeconds(x.total_seconds)}</td><td class="lb-sessions">${x.sessions}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No players yet</td></tr>'}catch(e){toast(e.message)}}
 
 async function refreshHistory(){await window.LGHistory?.load()}
@@ -296,8 +324,7 @@ function openJoin(x){joinTarget=x;$('join-avatar').src=x.avatar||'';$('join-name
 function closeJoin(){$('join-overlay').classList.add('hidden');joinTarget=null}
 
 $('login-form').onsubmit=async e=>{e.preventDefault();$('login-error').classList.add('hidden');try{await login($('login-key').value)}catch(ex){$('login-error').textContent=ex.message;$('login-error').classList.remove('hidden');SITE_KEY=''}};
-$('logout-btn').onclick=logout;$('manual-refresh').onclick=()=>refreshMonitor();$('user-filter').onchange=()=>refreshMonitor();$('days-filter').onchange=()=>refreshMonitor();
-document.querySelectorAll('[data-inner-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-inner-tab]').forEach(x=>x.classList.toggle('active',x===b));$('tab-sessions').style.display=b.dataset.innerTab==='sessions'?'':'none';$('tab-events').style.display=b.dataset.innerTab==='events'?'':'none'});
+$('logout-btn').onclick=logout;
 $('adduser-form').onsubmit=async e=>{e.preventDefault();try{await api('/tracked_users',{method:'POST',body:JSON.stringify({id:Number($('adduser-id').value),name:$('adduser-name').value.trim()})});$('adduser-id').value='';$('adduser-name').value='';$('adduser-msg').textContent='Player added. Tracking begins on the next poll.';await refreshTracked();toast('Player added')}catch(ex){$('adduser-msg').textContent=ex.message}};
 $('keygen-form').onsubmit=async e=>{e.preventDefault();try{const x=await api('/keys/generate',{method:'POST',body:JSON.stringify({tier:$('keygen-tier').value,label:$('keygen-label').value.trim()})});$('keygen-result').innerHTML=`<div class="adduser-hint">Copy this now — plaintext is shown once.</div><div class="key-output">${esc(x.raw_key)}</div>`;await refreshKeys()}catch(ex){toast(ex.message)}};
 $('join-no').onclick=closeJoin;$('join-overlay').onclick=e=>{if(e.target===$('join-overlay'))closeJoin()};$('join-yes').onclick=()=>{if(!joinTarget)return;const p=encodeURIComponent(joinTarget.place),g=encodeURIComponent(joinTarget.instance||'');location.href=joinTarget.instance?`roblox://experiences/start?placeId=${p}&gameInstanceId=${g}`:`https://www.roblox.com/games/${p}`;closeJoin()};

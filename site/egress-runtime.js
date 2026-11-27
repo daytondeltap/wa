@@ -128,7 +128,7 @@
         const direct = await directLegacyAccount(path, opts);
         if (direct) return direct;
       }
-      const ttl = method === 'GET' ? ttlFor(path) : 0;
+      const ttl = method === 'GET' && opts.cache !== 'no-store' ? ttlFor(path) : 0;
       if (!ttl) {
         if (method !== 'GET') apiCache.clear();
         return baseApi(path, opts);

@@ -220,7 +220,7 @@
     try {
       const result = await api('/dev/presence-overrides/' + id, {method:'POST', body:JSON.stringify(payload)});
       await load();
-      if (typeof refreshMonitor === 'function') setTimeout(() => refreshMonitor(false), 250);
+      if (window.LGMonitor) setTimeout(() => window.LGMonitor.refreshPresence(), 250);
       toast(result?.sync?.pending ? 'Override saved; detector sync pending' : 'Override applied');
     } catch (e) {
       toast(e?.message || 'Override failed');
@@ -243,9 +243,9 @@
       const result = await api('/dev/presence-overrides/' + id, {method:'DELETE'});
       overrides.delete(id);
       loadSelected();
-      if (typeof refreshMonitor === 'function') {
-        await Promise.resolve(refreshMonitor(false)).catch(() => {});
-        setTimeout(() => refreshMonitor(false), 450);
+      if (window.LGMonitor) {
+        await window.LGMonitor.refreshPresence().catch(() => {});
+        setTimeout(() => window.LGMonitor.refreshPresence(), 450);
       }
       toast(result?.sync?.pending ? 'Override cleared; detector refresh pending' : 'Detector restored');
     } catch (e) {
