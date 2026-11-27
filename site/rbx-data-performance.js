@@ -25,8 +25,8 @@
     return fastSig(users.map(u=>{
       const s=states[String(u.id)]||{};
       return {id:u.id,name:u.name,p:s.presence_type,l:s.last_location,pl:s.place_id,g:s.game_id,t:s.updated_at,
-        observation:s.visibility_observation,instanceUnavailable:s.instance_unavailable,stale:now-Date.parse(s.updated_at)>300000,a:data?.avatars?.[String(u.id)]||''};
-    }),['id','name','p','l','pl','g','t','observation','instanceUnavailable','stale','a']);
+        checkin:activityCheckinLabel(data?.activity_checkins?.[String(u.id)],now),observation:s.visibility_observation,instanceUnavailable:s.instance_unavailable,stale:now-Date.parse(s.updated_at)>300000,a:data?.avatars?.[String(u.id)]||''};
+    }),['id','name','p','l','pl','g','t','checkin','observation','instanceUnavailable','stale','a']);
   }
 
   function ensurePresenceDelegation(){
@@ -38,6 +38,7 @@
   if(typeof renderPresence==='function')renderPresence=function(data){
     const users=data?.users||[],states=data?.states||{},avatars=data?.avatars||{},grid=q('#presence-grid');
     if(!grid)return;
+    window.LGActivityCheckin?.update(data);
     const now=Date.now(),sig=presenceSig(data,now)+Boolean(account?.can_join);if(sig===cache.presence)return;cache.presence=sig;
     ensurePresenceDelegation();
     if(!users.length){grid.innerHTML='<div class="empty">No tracked users</div>';return}
@@ -51,7 +52,7 @@
       let card=q(`.presence-card[data-rbx-user="${id}"]`,grid);
       if(!card){
         card=document.createElement('div');card.dataset.rbxUser=id;
-        card.innerHTML='<div class="card-head"><div class="avatar avatar-md lg-avatar-slot"></div><div><div class="card-username"></div><div class="tracked-id"></div></div></div><span class="card-status"></span><div class="card-game"></div><div class="card-time"></div>';
+        card.innerHTML='<div class="card-head"><div class="avatar avatar-md lg-avatar-slot"></div><div><div class="card-username"></div><div class="tracked-id"></div></div></div><span class="card-status"></span><div class="card-game"></div><div class="activity-checkin-note" hidden></div><div class="card-time"></div>';
         grid.appendChild(card);
       }
       card.className=`presence-card ${info[0]}`;
@@ -69,6 +70,12 @@
       if(tid&&tid.textContent!==id)tid.textContent=id;
       if(status){status.className=`card-status ${info[2]}`;if(status.textContent!==info[1])status.textContent=info[1]}
       if(game){game.hidden=!detail;if(game.textContent!==detail)game.textContent=detail}
+      const note=q('.activity-checkin-note',card);
+      if(note){
+        const text=activityCheckinLabel(data.activity_checkins?.[id],now);
+        note.hidden=!text;
+        if(note.textContent!==text)note.textContent=text;
+      }
       if(time){const text=s.updated_at?'Updated '+fmtTs(s.updated_at):'';if(time.textContent!==text)time.textContent=text}
     }
     qa('.presence-card[data-rbx-user]',grid).forEach(card=>{if(!keep.has(card.dataset.rbxUser))card.remove()});

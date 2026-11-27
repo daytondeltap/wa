@@ -63,9 +63,19 @@
   .join-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:1rem}.join-modal{width:min(360px,100%);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;text-align:center}.join-modal-avatar{width:76px;height:76px;border-radius:50%;border:1px solid var(--border);object-fit:cover}.join-modal-name{font-weight:800;margin-top:.7rem}.join-modal-game{font-size:.75rem;color:var(--subtext);margin-top:.25rem}.join-modal-q{font-family:var(--font-mono);font-size:.72rem;margin:1rem 0}.join-modal-btns{display:flex;gap:.7rem;justify-content:center}.join-yes,.join-no{font-family:var(--font-mono);font-size:.7rem;padding:.55rem .9rem;border-radius:4px;cursor:pointer;background:transparent}.join-yes{color:var(--green);border:1px solid var(--green)}.join-no{color:var(--accent);border:1px solid var(--accent)}.join-hint{font-family:var(--font-mono);font-size:.6rem;color:var(--muted);margin-top:.7rem}
   .toast{position:fixed;right:1rem;bottom:1rem;z-index:1200;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.7rem .9rem;font-family:var(--font-mono);font-size:.7rem;color:var(--text)}
   @media(max-width:700px){header,.filter-bar,.page-nav,.main,.lb-wrap,.insights-wrap,.adduser-wrap{padding-left:1rem;padding-right:1rem}.header-right{gap:.7rem}.last-update{display:none}.lb-bar-cell{width:120px}}
+  #activity-code-open[hidden], #activity-code-result[hidden], .activity-checkin-note[hidden] {display:none!important}
+  .activity-checkin-note {color:var(--accent2);font-size:.75rem;margin-top:.45rem}
+  #activity-code-dialog {width:min(440px,calc(100vw - 2rem));max-height:calc(100dvh - 2rem);margin:auto;padding:1.25rem;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text)}
+  #activity-code-dialog::backdrop {background:#0009}
+  #activity-code-dialog h2 {font-size:1.15rem;margin:0 0 .65rem}
+  #activity-code-dialog p {color:var(--subtext);font-size:.8rem;line-height:1.5}
+  #activity-code-dialog label {display:grid;gap:.35rem;margin:.75rem 0;font-size:.8rem}
+  #activity-code-dialog :is(select,input) {max-width:100%;width:100%}
+  #activity-code-dialog .activity-code-actions {display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.65rem}
 </style>
 <link rel="stylesheet" href="history.css?v=20261127-1">
 <script defer src="history.js?v=20261127-1"></script>
+<script defer src="activity-checkin.js?v=1"></script>
 </head>
 <body>
 
@@ -103,7 +113,24 @@
     <label>User</label><select id="user-filter"><option value="">All Users</option></select>
     <label>Period</label><select id="days-filter"><option value="">All time</option><option value="7">7 days</option><option value="30" selected>30 days</option><option value="60">60 days</option></select>
     <button class="btn btn-accent" id="manual-refresh">↺ Refresh</button>
+    <button type="button" class="btn" id="activity-code-open" hidden>Request check-in</button>
   </div>
+  <dialog id="activity-code-dialog" aria-labelledby="activity-code-title">
+    <h2 id="activity-code-title">Request a Roblox check-in</h2>
+    <p>Share the code privately with this player. They can use it once to share a check-in timestamp with this LG account.</p>
+    <form id="activity-code-form">
+      <label>Tracked player<select id="activity-code-player" class="ask-input" required></select></label>
+      <div class="activity-code-actions">
+        <button type="submit" class="btn" id="activity-code-generate">Generate code</button>
+        <button type="button" class="btn" id="activity-code-close">Close</button>
+      </div>
+    </form>
+    <div id="activity-code-result" hidden>
+      <label>One-time code<input id="activity-code-value" class="ask-input" readonly autocomplete="off"></label>
+      <button type="button" class="btn" id="activity-code-copy">Copy code</button>
+    </div>
+    <p id="activity-code-status" role="status"></p>
+  </dialog>
   <div class="main">
     <section><div class="sec-title">Live Presence</div><div class="card-grid" id="presence-grid"><div class="empty">Loading…</div></div></section>
     <section><div class="sec-title">All-Time Totals</div><div class="user-totals" id="user-totals"><div class="empty">Loading…</div></div></section>
@@ -217,7 +244,7 @@ const presenceLabels = {
   1: ['website','ON WEBSITE','status-website'],
   2: ['ingame','IN GAME','status-ingame'],
   3: ['studio','IN STUDIO','status-studio'],
-  4: ['invisible','INVISIBLE','status-invisible'],
+  4: ['invisible','ROBLOX REPORTS INVISIBLE','status-invisible'],
 };
 function describePresence(state, now = Date.now()) {
   const observedAt = Date.parse(state?.updated_at);
@@ -228,22 +255,29 @@ function describePresence(state, now = Date.now()) {
   if (type === 0 && state.visibility_observation === 'pending_offline') {
     return {label:['','STATUS UNCONFIRMED','status-studio'], detail:'Waiting for a second offline report', actionable:false};
   }
-  const location = type !== 0 && state.last_location ? '🎮 ' + state.last_location : '';
+  const location = type !== 0 && type !== 4 && state.last_location ? '🎮 ' + state.last_location : '';
   let detail = location;
   if (type === 2 && !state.place_id) detail = 'Experience unavailable';
   else if (type === 2 && state.instance_unavailable) detail = [detail,'Server unavailable'].filter(Boolean).join(' · ');
   if (type === 2 && state.visibility_observation === 'visibility_gap') detail = [detail,'Brief visibility gap'].filter(Boolean).join(' · ');
   return {label, detail, actionable:type === 2 && Boolean(state.place_id)};
 }
+function activityCheckinLabel(timestamp, now=Date.now()) {
+  const verified = Date.parse(timestamp);
+  if (!Number.isFinite(verified) || now - verified >= 86_400_000) return '';
+  return 'Activity verified at ' + fmtTs(timestamp);
+}
 function renderPresence(data) {
+  window.LGActivityCheckin?.update(data);
   const users = data.users || [], states = data.states || {}, avatars = data.avatars || {};
   const grid = $('presence-grid');
   grid.innerHTML = users.map(u => {
     const s = states[String(u.id)];
     const {label, detail, actionable} = describePresence(s);
     const img = avatars[String(u.id)] || '';
+    const checkin = activityCheckinLabel(data.activity_checkins?.[String(u.id)]);
     const join = actionable && account?.can_join ? JSON.stringify({id:u.id,name:u.name,game:s.last_location,place:s.place_id,instance:s.game_id,avatar:img}) : '';
-    return `<div class="presence-card ${label[0]}" ${join ? `data-join='${esc(join)}'` : ''}><div class="card-head">${img ? `<img class="avatar avatar-md" src="${esc(img)}" alt="">` : '<div class="avatar avatar-md"></div>'}<div><div class="card-username">${esc(u.name)}</div><div class="tracked-id">${u.id}</div></div></div><span class="card-status ${label[2]}">${label[1]}</span>${detail ? `<div class="card-game">${esc(detail)}</div>` : ''}<div class="card-time">${s?.updated_at ? 'Updated '+fmtTs(s.updated_at) : ''}</div></div>`;
+    return `<div class="presence-card ${label[0]}" ${join ? `data-join='${esc(join)}'` : ''}><div class="card-head">${img ? `<img class="avatar avatar-md" src="${esc(img)}" alt="">` : '<div class="avatar avatar-md"></div>'}<div><div class="card-username">${esc(u.name)}</div><div class="tracked-id">${u.id}</div></div></div><span class="card-status ${label[2]}">${label[1]}</span>${detail ? `<div class="card-game">${esc(detail)}</div>` : ''}${checkin ? `<div class="activity-checkin-note">${esc(checkin)}</div>` : ''}<div class="card-time">${s?.updated_at ? 'Updated '+fmtTs(s.updated_at) : ''}</div></div>`;
   }).join('') || '<div class="empty">No tracked users</div>';
   grid.querySelectorAll('[data-join]').forEach(card => card.onclick = () => openJoin(JSON.parse(card.dataset.join)));
 }
