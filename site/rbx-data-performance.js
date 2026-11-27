@@ -133,7 +133,7 @@
     const [style,label,badge] = description.label;
     const image = data.avatars?.[id] || '';
     const available = description.actionable && Boolean(account?.can_join);
-    const checkin = activityCheckinLabel(data.activity_checkins?.[id],now);
+    const checkin = activityCheckinLabel(data.activity_checkins?.[id],now,data.activity_offline_reports?.[id]);
     const signature = JSON.stringify([user.name,style,label,badge,image,description.detail,checkin,state.updated_at,available,state.place_id,state.game_id]);
     if (card.signature === signature) return;
     card.signature = signature;

@@ -133,7 +133,7 @@
   </div>
   <dialog id="activity-code-dialog" aria-labelledby="activity-code-title">
     <h2 id="activity-code-title">Request a Roblox check-in</h2>
-    <p>Share the code privately with this player. They can use it once to share a check-in timestamp with this LG account.</p>
+    <p>Share the code privately with this player. They can use it once to share a check-in timestamp with this LG account. Monitor may show a nearby Roblox offline report alongside it. The report does not reveal the player's visibility setting.</p>
     <form id="activity-code-form">
       <label>Tracked player<select id="activity-code-player" class="ask-input" required></select></label>
       <div class="activity-code-actions">
@@ -350,10 +350,11 @@ function describePresence(state, now = Date.now()) {
   if (type === 2 && state.visibility_observation === 'visibility_gap') detail = [detail,'Brief visibility gap'].filter(Boolean).join(' · ');
   return {label, detail, actionable:type === 2 && Boolean(state.place_id)};
 }
-function activityCheckinLabel(timestamp, now=Date.now()) {
+function activityCheckinLabel(timestamp, now=Date.now(), offlineAt) {
   const verified = Date.parse(timestamp);
   if (!Number.isFinite(verified) || now - verified >= 86_400_000) return '';
-  return 'Activity verified at ' + fmtTs(timestamp);
+  const label = 'Activity verified at ' + fmtTs(timestamp);
+  return offlineAt ? label + ' · Roblox reported offline at ' + fmtTs(offlineAt) : label;
 }
 async function refreshLeaderboard(){try{const rows=await api('/leaderboard');const max=Math.max(1,...rows.map(x=>Number(x.total_seconds||0)));$('lb-table').querySelector('tbody').innerHTML=rows.length?rows.map((x,i)=>`<tr><td class="lb-rank lb-rank-${i+1}">${x.rank}</td><td><div class="lb-user-cell">${x.avatar_url?`<img class="avatar avatar-md" src="${esc(x.avatar_url)}">`:''}<div><div class="lb-username">${esc(x.username)}</div>${x.title?`<div class="lb-title">${esc(x.title)}</div>`:''}<div class="lb-userid">${x.user_id}</div></div></div></td><td class="lb-bar-cell"><div class="lb-bar-track"><div class="lb-bar-fill" style="width:${Math.max(2,Math.round(Number(x.total_seconds||0)/max*100))}%"></div></div></td><td class="lb-time">${fmtSeconds(x.total_seconds)}</td><td class="lb-sessions">${x.sessions}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No players yet</td></tr>'}catch(e){toast(e.message)}}
 
