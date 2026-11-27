@@ -68,7 +68,7 @@ jobs:
               '<script src="ck-key-manager.js?v=20261127-2"></script>',
               '<script src="key-delete-runtime.js?v=20260916-4"></script>',
               '<script src="egress-runtime.js?v=20261127-2"></script>',
-              '<script src="mc-detector.js?v=20261127-1"></script>',
+              '<script src="mc-detector.js?v=20261127-2"></script>',
               '<script src="mc-detector-session.js"></script>',
               '<script src="mc-player-lists.js"></script>',
               '<script src="mc-aero-final.js"></script>',

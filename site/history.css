@@ -1,0 +1,66 @@
+.history-workspace {
+  --history-edge: color-mix(in srgb, var(--text) 14%, var(--surface));
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  color: var(--text);
+}
+.history-workspace [hidden], .mc-history [hidden] {display:none !important}
+.history-workspace h1, .mc-history h1 {margin:0 0 1.15rem;font:800 clamp(1.8rem,4vw,2.8rem)/1.08 var(--font-ui);letter-spacing:-.04em}
+.history-filters, .history-library-controls {display:flex;align-items:end;flex-wrap:wrap;gap:.65rem}
+.history-filters {margin-bottom:1rem}
+.history-filters label, .history-library-controls label {display:grid;gap:.3rem;min-width:0;color:var(--subtext);font-size:.75rem}
+.history-filters :is(select,input), .history-library-controls :is(select,input) {
+  min-height:2.55rem;max-width:100%;width:100%;border:1px solid var(--history-edge);
+  border-radius:7px;background:var(--bg);color:var(--text);padding:.46rem .65rem;font:inherit;font-size:.85rem;
+}
+.history-filters .btn {min-height:2.55rem}
+.history-layout {display:grid;grid-template-columns:minmax(265px,.85fr) minmax(0,1.45fr);align-items:start;gap:1rem}
+.history-panel {min-width:0;background:var(--surface);border:1px solid var(--history-edge);border-radius:12px;padding:1rem}
+.history-panel-head {display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.65rem}
+.history-panel h2,.history-panel h3 {margin:0;color:var(--text)}
+.history-panel h2 {font-size:1.25rem;overflow-wrap:anywhere}
+.history-panel h3 {font-size:1rem}
+.history-panel-head span,.history-message,.history-pager span {color:var(--subtext);font-size:.75rem}
+.history-message {padding-block:.8rem;line-height:1.5}
+.history-library-controls {margin-bottom:.8rem}
+.history-library-controls label:first-child {flex:1 1 140px}
+.history-library-controls label:last-child {flex:1 0 105px}
+.history-game {
+  display:grid;gap:.35rem;width:100%;padding:.7rem .75rem;margin:.25rem 0;text-align:left;border:1px solid transparent;
+  border-radius:7px;background:transparent;color:var(--text);cursor:pointer;
+}
+.history-game:hover {background:var(--bg)}
+.history-game[aria-pressed="true"] {border-color:var(--accent2);background:var(--bg)}
+.history-game strong {font-size:.9rem;overflow-wrap:anywhere}
+.history-game span {color:var(--subtext);font-size:.72rem}
+.history-workspace :focus-visible,.mc-history :focus-visible {outline:2px solid var(--accent2);outline-offset:2px}
+.history-pager {display:flex;align-items:center;justify-content:space-between;gap:.35rem;margin-top:.8rem}
+.history-pager .btn:disabled {opacity:.5;cursor:default}
+.history-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin:.9rem 0 1rem}
+.history-stats>div {background:var(--bg);border:1px solid var(--history-edge);border-radius:7px;padding:.65rem}
+.history-stats dt {color:var(--subtext);font-size:.72rem}
+.history-stats dd {margin:.25rem 0 0;color:var(--text);font-size:.92rem;font-weight:700;overflow-wrap:anywhere}
+.history-session {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.25rem .7rem;padding:.6rem .2rem;border-bottom:1px solid var(--history-edge)}
+.history-session strong {overflow-wrap:anywhere;font-size:.85rem}
+.history-session span {grid-column:1;color:var(--subtext);font-size:.72rem;line-height:1.5}
+.history-session b {grid-column:2;grid-row:1 / span 2;align-self:center;font-size:.78rem;white-space:nowrap}
+#hist-back {display:none;margin-bottom:.7rem}
+.mc-history h1 {margin-bottom:.2rem}
+.mc-history-controls {display:flex;align-items:end;flex-wrap:wrap;gap:.7rem}
+.mc-history-controls label {display:grid;gap:.3rem;min-width:min(180px,100%);color:var(--subtext);font-size:.74rem}
+.mc-history-chart {position:relative;height:clamp(210px,34vw,340px);margin-top:.6rem}
+.mc-history-inspector {display:grid;grid-template-columns:auto minmax(85px,1fr) auto;align-items:center;gap:.65rem;padding-top:.6rem;font-size:.75rem;color:var(--subtext)}
+.mc-history-inspector input {min-width:0;width:100%;accent-color:#18905d}
+.mc-history-inspector output {font-variant-numeric:tabular-nums}
+.mc-history .mcx-panel > summary {cursor:pointer;font-weight:700}
+.mc-history .mcx-panel[open] > summary {margin-bottom:.6rem}
+@media (max-width:720px) {
+  .history-layout {grid-template-columns:minmax(0,1fr)}
+  .mc-history-inspector {grid-template-columns:auto minmax(0,1fr)}
+  .mc-history-inspector output {grid-column:1/-1}
+  .history-layout.show-detail #hist-browser,
+  .history-layout:not(.show-detail) #hist-detail {display:none}
+  #hist-back {display:inline-flex}
+  .history-stats {grid-template-columns:repeat(2,minmax(0,1fr))}
+}

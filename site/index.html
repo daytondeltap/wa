@@ -64,6 +64,8 @@
   .toast{position:fixed;right:1rem;bottom:1rem;z-index:1200;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.7rem .9rem;font-family:var(--font-mono);font-size:.7rem;color:var(--text)}
   @media(max-width:700px){header,.filter-bar,.page-nav,.main,.lb-wrap,.insights-wrap,.adduser-wrap{padding-left:1rem;padding-right:1rem}.header-right{gap:.7rem}.last-update{display:none}.lb-bar-cell{width:120px}}
 </style>
+<link rel="stylesheet" href="history.css?v=20261127-1">
+<script defer src="history.js?v=20261127-1"></script>
 </head>
 <body>
 
@@ -120,13 +122,39 @@
 </div>
 
 <div class="page" id="page-history">
-  <div class="insights-wrap">
-    <div class="filter-bar" style="border-radius:6px;border:1px solid var(--border);margin-bottom:1rem;padding:.8rem 1rem">
-      <label>User</label><select id="hist-user-filter"><option value="">All Users</option></select>
-      <label>Period</label><select id="hist-days-filter"><option value="" selected>All retained data</option><option value="7">7 days</option><option value="30">30 days</option><option value="60">60 days</option></select>
-      <button class="btn btn-accent" id="history-refresh">↺ Refresh</button><span id="hist-summary" style="margin-left:auto;color:var(--subtext);font-family:var(--font-mono);font-size:.7rem"></span>
+  <div class="history-workspace">
+    <h1>Play history</h1>
+    <div class="history-filters">
+      <label for="hist-user-filter">Player<select id="hist-user-filter"><option value="">All players</option></select></label>
+      <label for="hist-days-filter">Period<select id="hist-days-filter"><option value="" selected>All retained history</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="60">Last 60 days</option></select></label>
+      <button type="button" class="btn" id="history-refresh">Refresh</button>
     </div>
-    <section class="insight-card"><div class="sec-title">Game History</div><div style="color:var(--subtext);font-size:.75rem;margin-bottom:.6rem">Click any game row to expand individual sessions. History is server-side and only shows players on this key's tracking list.</div><div class="table-wrap"><table id="hist-table"><thead><tr><th>Game</th><th>Players</th><th>Sessions</th><th>Total Time</th><th>Avg</th><th>Longest</th><th>First Played</th><th>Last Played</th></tr></thead><tbody><tr><td colspan="8" class="empty">Loading…</td></tr></tbody></table></div></section>
+    <div class="history-layout" id="hist-layout">
+      <section class="history-panel" id="hist-browser" aria-labelledby="hist-games-title">
+        <div class="history-panel-head"><h2 id="hist-games-title">Games</h2><span id="hist-summary" role="status"></span></div>
+        <div class="history-library-controls">
+          <label for="hist-search">Search games<input id="hist-search" type="search" placeholder="Game name" autocomplete="off"></label>
+          <label for="hist-sort">Sort by<select id="hist-sort"><option value="time">Playtime</option><option value="recent">Most recent</option><option value="sessions">Sessions</option><option value="name">Name</option></select></label>
+        </div>
+        <div id="hist-games" aria-busy="false"></div>
+        <div class="history-pager" id="hist-game-pager" role="group" aria-label="Game pages" hidden>
+          <button type="button" class="btn" id="hist-games-prev">Previous</button><span id="hist-game-range"></span><button type="button" class="btn" id="hist-games-next">Next</button>
+        </div>
+      </section>
+      <section class="history-panel history-detail" id="hist-detail" aria-labelledby="hist-detail-title">
+        <button type="button" class="btn" id="hist-back">Back to games</button>
+        <h2 id="hist-detail-title" tabindex="-1">Game details</h2>
+        <p id="hist-detail-note" class="history-message">Choose a game to see playtime and sessions.</p>
+        <dl id="hist-stats" class="history-stats" hidden></dl>
+        <div id="hist-session-section" hidden>
+          <div class="history-panel-head"><h3>Sessions</h3><span id="hist-session-count" role="status"></span></div>
+          <div id="hist-sessions" aria-busy="false"></div>
+          <div class="history-pager" id="hist-session-pager" role="group" aria-label="Session pages" hidden>
+            <button type="button" class="btn" id="hist-sessions-prev">Previous</button><span id="hist-session-range"></span><button type="button" class="btn" id="hist-sessions-next">Next</button>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 </div>
 
@@ -181,7 +209,7 @@ function applyTier(){const map={DEV:['DEV','tb-dev'],'PK_':['DELUXE','tb-pk'],'U
 function buildNav(){const labels={monitor:'Monitor',leaderboard:'Leaderboard',history:'History',adduser:'User Adding',keys:'Key Generator'};$('page-nav').innerHTML='';for(const tab of account.tabs||[]){if(!labels[tab])continue;const b=document.createElement('button');b.className='page-nav-btn';b.dataset.tab=tab;b.textContent=labels[tab];b.onclick=()=>switchPage(tab,b);$('page-nav').appendChild(b)}}
 async function switchPage(name,btn){activePage=name;document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));const page=$('page-'+name);if(page)page.classList.add('active');document.querySelectorAll('.page-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));if(btn)btn.classList.add('active');if(name==='monitor')await refreshMonitor();if(name==='leaderboard')await refreshLeaderboard();if(name==='history')await refreshHistory();if(name==='adduser')await refreshTracked();if(name==='keys')await refreshKeys()}
 
-async function refreshTracked(){if(!account||!(account.tabs||[]).some(x=>['monitor','history','adduser'].includes(x)))return;const rows=await api('/tracked_users');const options=['<option value="">All Users</option>',...rows.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.id})</option>`)].join('');if($('user-filter'))$('user-filter').innerHTML=options;if($('hist-user-filter'))$('hist-user-filter').innerHTML=options;if($('tracked-list')){$('tracked-list').innerHTML=rows.length?rows.map(x=>`<div class="tracked-row"><div class="grow"><div>${esc(x.name)}</div><div class="tracked-id">${x.id}</div></div><button class="btn danger" data-remove="${x.id}">Remove</button></div>`).join(''):'<div class="empty">No tracked users</div>';document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Stop tracking this player?'))return;await api('/tracked_users/'+b.dataset.remove,{method:'DELETE'});await refreshTracked();toast('Player removed')})}}
+async function refreshTracked(){if(!account||!(account.tabs||[]).some(x=>['monitor','history','adduser'].includes(x)))return;const rows=await api('/tracked_users');const options=['<option value="">All Users</option>',...rows.map(x=>`<option value="${x.id}">${esc(x.name)} (${x.id})</option>`)].join('');if($('user-filter'))$('user-filter').innerHTML=options;const historyFilter=$('hist-user-filter');if(historyFilter){const selected=historyFilter.value;historyFilter.innerHTML=options;historyFilter.value=[...historyFilter.options].some(option=>option.value===selected)?selected:'';}if($('tracked-list')){$('tracked-list').innerHTML=rows.length?rows.map(x=>`<div class="tracked-row"><div class="grow"><div>${esc(x.name)}</div><div class="tracked-id">${x.id}</div></div><button class="btn danger" data-remove="${x.id}">Remove</button></div>`).join(''):'<div class="empty">No tracked users</div>';document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Stop tracking this player?'))return;await api('/tracked_users/'+b.dataset.remove,{method:'DELETE'});await refreshTracked();toast('Player removed')})}}
 
 async function refreshMonitor(mark=true){try{const uid=$('user-filter').value||'',days=$('days-filter').value||'';const [presence,totals,charts,games,sessions,events]=await Promise.all([apiGet('/monitor/presence',{user_id:uid}),apiGet('/monitor/totals',{user_id:uid}),apiGet('/monitor/charts',{user_id:uid,days:days||30}),apiGet('/monitor/top_games',{user_id:uid,days}),apiGet('/monitor/sessions',{user_id:uid,days}),apiGet('/monitor/events',{user_id:uid})]);renderPresence(presence);renderTotals(totals,presence.avatars||{});renderCharts(charts);renderGames(games);renderSessions(sessions);renderEvents(events);if(mark)$('last-update').textContent=new Date().toLocaleTimeString()}catch(e){toast(e.message)}}
 const presenceLabels = {
@@ -227,15 +255,14 @@ function renderEvents(rows){const cls=x=>x==='ENTERED_GAME'?'tag-entered':x==='L
 
 async function refreshLeaderboard(){try{const rows=await api('/leaderboard');const max=Math.max(1,...rows.map(x=>Number(x.total_seconds||0)));$('lb-table').querySelector('tbody').innerHTML=rows.length?rows.map((x,i)=>`<tr><td class="lb-rank lb-rank-${i+1}">${x.rank}</td><td><div class="lb-user-cell">${x.avatar_url?`<img class="avatar avatar-md" src="${esc(x.avatar_url)}">`:''}<div><div class="lb-username">${esc(x.username)}</div>${x.title?`<div class="lb-title">${esc(x.title)}</div>`:''}<div class="lb-userid">${x.user_id}</div></div></div></td><td class="lb-bar-cell"><div class="lb-bar-track"><div class="lb-bar-fill" style="width:${Math.max(2,Math.round(Number(x.total_seconds||0)/max*100))}%"></div></div></td><td class="lb-time">${fmtSeconds(x.total_seconds)}</td><td class="lb-sessions">${x.sessions}</td></tr>`).join(''):'<tr><td colspan="5" class="empty">No players yet</td></tr>'}catch(e){toast(e.message)}}
 
-async function refreshHistory(){try{const uid=$('hist-user-filter').value||'',days=$('hist-days-filter').value||'',rows=await apiGet('/history/games',{user_id:uid,days});$('hist-summary').textContent=`${rows.length} games · server-side · max 2 months retained`;$('hist-table').querySelector('tbody').innerHTML=rows.length?rows.map((x,i)=>`<tr class="hist-game" data-game="${encodeURIComponent(x.location_name)}" data-i="${i}" style="cursor:pointer"><td>${esc(x.location_name)}</td><td>${x.unique_players}</td><td>${x.sessions}</td><td>${fmtSeconds(x.total_seconds)}</td><td>${fmtSeconds(x.avg_seconds)}</td><td>${fmtSeconds(x.max_seconds)}</td><td>${fmtHistTs(x.first_played)}</td><td>${fmtHistTs(x.last_played)}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">No retained history yet</td></tr>';document.querySelectorAll('.hist-game').forEach(r=>r.onclick=()=>toggleHistoryRow(r,uid,days))}catch(e){toast(e.message)}}
-async function toggleHistoryRow(row,uid,days){const next=row.nextElementSibling;if(next&&next.classList.contains('hist-detail')){next.remove();return}const game=decodeURIComponent(row.dataset.game);const rows=await apiGet('/history/sessions',{game,user_id:uid,days});const tr=document.createElement('tr');tr.className='hist-detail';tr.innerHTML=`<td colspan="8"><div style="padding:.55rem 0"><table><thead><tr><th>Player</th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody>${rows.length?rows.map(x=>`<tr><td>${esc(x.username)}</td><td>${fmtHistTs(x.start_time)}</td><td>${fmtHistTs(x.end_time)}</td><td>${fmtSeconds(x.duration_seconds)}</td></tr>`).join(''):'<tr><td colspan="4" class="empty">No sessions</td></tr>'}</tbody></table></div></td>`;row.after(tr)}
+async function refreshHistory(){await window.LGHistory?.load()}
 
 async function refreshKeys(){if(account.tier!=='DEV')return;try{const rows=await api('/keys');$('keys-table').querySelector('tbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.tier)}</td><td>${esc(x.key_label||'—')}</td><td><code>${esc(x.key_id)}</code></td><td>${x.active?'Active':'Revoked'}</td><td>${fmtHistTs(x.created_at)}</td><td><button class="btn ${x.active?'danger':''}" data-key="${x.key_id}" data-action="${x.active?'revoke':'reactivate'}">${x.active?'Revoke':'Reactivate'}</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">No generated keys</td></tr>';document.querySelectorAll('[data-key]').forEach(b=>b.onclick=async()=>{await api(`/keys/${b.dataset.key}/${b.dataset.action}`,{method:'POST'});await refreshKeys()})}catch(e){toast(e.message)}}
 function openJoin(x){joinTarget=x;$('join-avatar').src=x.avatar||'';$('join-name').textContent=x.name;$('join-game').textContent=x.game||'Roblox game';$('join-question').textContent=x.instance?'Join their game?':'Open the experience page?';$('join-overlay').classList.remove('hidden')}
 function closeJoin(){$('join-overlay').classList.add('hidden');joinTarget=null}
 
 $('login-form').onsubmit=async e=>{e.preventDefault();$('login-error').classList.add('hidden');try{await login($('login-key').value)}catch(ex){$('login-error').textContent=ex.message;$('login-error').classList.remove('hidden');SITE_KEY=''}};
-$('logout-btn').onclick=logout;$('manual-refresh').onclick=()=>refreshMonitor();$('user-filter').onchange=()=>refreshMonitor();$('days-filter').onchange=()=>refreshMonitor();$('history-refresh').onclick=refreshHistory;$('hist-user-filter').onchange=refreshHistory;$('hist-days-filter').onchange=refreshHistory;
+$('logout-btn').onclick=logout;$('manual-refresh').onclick=()=>refreshMonitor();$('user-filter').onchange=()=>refreshMonitor();$('days-filter').onchange=()=>refreshMonitor();
 document.querySelectorAll('[data-inner-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-inner-tab]').forEach(x=>x.classList.toggle('active',x===b));$('tab-sessions').style.display=b.dataset.innerTab==='sessions'?'':'none';$('tab-events').style.display=b.dataset.innerTab==='events'?'':'none'});
 $('adduser-form').onsubmit=async e=>{e.preventDefault();try{await api('/tracked_users',{method:'POST',body:JSON.stringify({id:Number($('adduser-id').value),name:$('adduser-name').value.trim()})});$('adduser-id').value='';$('adduser-name').value='';$('adduser-msg').textContent='Player added. Tracking begins on the next poll.';await refreshTracked();toast('Player added')}catch(ex){$('adduser-msg').textContent=ex.message}};
 $('keygen-form').onsubmit=async e=>{e.preventDefault();try{const x=await api('/keys/generate',{method:'POST',body:JSON.stringify({tier:$('keygen-tier').value,label:$('keygen-label').value.trim()})});$('keygen-result').innerHTML=`<div class="adduser-hint">Copy this now — plaintext is shown once.</div><div class="key-output">${esc(x.raw_key)}</div>`;await refreshKeys()}catch(ex){toast(ex.message)}};
