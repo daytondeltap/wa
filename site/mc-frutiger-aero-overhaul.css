@@ -12,6 +12,7 @@ body.mc-mode #mcx {display:block}
 #mcx [hidden],.mcx-toggle[hidden],#rbxm-theme-toggle[hidden] {display:none!important}
 .mcx-toggle {display:flex;align-items:center;gap:.42rem;text-wrap:nowrap}
 .mcx-lbl {font:650 .77rem var(--font-ui);color:var(--subtext)}
+body.mc-mode .mcx-lbl {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .mcx-sw {width:40px;height:22px;padding:2px;border:1px solid var(--border);border-radius:999px;background:var(--bg);cursor:pointer}
 .mcx-sw::after {content:"";display:block;width:16px;height:16px;border-radius:50%;background:var(--text);transition:transform .15s ease}
 .mcx-sw[aria-checked="true"] {background:linear-gradient(#a2e7bb,#46a96c);border-color:#287b4e}

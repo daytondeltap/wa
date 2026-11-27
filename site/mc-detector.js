@@ -110,6 +110,7 @@ function preferredMode() {
 function setPreference(on) {
   try {localStorage.lg_detector_mode=on?'mc':'rbx';} catch {}
   syncMode();
+  window.scrollTo(0,0);
 }
 function syncMode() {
   const viewer = identity();
@@ -146,6 +147,7 @@ function syncMode() {
   const button = q('#mcx-sw');
   button.closest('.mcx-toggle').hidden = !viewer;
   button.setAttribute('aria-checked',String(S.on));
+  button.title = S.on ? 'Switch to Roblox' : 'Switch to Minecraft';
   const platform = q('#detector-platform');
   const label = S.on ? 'Minecraft' : 'Roblox';
   if (platform.textContent !== label) platform.textContent = label;
