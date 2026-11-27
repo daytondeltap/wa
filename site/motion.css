@@ -1,0 +1,49 @@
+/* Animate changes of view and direct interactions. Data refreshes leave these nodes in place. */
+@media(prefers-reduced-motion:no-preference) {
+  body:not(.lg-perf-lite) {
+    --metro-enter:metro-enter 220ms cubic-bezier(.2,.72,.25,1) both;
+    --metro-nav:metro-underline 220ms ease-out both;
+    --aero-enter:aero-enter 260ms cubic-bezier(.2,.72,.25,1) both;
+  }
+  body.lg-page-hidden {--detector-play-state:paused}
+  body.rbx-metro :is(.page.active > .workspace-shell,.page.active > .history-workspace,.monitor-heading,.monitor-workspace > [role="tabpanel"]:not([hidden]),dialog[open],.join-modal) {
+    animation:var(--metro-enter,none);animation-play-state:var(--detector-play-state,running);
+  }
+  body.rbx-metro .page-nav-btn.active::after {
+    animation:var(--metro-nav,none);animation-play-state:var(--detector-play-state,running);
+  }
+  body.rbx-metro .signin-tiles i {animation:var(--metro-enter,none);animation-play-state:var(--detector-play-state,running)}
+  body.rbx-metro .signin-tiles i:nth-child(2) {animation-delay:45ms}
+  body.rbx-metro .signin-tiles i:nth-child(3) {animation-delay:90ms}
+  body.rbx-metro .signin-tiles i:nth-child(4) {animation-delay:135ms}
+  body.mc-mode .mcx-page.active > .mcx-wrap {animation:var(--aero-enter,none);animation-play-state:var(--detector-play-state,running)}
+  body.mc-mode:not(.lg-perf-lite,.lg-perf-balanced) .mcx-hero::after {
+    animation:aero-glint 840ms ease-out both;animation-play-state:var(--detector-play-state,running);
+  }
+  body:not(.lg-perf-lite,.lg-page-hidden) :is(.page-nav-btn,.mcx-nav button,.btn,.btn-login,.ask-submit,.btn-logout) {
+    transition:translate 145ms ease-out;
+  }
+  body:not(.lg-perf-lite,.lg-page-hidden) :is(.page-nav-btn,.mcx-nav button,.btn,.btn-login,.ask-submit,.btn-logout):active:not(:disabled) {
+    translate:0 2px;
+  }
+}
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+  body:not(.lg-perf-lite,.lg-page-hidden) :is(.mcx-card,.presence-card) {
+    transition:translate 150ms ease-out;
+  }
+  body:not(.lg-perf-lite,.lg-page-hidden) :is(.mcx-card,.presence-card):hover {translate:0 -2px}
+}
+@keyframes metro-enter {
+  from {opacity:.76;transform:translateX(-7px)}
+}
+@keyframes metro-underline {
+  from {opacity:.4;transform:scaleX(.24)}
+}
+@keyframes aero-enter {
+  from {opacity:.7;transform:translateY(7px)}
+}
+@keyframes aero-glint {
+  from {opacity:0;transform:translateX(32%)}
+  40% {opacity:.62}
+  to {opacity:0;transform:translateX(-30%)}
+}

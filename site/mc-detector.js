@@ -146,9 +146,9 @@ function syncMode() {
   const button = q('#mcx-sw');
   button.closest('.mcx-toggle').hidden = !viewer;
   button.setAttribute('aria-checked',String(S.on));
-  const logo = q('#app header .logo');
-  const brand = S.on ? 'WA<span>/</span>Minecraft' : 'WA<span>/</span>Roblox';
-  if (logo.innerHTML !== brand) logo.innerHTML = brand;
+  const platform = q('#detector-platform');
+  const label = S.on ? 'Minecraft' : 'Roblox';
+  if (platform.textContent !== label) platform.textContent = label;
   if (S.on && !wasOn) {
     render();
     load();

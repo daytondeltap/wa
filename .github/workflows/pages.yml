@@ -1,4 +1,4 @@
-name: Deploy Wa to GitHub Pages
+name: Deploy LG DETECTOR to GitHub Pages
 
 on:
   push:
@@ -68,7 +68,7 @@ jobs:
               '<script src="ck-key-manager.js?v=20261127-2"></script>',
               '<script src="key-delete-runtime.js?v=20260916-4"></script>',
               '<script src="egress-runtime.js?v=20261127-3"></script>',
-              '<script src="mc-detector.js?v=20261127-3"></script>',
+              '<script src="mc-detector.js?v=20261127-4"></script>',
               '<script src="rbx-metro.js?v=20261127-1"></script>',
               '<script src="dev-presence-simulation.js?v=20261127-1"></script>',
               '<script src="performance-runtime.js?v=2"></script>',

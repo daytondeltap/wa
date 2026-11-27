@@ -14,14 +14,12 @@ body.rbx-metro.rbx-dorfic {
 body.rbx-metro::before {display:none}
 body.rbx-metro [hidden] {display:none!important}
 #app>header {gap:.8rem;flex-wrap:wrap}
-.app-brand {display:flex;align-items:center;gap:.65rem;min-width:0}
+.app-brand {display:flex;align-items:center;flex-wrap:wrap;gap:.4rem .65rem;min-width:0}
 #app .header-right {gap:.65rem}
 body.rbx-metro #app>header {
   padding:.82rem clamp(1rem,4vw,3rem);background:var(--surface);
   border-top:3px solid var(--accent2);box-shadow:none;
 }
-body.rbx-metro #app .logo {font-size:1rem;letter-spacing:.025em;text-transform:none;white-space:nowrap}
-body.rbx-metro #app .logo span {color:var(--accent2);margin-inline:.22rem}
 body.rbx-metro #live-dot {width:7px;height:7px;background:var(--green);box-shadow:none;animation:none}
 body.rbx-metro #tier-badge {border-radius:0;box-shadow:none}
 body.rbx-dorfic #tier-badge {color:var(--text);border-color:var(--border)}
@@ -54,7 +52,6 @@ body.rbx-metro :focus-visible {outline:2px solid var(--accent2);outline-offset:2
   padding:2rem;background:var(--metro-tile);color:var(--text);
 }
 .signin-brand strong {line-height:1;font:750 clamp(3rem,8vw,5.25rem)/.98 var(--font-ui);letter-spacing:-.08em;position:relative}
-.signin-brand span {position:relative;margin-top:.5rem;font-size:.92rem}
 .signin-tiles {display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:.35rem;width:145px;height:96px;position:absolute;right:1.6rem;top:1.6rem}
 .signin-tiles i:nth-child(1) {background:#55d9e6}
 .signin-tiles i:nth-child(2) {background:#147e99}
@@ -132,4 +129,52 @@ body.rbx-dorfic #hist-detail .history-session {border-color:var(--border)}
   .signin-tiles {width:74px;height:54px;right:1rem;top:1rem}
   body.rbx-metro .login-card {padding:1.25rem}
   .workspace-title input,.workspace-section-head input {min-width:0;width:100%}
+}
+
+/* The shared wordmark holds its shape when the workspace changes. */
+#app header .logo {
+  display:flex;align-items:center;gap:.52rem;font:700 .88rem var(--font-ui);
+  white-space:nowrap;letter-spacing:.045em;text-transform:none;
+}
+#app header .logo .detector-mark {
+  width:1.65rem;height:1.65rem;margin:0;flex:none;
+  background:url("detector-mark.svg") center / contain no-repeat;
+}
+#app header .logo #detector-platform {
+  margin:0;padding-left:.52rem;border-left:1px solid var(--border);
+  color:var(--subtext);font-weight:600;font-size:.78rem;letter-spacing:0;
+}
+.signin-brand {
+  background:
+    repeating-linear-gradient(0deg,transparent 0 2.75rem,#ffffff0d 2.75rem calc(2.75rem + 1px)),
+    repeating-linear-gradient(90deg,transparent 0 2.75rem,#ffffff0d 2.75rem calc(2.75rem + 1px)),
+    var(--metro-tile);
+}
+.signin-brand strong {font-size:clamp(3.2rem,8vw,6rem)}
+.signin-brand strong span {
+  display:block;margin:0;font-size:clamp(1.55rem,5vw,3.3rem);line-height:1.1;
+  letter-spacing:-.035em;
+}
+.signin-brand p {position:relative;margin-top:.65rem;color:var(--subtext);font-size:.92rem}
+.signin-tiles i:first-child::before {
+  content:"";display:block;width:100%;height:100%;background:url("detector-mark.svg") center / auto 73% no-repeat;
+}
+body.rbx-metro #page-nav {border-bottom:1px solid var(--border)}
+body.rbx-metro .page-nav-btn {position:relative}
+body.rbx-metro .page-nav-btn.active {
+  background:var(--metro-tile);border-color:transparent;color:var(--text);
+}
+body.rbx-metro .page-nav-btn.active::after {
+  content:"";position:absolute;inset:auto 0 -3px;height:3px;background:var(--accent2);transform-origin:left;
+}
+body.rbx-metro :is(.workspace-title,.monitor-heading,.history-workspace) h1 {
+  border-inline-start:4px solid var(--accent2);padding-inline-start:.65rem;
+}
+body.rbx-metro :is(.workspace-shell .insight-card,.history-panel) {border-top:2px solid var(--accent2)}
+@media(max-width:580px) {
+  #app header .logo {gap:.38rem;letter-spacing:.02em}
+  #app header .logo #detector-platform {padding-left:.38rem}
+  .signin-brand {min-height:158px}
+  .signin-brand strong {font-size:3rem}
+  .signin-brand strong span {font-size:1.55rem}
 }

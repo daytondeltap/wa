@@ -1,6 +1,6 @@
-# LG Presence Suite
+# LG DETECTOR
 
-Static GitHub Pages frontend for **RBX Detect** and **MC Detector**. Production data and authentication are backed by the `LgBackend` Supabase project. Backend source is maintained in `daytondeltap/Lg`.
+Static frontend for Roblox and Minecraft monitoring. [Open LG DETECTOR](https://daytondeltap.github.io/wa/). Production data and authentication are backed by the `LgBackend` Supabase project. Backend source is maintained in `daytondeltap/Lg`.
 
 
 ## Production architecture
@@ -60,7 +60,7 @@ A Google account can be linked to an LG key by a DEV user. Supabase Auth validat
 
 Google and CK requests continue through `lg-gateway` because they need server-side identity translation and/or custom permission enforcement.
 
-Production OAuth values:
+OAuth values to use when enabling Google sign-in for the production site:
 
 - Google OAuth client ID: `116418828646-25qo5updqnfpv3g7qb68v7j51pj8osoh.apps.googleusercontent.com`
 - Google Authorized JavaScript origin: `https://daytondeltap.github.io`
